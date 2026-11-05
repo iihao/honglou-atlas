@@ -328,7 +328,9 @@
       if (!index[key]) {
         var fam = famById[f];
         index[key] = { key: key, family: f, inner: inner, nodes: [],
-          title: f === 'events' ? '情节事件' : (f === 'minor' ? '其他家族' : ((fam ? fam.name : '其他') + (inner ? '' : ' · 仆从'))),
+          title: f === 'events' ? '情节事件'
+            : f === 'minor' ? ('其他家族' + (inner ? '' : ' · 仆从'))
+            : ((fam ? fam.name : '其他') + (inner ? '' : ' · 仆从')),
           color: f === 'events' ? '#7a6a52' : (fam ? fam.color : '#8a8073') };
         clusters.push(index[key]);
       }
