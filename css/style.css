@@ -398,7 +398,7 @@ table.data th{font-family:var(--serif);font-size:11px;letter-spacing:.14em;color
 .g-fam{font-family:var(--serif);font-size:15px;letter-spacing:.14em;text-anchor:middle;opacity:.5}
 .g-edge-g.cross .g-edge{opacity:.07}
 .g-edge-g.cross.hl .g-edge{opacity:.9}
-.g-fam{font-size:12px;letter-spacing:.1em}
+.g-fam{font-size:12px;letter-spacing:.1em;paint-order:stroke;stroke:#faf6ec;stroke-width:3px;stroke-linejoin:round}
 .ev-badge{display:inline-block;margin-left:6px;font-size:9px;letter-spacing:.04em;padding:1px 5px;
   border-radius:999px;background:rgba(154,106,53,.14);color:#7a5a24}
 .m-ev .e-kind{font-style:normal;font-size:9px;color:#8a6a30;border:1px solid rgba(154,106,53,.4);
@@ -498,8 +498,6 @@ table.data th{font-family:var(--serif);font-size:11px;letter-spacing:.14em;color
 /* ---------- 关系图全屏覆盖层 ---------- */
 .stage-tools{display:none}
 body.graph-fs{overflow:hidden}
-body.graph-fs #fsToggle{display:none}
-body.graph-fs .filterbar.stack{visibility:hidden}
 body.graph-fs #gStage{
   position:fixed;inset:0;z-index:200;border:0;border-radius:0;
   contain:layout paint;will-change:transform;
@@ -619,19 +617,5 @@ body.cross-on .g-edge-g.cross.show{opacity:1}
 body.fs-switching *,body.fs-switching *::before,body.fs-switching *::after{
   transition:none!important;animation:none!important}
 
-/* ---------- 原生全屏 ---------- */
-#gStage:fullscreen{
-  width:100vw;height:100vh;padding:0;border:0;border-radius:0;
-  background:radial-gradient(900px 500px at 50% 0%,rgba(140,31,40,.05),transparent 70%),
-             linear-gradient(180deg,#faf6ec,#f3ecdd);
-}
-#gStage:fullscreen .stage-tools{display:flex;position:fixed;left:50%;bottom:18px;transform:translateX(-50%);
-  z-index:5;padding:6px 10px;border:1px solid var(--line-2);border-radius:999px;
-  background:rgba(250,246,236,.94);backdrop-filter:blur(10px);
-  box-shadow:0 10px 30px -18px rgba(40,25,10,.7);align-items:center;gap:6px}
-#gStage:fullscreen .cap-tip{display:none}
-@media(max-width:820px){
-  #gStage:fullscreen .stage-tools{left:10px;right:10px;transform:none;justify-content:space-between}
-}
 .stage-spacer{display:block}
 .stage-spacer[hidden]{display:none}

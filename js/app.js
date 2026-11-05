@@ -402,13 +402,23 @@
       index[key].nodes.push(nd);
     });
 
+    // 只含两三个人的小岛统一并成「零散人物」，避免右侧堆一堆碎标签
+    var tiny = clusters.filter(function (c) { return c.nodes.length <= 4 && c.family !== 'events' && !c.inner; });
+    if (tiny.length > 1) {
+      var merged = { key: 'tiny', family: 'minor', inner: false, nodes: [],
+        title: '零散人物', color: '#8a8073' };
+      tiny.forEach(function (c) { merged.nodes = merged.nodes.concat(c.nodes); });
+      clusters = clusters.filter(function (c) { return tiny.indexOf(c) < 0; });
+      clusters.push(merged);
+    }
+
     clusters.forEach(function (c) {
       c.nodes.sort(function (a, b) {
         var ra = ROLE_ORDER.indexOf(a.item.role); ra = ra < 0 ? 99 : ra;
         var rb = ROLE_ORDER.indexOf(b.item.role); rb = rb < 0 ? 99 : rb;
         return ra - rb || a.item.name.localeCompare(b.item.name, 'zh-Hans-CN');
       });
-      c.R = c.nodes.length <= 3 ? 44 : 26 + 26 * Math.sqrt(c.nodes.length);
+      c.R = c.nodes.length <= 3 ? 46 : 26 + 22 * Math.sqrt(c.nodes.length);
     });
     var famTotal = {};
     clusters.forEach(function (c) { famTotal[c.family] = (famTotal[c.family] || 0) + c.nodes.length; });
@@ -419,30 +429,56 @@
       return 0;
     });
 
-    var TARGET_W = 1440, PAD = 36, GAPY = 66;
-    var x = PAD, y = PAD, rowH = 0;
+    // ---- 岛与岛之间：货架式排布（大岛在前，每行居中），整体等比缩放到一屏 ----
+    var TARGET_W = 1440, TARGET_H = 880, PAD = 44, GAP = 50;
+    var availW = TARGET_W - PAD * 2, availH = TARGET_H - PAD * 2;
+
+    clusters.sort(function (a, b) { return b.R - a.R; });
+    var rows = [], row = { items: [], w: 0, h: 0 }, used = 0;
     clusters.forEach(function (c) {
-      if (x + c.R * 2 > TARGET_W - PAD && x > PAD) { x = PAD; y += rowH + GAPY; rowH = 0; }
-      c.cx = x + c.R; c.cy = y + c.R;
-      x += c.R * 2 + (c.R > 120 ? 74 : 30);
-      rowH = Math.max(rowH, c.R * 2);
-      // 环状排布：每环按周长决定容量
-      var per = Math.max(6, Math.round((2 * Math.PI * Math.max(24, c.R * 0.45)) / 42));
-      var placed = 0;
-      for (var ring = 0; placed < c.nodes.length; ring++) {
-        var r = Math.max(24, c.R * 0.42) + ring * 50;
-        var cap = Math.max(6, Math.round((2 * Math.PI * r) / 46));
-        for (var i = 0; i < cap && placed < c.nodes.length; i++, placed++) {
-          var a = (i / cap) * Math.PI * 2 + ring * 0.6;
-          var nd = c.nodes[placed];
-          nd.x = c.cx + Math.cos(a) * r;
-          nd.y = c.cy + Math.sin(a) * r;
-        }
+      var d = c.R * 2;
+      var add = (row.items.length ? GAP : 0) + d;
+      if (used + add > availW && row.items.length) {
+        rows.push(row);
+        row = { items: [], w: 0, h: 0 };
+        used = 0;
+        add = d;
       }
+      row.items.push(c);
+      row.w += add;
+      row.h = Math.max(row.h, d);
+      used += add;
+    });
+    if (row.items.length) rows.push(row);
+
+    var totalH = rows.reduce(function (acc, r) { return acc + r.h + GAP; }, -GAP);
+    var k = Math.min(1.12, availH / Math.max(1, totalH));
+    var y = PAD + (availH - totalH * k) / 2;
+    rows.forEach(function (r) {
+      var x = PAD + (availW - r.w * k) / 2;
+      r.items.forEach(function (c) {
+        c.R = c.R * k;
+        c.cx = x + c.R;
+        c.cy = y + (r.h * k) / 2;
+        x += c.R * 2 + GAP * k;
+      });
+      y += (r.h + GAP) * k;
+    });
+
+    // ---- 岛内：向日葵式均匀铺点，比同心环更透气 ----
+    clusters.forEach(function (c) {
+      var n = c.nodes.length;
+      var maxR = Math.max(26, c.R * 0.86);
+      c.nodes.forEach(function (nd, i) {
+        var rr = maxR * Math.sqrt((i + 0.5) / n);
+        var ang = i * 2.399963229728653;
+        nd.x = c.cx + Math.cos(ang) * rr;
+        nd.y = c.cy + Math.sin(ang) * rr;
+      });
     });
 
     G.W = TARGET_W;
-    G.H = Math.max(720, y + rowH + PAD + 26);
+    G.H = TARGET_H;
     model.clusters = clusters;
   }
 
@@ -622,8 +658,7 @@
 
   function clampPan(v) { var lim = G.W * 0.5; return Math.max(-lim, Math.min(lim, v)); }
 
-  /* 全屏：优先用浏览器原生 Fullscreen API（不改变文档流，无回流闪动），
-     不支持时退回覆盖层方案 */
+  /* 网页全屏：只用页面内覆盖层，不调用浏览器原生 Fullscreen（不抢占整个浏览器） */
   function fsFallback(on) {
     // 用占位块保住原高度，避免画布脱离文档流后整页塌陷（闪动的根因）
     var el = $('#gStage'), sp = $('#stageSpacer'), svg = $('#gSvg');
@@ -665,28 +700,12 @@
   }
 
   function isGraphFs() {
-    return document.fullscreenElement === $('#gStage') ||
-      document.body.classList.contains('graph-fs');
+    return document.body.classList.contains('graph-fs');
   }
 
   function setGraphFs(on) {
-    var el = $('#gStage');
-    if (!el) return;
     if (on === isGraphFs()) return;
-    if (on) {
-      if (el.requestFullscreen && document.fullscreenEnabled) {
-        el.requestFullscreen().then(function () { syncFsUi(true); })
-          .catch(function () { fsFallback(true); });
-      } else {
-        fsFallback(true);
-      }
-    } else {
-      if (document.fullscreenElement) {
-        document.exitFullscreen().finally(function () { syncFsUi(false); });
-      } else {
-        fsFallback(false);
-      }
-    }
+    fsFallback(on);
   }
 
   function toggleGraphFs() { setGraphFs(!isGraphFs()); }
@@ -1489,9 +1508,6 @@
       renderGraph();
     });
 
-    document.addEventListener('fullscreenchange', function () {
-      syncFsUi(!!document.fullscreenElement);
-    });
     document.addEventListener('keydown', function (e) {
       var meta = e.metaKey || e.ctrlKey;
       if (meta && e.key.toLowerCase() === 'k') { e.preventDefault(); $('#palette').hidden ? openPalette() : closePalette(); return; }
