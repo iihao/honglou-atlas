@@ -658,28 +658,74 @@
 
   function clampPan(v) { var lim = G.W * 0.5; return Math.max(-lim, Math.min(lim, v)); }
 
-  /* 网页全屏：只用页面内覆盖层，不调用浏览器原生 Fullscreen（不抢占整个浏览器） */
+  /* 网页全屏：只用页面内覆盖层，不调用浏览器原生 Fullscreen（不抢占整个浏览器）。
+     进入时把 viewBox 收到人物范围，让画布真正放大到铺满屏幕 */
+  var FS_VIEWBOX = null, FS_TRANSFORM = null;
+
+  function graphContentBBox() {
+    var minX = 1e9, minY = 1e9, maxX = -1e9, maxY = -1e9, n = 0;
+    Object.keys(gState.nodeMap).forEach(function (id) {
+      var nd = gState.nodeMap[id];
+      if (!nd) return;
+      minX = Math.min(minX, nd.x); maxX = Math.max(maxX, nd.x);
+      minY = Math.min(minY, nd.y); maxY = Math.max(maxY, nd.y);
+      n++;
+    });
+    return n ? { minX: minX, minY: minY, maxX: maxX, maxY: maxY } : null;
+  }
+
+  function fitSvgToStage(on) {
+    var svg = $('#gSvg');
+    if (!svg) return;
+    if (on) {
+      var bb = graphContentBBox();
+      if (!bb) return;
+      FS_VIEWBOX = svg.getAttribute('viewBox') || ('0 0 ' + G.W + ' ' + G.H);
+      FS_TRANSFORM = { zoom: gState.zoom, tx: gState.tx, ty: gState.ty };
+      var sr = $('#gStage').getBoundingClientRect();
+      var aspect = sr.width / Math.max(1, sr.height);
+      // 内容范围 + 内边距；viewBox 宽高比对齐舞台，保证放大后铺满
+      var padX = 60, padTop = 90, padBottom = 70;
+      var cw = (bb.maxX - bb.minX) + padX * 2;
+      var ch = (bb.maxY - bb.minY) + padTop + padBottom;
+      var vw, vh;
+      if (cw / ch >= aspect) { vw = cw; vh = cw / aspect; }
+      else { vh = ch; vw = ch * aspect; }
+      var cx = (bb.minX + bb.maxX) / 2, cy = (bb.minY + bb.maxY) / 2;
+      var x = cx - vw / 2, y = cy - vh / 2;
+      svg.setAttribute('viewBox', x.toFixed(1) + ' ' + y.toFixed(1) + ' ' + vw.toFixed(1) + ' ' + vh.toFixed(1));
+      svg.style.width = '100%';
+      svg.style.height = '100%';
+      svg.style.maxWidth = 'none';
+      gState.zoom = 1; gState.tx = 0; gState.ty = 0;
+      applyTransform();
+    } else {
+      if (FS_VIEWBOX) svg.setAttribute('viewBox', FS_VIEWBOX);
+      svg.style.width = ''; svg.style.height = ''; svg.style.maxWidth = '';
+      if (FS_TRANSFORM) {
+        gState.zoom = FS_TRANSFORM.zoom; gState.tx = FS_TRANSFORM.tx; gState.ty = FS_TRANSFORM.ty;
+      }
+      FS_VIEWBOX = null; FS_TRANSFORM = null;
+      applyTransform();
+    }
+  }
+
   function fsFallback(on) {
     // 用占位块保住原高度，避免画布脱离文档流后整页塌陷（闪动的根因）
-    var el = $('#gStage'), sp = $('#stageSpacer'), svg = $('#gSvg');
+    var el = $('#gStage'), sp = $('#stageSpacer');
     if (sp) {
       if (on) {
         sp.style.height = el.offsetHeight + 'px';
         sp.hidden = false;
-        // 固定 SVG 的像素宽度：全屏只放大可视区，不重排图谱，避免整图跳动
-        if (svg) {
-          svg.style.width = Math.round(svg.getBoundingClientRect().width) + 'px';
-          svg.style.maxWidth = 'none';
-        }
       } else {
         sp.hidden = true;
         sp.style.height = '';
-        if (svg) { svg.style.width = ''; svg.style.maxWidth = ''; }
       }
     }
     document.body.classList.add('fs-switching');
     document.body.classList.toggle('graph-fs', on);
     setTimeout(function () { document.body.classList.remove('fs-switching'); }, 260);
+    fitSvgToStage(on);
     syncFsUi(on);
   }
 
@@ -713,6 +759,20 @@
   function paintEdges() {
     var nid = gState.sel, eid = gState.edgeSel, hov = gState.edgeHover;
     var any = !!nid || !!eid || !!hov;
+    // 悬停/选中连线时，两端的人名一并显示（即便它们在密集区默认不显标签）
+    var show = {};
+    if (hov) { show[hov.a] = 1; show[hov.b] = 1; }
+    if (eid) { show[eid.a] = 1; show[eid.b] = 1; }
+    if (nid) {
+      show[nid] = 1;
+      gState.edges.forEach(function (e) {
+        if (e.a === nid) show[e.b] = 1;
+        if (e.b === nid) show[e.a] = 1;
+      });
+    }
+    $$('.g-node').forEach(function (g) {
+      g.classList.toggle('elabel', !!show[g.getAttribute('data-id')]);
+    });
     $$('.g-edge-g').forEach(function (g) {
       var a = g.getAttribute('data-a'), b = g.getAttribute('data-b');
       var onNode = !!nid && (a === nid || b === nid);
@@ -779,11 +839,14 @@
   function svgToStagePt(x, y) {
     var svg = $('#gSvg'), stage = $('#gStage');
     if (!svg || !stage) return null;
-    var r = svg.getBoundingClientRect();
+    var m = svg.getScreenCTM();
+    if (!m) return null;
+    var pt = svg.createSVGPoint();
+    pt.x = gState.tx + x * gState.zoom;
+    pt.y = gState.ty + y * gState.zoom;
+    var p = pt.matrixTransform(m);
     var sr = stage.getBoundingClientRect();
-    var vx = gState.tx + x * gState.zoom;
-    var vy = gState.ty + y * gState.zoom;
-    return { x: (r.left - sr.left) + vx * (r.width / G.W), y: (r.top - sr.top) + vy * (r.height / G.H) };
+    return { x: p.x - sr.left, y: p.y - sr.top };
   }
 
   function positionEdgePanel() {

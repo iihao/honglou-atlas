@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>红楼梦图谱 · Dream of the Red Chamber Atlas</title>
+<meta name="description" content="红楼梦人物谱系、关系图谱、判词、诗词、事件与地点检索，附参考来源、维基/百度百科外链与红楼研究线索">
+<link rel="stylesheet" href="css/style.css?v=19">
+</head>
+<body>
+
+<header class="topbar">
+  <button class="icon-btn menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="#lineage">
+    <span class="seal">红</span>
+    <span class="brand-text">
+      <strong>红楼梦图谱</strong>
+      <small>DREAM OF THE RED CHAMBER · ATLAS</small>
+    </span>
+  </a>
+  <nav class="mainnav" id="mainnav">
+    <a href="#lineage" data-nav="lineage">谱系</a>
+    <a href="#graph" data-nav="graph">关系图</a>
+    <a href="#people" data-nav="people">人物</a>
+    <a href="#events" data-nav="events">事件</a>
+    <a href="#fate" data-nav="fate">判词</a>
+    <a href="#poetry" data-nav="poetry">诗词</a>
+    <a href="#places" data-nav="places">地点</a>
+    <a href="#chapters" data-nav="chapters">回目</a>
+    <a href="#data" data-nav="data">数据</a>
+  </nav>
+  <button class="search-btn" id="searchBtn"><span>检索</span><kbd>⌘K</kbd></button>
+</header>
+
+<main>
+
+<!-- ============ 谱系 ============ -->
+<section class="view" id="view-lineage">
+  <div class="wrap">
+    <div class="page-head">
+      <p class="eyebrow">GENEALOGY · 世代谱系</p>
+      <h1>家族谱系</h1>
+      <p>按世代排列的血亲树：实线为亲子，虚线为婚姻，虚线框为名佚补位。点击人物可查看词条与关系。</p>
+    </div>
+    <div class="filterbar" id="lineageTabs"></div>
+    <div class="lg-toolbar">
+      <div class="lg-legend">
+        <span><i class="solid"></i>亲子</span>
+        <span><i class="dash"></i>婚姻</span>
+        <span><i class="vbox"></i>名佚补位</span>
+      </div>
+      <div class="lg-zoom" id="lgZoom">
+        <button type="button" data-lgzoom="out" aria-label="缩小">−</button>
+        <span id="lgZoomLabel">100%</span>
+        <button type="button" data-lgzoom="in" aria-label="放大">+</button>
+        <button type="button" data-lgzoom="fit">还原</button>
+      </div>
+    </div>
+    <figure class="lg-card">
+      <div class="lg-scroll" id="lgScroll">
+        <svg id="lgSvg" role="img" aria-label="家族谱系图"></svg>
+      </div>
+      <figcaption class="lg-note" id="lgNote"></figcaption>
+      <p class="scroll-hint">← 左右滑动查看完整谱系 →</p>
+    </figure>
+  </div>
+</section>
+
+<!-- ============ 关系图 ============ -->
+<section class="view" id="view-graph">
+  <div class="wrap">
+    <div class="page-head compact">
+      <div class="ph-text">
+        <p class="eyebrow">RELATION GRAPH</p>
+        <h1>人物关系图谱</h1>
+      </div>
+      <p class="ph-hint" id="graphHint">悬停高亮邻域；点节点看简介、谶语、脂评与结局；点连线看两人关系与共同事件。</p>
+    </div>
+    <div class="filterbar stack">
+      <div class="seg" id="gViewSeg" role="group" aria-label="视图切换">
+        <button class="seg-btn on" data-gview="graph">图谱</button>
+        <button class="seg-btn" data-gview="list">列表</button>
+      </div>
+      <div class="seg" role="group" aria-label="关系筛选">
+        <button class="seg-btn on" data-gfilter="all">全部</button>
+        <button class="seg-btn" data-gfilter="kin">亲缘</button>
+        <button class="seg-btn" data-gfilter="servant">主仆</button>
+        <button class="seg-btn" data-gfilter="love">情缘</button>
+        <button class="seg-btn" data-gfilter="friend">同人/友人</button>
+      </div>
+      <div class="zoom" id="gZoom">
+        <button data-zoom="out">−</button><span id="gZoomLabel">100%</span><button data-zoom="in">＋</button>
+        <button data-zoom="reset" class="fit">重置</button>
+      </div>
+      <button class="chip" id="evToggle">显示事件节点</button>
+      <button class="chip" id="crossToggle">显示跨族连线</button>
+      <button class="chip" id="fsToggle">全屏</button>
+      <span class="muted" id="gCount"></span>
+    </div>
+    <div class="legend" id="gLegend"></div>
+    <p class="scroll-hint">← 左右滑动查看完整关系图 · 点节点看详情 →</p>
+    <div class="glist" id="gListWrap" hidden>
+      <div class="glist-bar">
+        <input type="search" id="gListSearch" placeholder="检索关系：人物名、关系名（如 宝玉 / 主仆 / 母女）">
+        <span class="muted" id="gListCount"></span>
+      </div>
+      <div class="glist-body" id="gListBody"></div>
+    </div>
+
+    <div class="stage-spacer" id="stageSpacer" hidden></div>
+    <div class="stage" id="gStage">
+      <svg id="gSvg" role="img" aria-label="红楼梦人物关系图"></svg>
+      <div class="tip" id="gTip" hidden></div>
+      <aside class="edge-panel" id="gEdgePanel" hidden aria-label="关系详情">
+        <button class="edge-close" id="gEdgeClose" aria-label="关闭">✕</button>
+      </aside>
+      <div class="stage-tools" id="stageTools">
+        <span class="st-hint">拖拽平移 · 滚轮/双指缩放 · ESC 退出</span>
+        <button data-zoom="out" aria-label="缩小">−</button>
+        <span id="fsZoomLabel">100%</span>
+        <button data-zoom="in" aria-label="放大">＋</button>
+        <button data-zoom="reset">重置</button>
+        <button id="fsExit" class="st-exit">退出全屏 ✕</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 人物 ============ -->
+<section class="view" id="view-people">
+  <div class="wrap">
+    <div class="page-head">
+      <p class="eyebrow">CHARACTERS</p>
+      <h1>人物志</h1>
+      <p>按家族与身份检索。点击卡片查看关系网与出场事件。</p>
+    </div>
+    <div class="filterbar stack">
+      <input type="search" id="peopleSearch" placeholder="检索：姓名、别号、判词、结局…（如 黛玉 / 潇湘 / 焚稿）">
+      <select id="peopleFamily"></select>
+      <select id="peopleRole"></select>
+      <span class="muted" id="peopleCount"></span>
+    </div>
+    <div class="people-grid" id="peopleGrid"></div>
+  </div>
+</section>
+
+<!-- ============ 事件 ============ -->
+<section class="view" id="view-events">
+  <div class="wrap">
+    <div class="page-head">
+      <p class="eyebrow">EVENTS</p>
+      <h1>情节事件</h1>
+      <p>按回目顺序排列。点击查看经过、出场人物与相关判词。</p>
+    </div>
+    <div class="filterbar" id="eventFilters"></div>
+    <div class="list" id="eventList"></div>
+  </div>
+</section>
+
+<!-- ============ 判词 ============ -->
+<section class="view" id="view-fate">
+  <div class="wrap">
+    <div class="page-head">
+      <p class="eyebrow">FATES</p>
+      <h1>金陵十二钗判词</h1>
+      <p>正册、副册、又副册，共十四则。判词是全书命运的预言，也是结构的总纲。</p>
+    </div>
+    <div class="fate-grid" id="fateGrid"></div>
+  </div>
+</section>
+
+<!-- ============ 诗词 ============ -->
+<section class="view" id="view-poetry">
+  <div class="wrap">
+    <div class="page-head">
+      <p class="eyebrow">POETRY</p>
+      <h1>诗词曲赋</h1>
+      <p>《好了歌》《枉凝眉》《葬花吟》等，节选处已标注。</p>
+    </div>
+    <div class="poem-list" id="poemList"></div>
+  </div>
+</section>
+
+<!-- ============ 地点 ============ -->
+<section class="view" id="view-places">
+  <div class="wrap">
+    <div class="page-head">
+      <p class="eyebrow">PLACES</p>
+      <h1>大观园与府邸</h1>
+      <p>园中院落、府邸与方外之境。</p>
+    </div>
+    <div class="card-grid" id="placeGrid"></div>
+  </div>
+</section>
+
+<!-- ============ 回目 ============ -->
+<section class="view" id="view-chapters">
+  <div class="wrap">
+    <div class="page-head">
+      <p class="eyebrow">CHAPTERS</p>
+      <h1>关键回目</h1>
+      <p>择要列出十回，可点击跳到相关事件。</p>
+    </div>
+    <div class="list" id="chapterList"></div>
+  </div>
+</section>
+
+<!-- ============ 数据 ============ -->
+<section class="view" id="view-data">
+  <div class="wrap">
+    <div class="page-head">
+      <p class="eyebrow">DATA</p>
+      <h1>数字里的红楼梦</h1>
+      <p>人物身份、家族分布与十二钗结局，均据本库条目统计。</p>
+    </div>
+    <div id="dataPanels"></div>
+  </div>
+</section>
+
+</main>
+
+<footer class="footer">
+  <span class="seal small">红</span>
+  <p>红楼梦图谱 · 本地资料库 · 数据可增补</p>
+  <p class="muted" id="footerCount"></p>
+</footer>
+
+<!-- 检索面板 -->
+<div class="palette" id="palette" hidden>
+  <div class="palette-box" role="dialog" aria-modal="true" aria-label="检索">
+    <div class="palette-input">
+      <span>⌕</span>
+      <input id="paletteInput" placeholder="检索人物、事件、判词、诗词、地点…" autocomplete="off">
+      <kbd>ESC</kbd>
+    </div>
+    <div class="palette-results" id="paletteResults"></div>
+  </div>
+</div>
+
+<!-- 详情 -->
+<div class="modal" id="modal" hidden>
+  <div class="modal-box" role="dialog" aria-modal="true">
+    <button class="modal-close" id="modalClose" aria-label="关闭">✕</button>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-nav">
+      <span class="modal-hint">↑↓ 切换同列条目 · ESC 关闭</span>
+      <span><button id="modalPrev">← 上一条</button><button id="modalNext">下一条 →</button></span>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js?v=28"></script>
+
+<style>*{animation:none!important;transition:none!important}</style>
+<script>
+window.__errs=[]; window.addEventListener('error',function(e){window.__errs.push(String(e.message));});
+window.addEventListener('load', function () { setTimeout(function () {
+  var out = {};
+  try {
+    var svg = document.getElementById('gSvg'), st = document.getElementById('gStage');
+    out.beforeVB = svg.getAttribute('viewBox');
+    out.beforeSize = [Math.round(svg.getBoundingClientRect().width), Math.round(svg.getBoundingClientRect().height)];
+    document.getElementById('fsToggle').click();
+    setTimeout(function () {
+      out.fsVB = svg.getAttribute('viewBox');
+      out.fsSize = [Math.round(svg.getBoundingClientRect().width), Math.round(svg.getBoundingClientRect().height)];
+      var el = document.querySelector('.g-edge-g[data-a="pl-baoyu"][data-b="pl-daiyu"]');
+      el.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,view:window}));
+      setTimeout(function () {
+        var p = document.getElementById('gEdgePanel');
+        var pr = p.getBoundingClientRect(), sr = st.getBoundingClientRect();
+        out.panel = [Math.round(pr.left-sr.left), Math.round(pr.top-sr.top)];
+        // 连线中点屏幕坐标
+        var a = document.querySelector('.g-node[data-id="pl-baoyu"]').getBoundingClientRect();
+        var b = document.querySelector('.g-node[data-id="pl-daiyu"]').getBoundingClientRect();
+        out.mid = [Math.round((a.left+b.left)/2 - sr.left), Math.round((a.top+b.top)/2 - sr.top)];
+        document.getElementById('fsExit').click();
+        setTimeout(function () {
+          out.afterVB = svg.getAttribute('viewBox');
+          out.afterSize = [Math.round(svg.getBoundingClientRect().width), Math.round(svg.getBoundingClientRect().height)];
+          out.afterFs = document.body.classList.contains('graph-fs');
+          out.errs = window.__errs;
+          var d=document.createElement('pre'); d.id='errdump'; d.textContent='CHK '+JSON.stringify(out);
+          document.body.appendChild(d);
+        }, 200);
+      }, 200);
+    }, 300);
+  } catch (err) { out.threw = String(err); out.errs = window.__errs;
+    var d=document.createElement('pre'); d.id='errdump'; d.textContent='CHK '+JSON.stringify(out);
+    document.body.appendChild(d);
+  }
+}, 1000); });
+</script>
+</body>
+</html>
