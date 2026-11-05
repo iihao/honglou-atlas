@@ -953,7 +953,8 @@
     html += '<div class="edge-foot"><button class="edge-more-btn" id="edgeExpand">查看完整关系 ↗</button>' +
       '<span class="edge-tip">Esc 或点空白处关闭</span></div>';
 
-    panel.innerHTML = html;
+    // 关闭按钮放在最前，避免 innerHTML 覆盖掉index.html里的原始按钮
+    panel.innerHTML = '<button class="edge-close" id="gEdgeClose" aria-label="关闭">✕</button>' + html;
     panel.hidden = false;
     $$('#gEdgePanel [data-go]').forEach(function (btn) {
       btn.addEventListener('click', function () { hideEdgePanel(); openItem(btn.getAttribute('data-go')); });
@@ -1052,8 +1053,14 @@
     if (stage.dataset.bound) return;
     stage.dataset.bound = '1';
 
-    var closeBtn = $('#gEdgeClose');
-    if (closeBtn) closeBtn.addEventListener('click', clearEdgeSel);
+    // 关系卡内容每次重绘，关闭按钮用事件委托绑定一次即可
+    var fsPanel = $('#gEdgePanel');
+    if (fsPanel && !fsPanel.dataset.bound) {
+      fsPanel.dataset.bound = '1';
+      fsPanel.addEventListener('click', function (e) {
+        if (e.target.closest('#gEdgeClose')) clearEdgeSel();
+      });
+    }
     $('#gSvg').addEventListener('click', function (e) {
       if (e.target.closest('.g-node') || e.target.closest('.g-edge-g')) return;
       clearEdgeSel();
