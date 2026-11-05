@@ -549,7 +549,9 @@
         (isEv
           ? '<rect class="dot" x="' + (nd.x - r).toFixed(1) + '" y="' + (nd.y - r).toFixed(1) +
             '" width="' + (r * 2).toFixed(1) + '" height="' + (r * 2).toFixed(1) + '" rx="2" fill="#7a6a52"/>'
-          : '<circle class="dot" cx="' + nd.x.toFixed(1) + '" cy="' + nd.y.toFixed(1) + '" r="' + r.toFixed(1) +
+          : '<circle class="hit" cx="' + nd.x.toFixed(1) + '" cy="' + nd.y.toFixed(1) +
+            '" r="' + (r + 7).toFixed(1) + '"/>' +
+            '<circle class="dot" cx="' + nd.x.toFixed(1) + '" cy="' + nd.y.toFixed(1) + '" r="' + r.toFixed(1) +
             '" fill="' + famColor(nd.item) + '"/>' +
             (fated ? '<circle class="ring" cx="' + nd.x.toFixed(1) + '" cy="' + nd.y.toFixed(1) +
               '" r="' + (r + 2.6).toFixed(1) + '"/>' : '')) +
@@ -780,8 +782,14 @@
         if (e.b === nid) show[e.a] = 1;
       });
     }
+    var eFocus = hov || eid;
     $$('.g-node').forEach(function (g) {
-      g.classList.toggle('elabel', !!show[g.getAttribute('data-id')]);
+      var nid2 = g.getAttribute('data-id');
+      var isEnd = !!eFocus && (nid2 === eFocus.a || nid2 === eFocus.b);
+      g.classList.toggle('elabel', !!show[nid2]);
+      // 悬停/选中连线：两端高亮，其余节点置灰
+      g.classList.toggle('ehot', isEnd);
+      g.classList.toggle('eof', !!eFocus && !isEnd);
     });
     $$('.g-edge-g').forEach(function (g) {
       var a = g.getAttribute('data-a'), b = g.getAttribute('data-b');

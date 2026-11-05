@@ -132,11 +132,12 @@ input[type=search]:focus,select:focus{border-color:var(--red);box-shadow:0 0 0 3
 .tip b{color:#e8c07a;margin-right:6px}
 .g-edge{stroke:rgba(140,115,80,.30);stroke-width:.9;transition:.15s}
 .g-edge-g .g-edge.hl{stroke:var(--red);stroke-width:1.9;opacity:.95;stroke-dasharray:none}
-.g-edge-g .g-edge.dim{opacity:.08}
+.g-edge-g .g-edge.dim{opacity:.10}
 .g-edge-label{font-family:var(--sans);font-size:8.5px;fill:#8a7f6d;paint-order:stroke;
   stroke:#f7f2e7;stroke-width:2.6px;opacity:0;transition:opacity .15s;pointer-events:none}
 .g-edge.show .g-edge-label{opacity:1}
-.g-node{cursor:pointer}
+.g-node{cursor:pointer;transition:opacity .14s ease}
+.g-node .hit{fill:transparent;pointer-events:all}
 .g-node circle.dot{stroke:#fffdf7;stroke-width:1.1;transition:r .12s,filter .12s}
 .g-node:hover circle.dot{filter:drop-shadow(0 2px 6px rgba(40,28,14,.3))}
 .g-node .g-label{font-family:var(--sans);font-size:10.5px;fill:var(--ink-2);paint-order:stroke;
@@ -145,6 +146,10 @@ input[type=search]:focus,select:focus{border-color:var(--red);box-shadow:0 0 0 3
 .g-node.sel .g-label{fill:var(--red);font-weight:600;font-size:10.5px}
 .g-node.dim{opacity:.14}
 .g-node.faded{opacity:.22}
+/* 连线聚焦：其它节点统一置灰，两端提亮 */
+.g-node.eof{opacity:.16}
+.g-node.ehot circle.dot{stroke:var(--red);stroke-width:1.9}
+.g-node.ehot .g-label{opacity:1}
 
 /* ---------- cards / lists ---------- */
 .card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:13px}
@@ -296,6 +301,8 @@ table.data th{font-family:var(--serif);font-size:11px;letter-spacing:.14em;color
 .g-node.elabel .g-label{opacity:1;font-weight:600;font-size:11.5px;fill:var(--ink);
   paint-order:stroke;stroke:#faf6ec;stroke-width:3.2px}
 .g-node.elabel .dot{filter:drop-shadow(0 0 2px rgba(140,40,40,.55))}
+/* 悬停期不做任何会改变几何的动画，避免连线/标签来回闪 */
+.g-node.elabel circle.dot{transition:stroke-width .12s ease,filter .12s ease}
 
 /* ================= 移动端适配 ================= */
 @media (max-width:820px){
@@ -552,7 +559,7 @@ body.graph-fs #gZoom{display:none} /* 缩放已在底部工具条 */
 
 /* ---------- 关系连线着色与点击 ---------- */
 .g-edge-hit{stroke:transparent;stroke-width:18;cursor:pointer;pointer-events:stroke}
-.g-edge-g{pointer-events:visibleStroke}
+.g-edge-g{pointer-events:visibleStroke;transition:opacity .14s ease}
 /* 跨族连线默认几乎隐形，避免长线穿满画布；悬停/选中或打开开关时再显示 */
 .g-edge-g.cross{opacity:.05}
 .g-edge-g.cross.show,.g-edge-g.cross.hl,.g-edge-g.cross.sel{opacity:1}
