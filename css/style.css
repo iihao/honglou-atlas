@@ -137,7 +137,8 @@ input[type=search]:focus,select:focus{border-color:var(--red);box-shadow:0 0 0 3
 .g-edge-g .g-edge.dim{opacity:.10}
 .g-edge-label{font-family:var(--sans);font-size:8.5px;fill:#8a7f6d;paint-order:stroke;
   stroke:#f7f2e7;stroke-width:2.6px;opacity:0;transition:opacity .15s;pointer-events:none}
-.g-edge.show .g-edge-label{opacity:1}
+.g-edge-g.show .g-edge-label,.g-edge-g.sel .g-edge-label{opacity:1}
+.g-edge-g.show .g-edge-label{font-weight:600;fill:var(--red)}
 .g-node{cursor:pointer;transition:opacity .14s ease}
 .g-node .hit{fill:transparent;pointer-events:all}
 .g-node circle.dot{stroke:#fffdf7;stroke-width:1.1;transition:r .12s,filter .12s}
