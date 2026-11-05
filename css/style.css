@@ -149,6 +149,9 @@ input[type=search]:focus,select:focus{border-color:var(--red);box-shadow:0 0 0 3
 /* 连线聚焦：其它节点统一置灰，两端提亮 */
 .g-node.eof{opacity:.16}
 .g-node.ehot circle.dot{stroke:var(--red);stroke-width:1.9}
+/* 人物悬停：所有直接相关的人都显名并描红 */
+.g-node.nbr circle.dot{stroke:var(--red);stroke-width:1.7}
+.g-node.nbr .g-label{opacity:1}
 .g-node.ehot .g-label{opacity:1}
 
 /* ---------- cards / lists ---------- */

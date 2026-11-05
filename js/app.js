@@ -338,15 +338,19 @@
     var ids = {};
     people.forEach(function (p) { ids[p.id] = p; });
 
-    var seen = {}, edges = [];
+    // 同一对人可能有多条关系（旧识 + 打醮），图上只画一根线，
+    // 否则两条线完全重叠，悬停时还会互相抢命中区
+    var seen = {}, edges = [], byPair = {};
     D.relations.forEach(function (r) {
       if (!ids[r.a] || !ids[r.b]) return;
-      var key = r.a < r.b ? r.a + '|' + r.b + '|' + r.label : r.b + '|' + r.a + '|' + r.label;
-      if (seen[key]) return;
-      seen[key] = 1;
+      var pair = r.a < r.b ? r.a + '|' + r.b : r.b + '|' + r.a;
       if (state.gfilter !== 'all' && relCat(r.label) !== state.gfilter) return;
-      edges.push({ a: r.a, b: r.b, label: r.label });
+      if (byPair[pair]) { byPair[pair].labels.push(r.label); return; }
+      var e = { a: r.a, b: r.b, label: r.label, labels: [r.label] };
+      byPair[pair] = e;
+      edges.push(e);
     });
+    edges.forEach(function (e) { e.labelAll = e.labels.join(' / '); });
 
     // 可选：把事件作为节点接进来
     if (state.showEvents) {
@@ -537,7 +541,7 @@
         '<line class="g-edge" x1="' + a.x.toFixed(1) + '" y1="' + a.y.toFixed(1) +
         '" x2="' + b.x.toFixed(1) + '" y2="' + b.y.toFixed(1) + '"/>' +
         '<text class="g-edge-label" x="' + mx.toFixed(1) + '" y="' + (my - 3).toFixed(1) + '" text-anchor="middle">' +
-        esc(e.label) + '</text></g>');
+        esc(e.labelAll || e.label) + '</text></g>');
     });
     model.nodes.forEach(function (nd) {
       var r = Math.min(8.5, 3.0 + Math.sqrt(nd.deg) * (model.nodes.length > 100 ? 1.5 : 1.8));
@@ -769,31 +773,34 @@
   function toggleGraphFs() { setGraphFs(!isGraphFs()); }
 
   function paintEdges() {
-    var nid = gState.sel, eid = gState.edgeSel, hov = gState.edgeHover;
-    var any = !!nid || !!eid || !!hov;
-    // 悬停/选中连线时，两端的人名一并显示（即便它们在密集区默认不显标签）
-    var show = {};
+    var focusNode = gState.hover || gState.sel;   // 鼠标悬停优先，其次选中
+    var eid = gState.edgeSel, hov = gState.edgeHover;
+    var any = !!focusNode || !!eid || !!hov;
+    // 聚焦时把相关的人名都显出来（密集区默认隐藏的标签也一并显示）
+    var show = {}, nbr = {};
     if (hov) { show[hov.a] = 1; show[hov.b] = 1; }
     if (eid) { show[eid.a] = 1; show[eid.b] = 1; }
-    if (nid) {
-      show[nid] = 1;
+    if (focusNode) {
+      show[focusNode] = 1;
+      nbr[focusNode] = 1;
       gState.edges.forEach(function (e) {
-        if (e.a === nid) show[e.b] = 1;
-        if (e.b === nid) show[e.a] = 1;
+        if (e.a === focusNode) { show[e.b] = 1; nbr[e.b] = 1; }
+        if (e.b === focusNode) { show[e.a] = 1; nbr[e.a] = 1; }
       });
     }
-    var eFocus = hov || eid;
+    var eFocus = gState.hover ? null : (hov || eid);  // 人物悬停优先于连线
     $$('.g-node').forEach(function (g) {
       var nid2 = g.getAttribute('data-id');
       var isEnd = !!eFocus && (nid2 === eFocus.a || nid2 === eFocus.b);
       g.classList.toggle('elabel', !!show[nid2]);
+      g.classList.toggle('nbr', !!nbr[nid2]);
       // 悬停/选中连线：两端高亮，其余节点置灰
       g.classList.toggle('ehot', isEnd);
       g.classList.toggle('eof', !!eFocus && !isEnd);
     });
     $$('.g-edge-g').forEach(function (g) {
       var a = g.getAttribute('data-a'), b = g.getAttribute('data-b');
-      var onNode = !!nid && (a === nid || b === nid);
+      var onNode = !!focusNode && (a === focusNode || b === focusNode);
       var onEdge = !!eid && a === eid.a && b === eid.b;
       var onHov = !!hov && a === hov.a && b === hov.b;
       var on = onNode || onEdge || onHov;
@@ -1042,6 +1049,71 @@
     if (tools && isGraphFs()) tools.style.display = 'none';
   }
 
+  // 指针到连线的最近距离（图坐标系）
+  function _distToSeg(px, py, ax, ay, bx, by) {
+    var dx = bx - ax, dy = by - ay;
+    var len2 = dx * dx + dy * dy;
+    var t = len2 ? ((px - ax) * dx + (py - ay) * dy) / len2 : 0;
+    t = t < 0 ? 0 : (t > 1 ? 1 : t);
+    var qx = ax + t * dx, qy = ay + t * dy;
+    return Math.hypot(px - qx, py - qy);
+  }
+
+  function bindEdgeHover() {
+    var svg = $('#gSvg');
+    if (!svg || svg.dataset.edgeHover) return;
+    svg.dataset.edgeHover = '1';
+    var raf = 0, lastEv = null, pt = null;
+
+    function toGraph(ev) {
+      if (!pt) pt = svg.createSVGPoint();
+      pt.x = ev.clientX; pt.y = ev.clientY;
+      var m = svg.getScreenCTM();
+      if (!m) return null;
+      var p = pt.matrixTransform(m.inverse());
+      return { x: (p.x - gState.tx) / gState.zoom, y: (p.y - gState.ty) / gState.zoom };
+    }
+
+    function update(ev) {
+      if (!ev) return;
+      // 落在节点命中圈内时交给节点悬停处理，避免两种高亮打架
+      if (ev.target && ev.target.closest && ev.target.closest('.g-node')) {
+        if (gState.edgeHover) { gState.edgeHover = null; paintEdges(); }
+        return;
+      }
+      var p = toGraph(ev);
+      if (!p) return;
+      var best = null, bestD = 1e9;
+      gState.edges.forEach(function (e) {
+        var a = gState.nodeMap[e.a], b = gState.nodeMap[e.b];
+        if (!a || !b) return;
+        var d = _distToSeg(p.x, p.y, a.x, a.y, b.x, b.y);
+        if (d < bestD) { bestD = d; best = e; }
+      });
+      var rect = svg.getBoundingClientRect();
+      var unit = (rect.width ? G.W / rect.width : 1) / gState.zoom;  // 图坐标 → 屏幕像素
+      var thr = 7 * unit;
+      if (best && bestD <= thr) {
+        if (!gState.edgeHover || gState.edgeHover.a !== best.a || gState.edgeHover.b !== best.b) {
+          gState.edgeHover = { a: best.a, b: best.b };
+          paintEdges();
+        }
+      } else if (gState.edgeHover) {
+        gState.edgeHover = null;
+        paintEdges();
+      }
+    }
+
+    svg.addEventListener('mousemove', function (ev) {
+      lastEv = ev;
+      if (raf) return;
+      raf = requestAnimationFrame(function () { raf = 0; update(lastEv); });
+    }, { passive: true });
+    svg.addEventListener('mouseleave', function () {
+      if (gState.edgeHover) { gState.edgeHover = null; paintEdges(); }
+    });
+  }
+
   function bindGraph() {
     $$('.g-node').forEach(function (g) {
       var id = g.getAttribute('data-id');
@@ -1049,13 +1121,10 @@
       g.addEventListener('mouseleave', function () { gState.hover = null; highlight(gState.sel); });
       g.addEventListener('click', function (e) { e.stopPropagation(); gState.sel = id; clearEdgeSel(); highlight(id); openItem(id); });
     });
-    // 连线可点：看两人关系与共同事件
-    $$('.g-edge-g').forEach(function (g) {
-      var a = g.getAttribute('data-a'), b = g.getAttribute('data-b'), label = g.getAttribute('data-label');
-      g.addEventListener('mouseenter', function () { gState.edgeHover = { a: a, b: b }; paintEdges(); });
-      g.addEventListener('mouseleave', function () { gState.edgeHover = null; paintEdges(); });
-      g.addEventListener('click', function (e) { e.stopPropagation(); openEdge(a, b, label); });
-    });
+    // 连线悬停：用「指针到线段的距离」判定，而不是 DOM 命中。
+    // 密集区里多条线的 18px 命中区互相叠压，靠 DOM 只能选中最后画的那条，
+    // 会出现「看得到线、悬停却没反应」；按距离取最近的一条就都能命中。
+    bindEdgeHover();
 
     var stage = $('#gStage');
     if (stage.dataset.bound) return;
@@ -1070,7 +1139,13 @@
       });
     }
     $('#gSvg').addEventListener('click', function (e) {
-      if (e.target.closest('.g-node') || e.target.closest('.g-edge-g')) return;
+      if (e.target.closest('.g-node')) return;
+      if (gState.edgeHover) {
+        var eh = gState.edgeHover;
+        var rec = gState.edges.filter(function (r) { return r.a === eh.a && r.b === eh.b; })[0];
+        openEdge(eh.a, eh.b, rec ? rec.label : '');
+        return;
+      }
       clearEdgeSel();
     });
 
