@@ -1238,7 +1238,7 @@ _item_ids = {it["id"] for it in seed["items"]}
 for g in seed["genealogy"]:
     if g["id"] in _item_ids:
         continue
-    label = (g.get("label") or g["id"]).replace("\\n", " ").strip()
+    label = (g.get("label") or g["id"]).replace("\n", " ").strip()
     name = label.split(" ")[0]
     note = label[len(name):].strip(" （）()")
     seed["items"].append(dict(
@@ -1250,6 +1250,32 @@ for g in seed["genealogy"]:
         tags=["谱系", "名佚"],
     ))
     _item_ids.add(g["id"])
+
+# 谱系中的亲子、婚姻关系补进关系表，保证谱系图与关系图一致
+FEMALE = {
+    "pl-jiamu", "pl-xingfuren", "pl-wangfuren", "pl-jiamin", "pl-daiyu", "pl-jiayuanchun",
+    "pl-yingchun", "pl-tanchun", "pl-xichun", "pl-wangxifeng", "pl-qiaojie", "pl-livan",
+    "pl-xuebaochai", "pl-xueyima", "pl-xiangling", "pl-xiajingui", "pl-xiangyun",
+    "pl-youerjie", "pl-yousanjie", "pl-youshi", "pl-qinkeqing", "pl-miaoyu", "pl-xingxiuyan",
+    "pl-liwen", "pl-liqi", "pl-xuebaoqin", "pl-hushi", "pl-youlaniang", "pl-zhouyiniang",
+    "pl-zhaoyiniang", "pl-jinchuan", "pl-yuchuan", "pl-yuanyang", "pl-pinger", "pl-xiren",
+    "pl-qingwen", "pl-sheyue", "pl-ziyuan", "pl-xueyan", "pl-yinger", "pl-siqi", "pl-shishu",
+    "pl-ruhua", "pl-xiaohong", "pl-fangguan", "pl-lingguan", "pl-ouguan", "pl-liuwuer",
+    "pl-cuimo", "pl-cuilv", "pl-xiuju", "pl-suyun", "pl-biyue", "pl-hupo", "pl-qiuwen",
+    "pl-bihen", "pl-qianxue", "pl-chunyan", "pl-sier", "pl-zhuier", "pl-wenguan",
+    "pl-ruiguan", "pl-ouguan2", "pl-wangqinghui", "pl-xujunbaoyi", "pl-yanrui", "pl-zhushuzhen",
+}
+_rel_keys = {(r["a"], r["b"], r["label"]) for r in seed["relations"]}
+def _link(a, b, label):
+    if a and b and a != b and a in _item_ids and b in _item_ids and (a, b, label) not in _rel_keys:
+        _rel_keys.add((a, b, label))
+        seed["relations"].append({"a": a, "b": b, "label": label})
+
+for g in seed["genealogy"]:
+    if g.get("parent"):
+        _link(g["parent"], g["id"], "父女" if g["id"] in FEMALE else "父子")
+    if g.get("spouse"):
+        _link(g["id"], g["spouse"], "夫妻")
 
 # 统计面板按实际数据重算
 from collections import Counter

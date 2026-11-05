@@ -1496,6 +1496,23 @@
    ]
   },
   {
+   "id": "pl-jiadairu",
+   "cat": "people",
+   "name": "贾代儒",
+   "family": "ning",
+   "role": "主子",
+   "summary": "贾氏族中长辈，家塾塾师，贾瑞之祖。",
+   "detail": "贾代儒是贾代化一辈的族兄弟，掌管贾府家塾，课徒极严而不得法。孙子贾瑞被他管束过紧，反生邪念，终至丧命。",
+   "tags": [
+    "家塾",
+    "族中长辈"
+   ],
+   "refs": [
+    "《红楼梦》（程乙本）相关回目",
+    "冯其庸、李希凡主编《红楼梦大辞典》，文化艺术出版社"
+   ]
+  },
+  {
    "id": "pl-jiarui",
    "cat": "people",
    "name": "贾瑞",
@@ -2327,25 +2344,6 @@
     "《红楼梦》第58回",
     "《红楼梦大辞典》“菂官”条"
    ]
-  },
-  {
-   "id": "pl-jiadaifu",
-   "name": "贾代儒",
-   "family": "rong",
-   "role": "亲戚",
-   "type": "族亲",
-   "summary": "贾府代字辈族亲，家塾塾师，贾瑞之祖，管教严苛而失于迂执。",
-   "detail": "贾代儒是贾府家塾的塾师，辈分与贾母同。第9回“起嫌疑顽童闹学堂”，他因事回家，塾中便闹得天翻地覆；第12回孙子贾瑞被凤姐相思局害死，他白发人送黑发人，哭得死去活来。\n\n【评析】代儒的“严”只严在表面：他管不住学堂，也管不住孙子。他是贾府教育失败的象征——礼法还在，教化已空。",
-   "tags": [
-    "家塾",
-    "贾瑞之祖",
-    "教化失败"
-   ],
-   "refs": [
-    "《红楼梦》第9、11-12回",
-    "《红楼梦大辞典》“贾代儒”条"
-   ],
-   "cat": "people"
   },
   {
    "id": "pl-jiacong",
@@ -3241,8 +3239,8 @@
    "id": "vg-shi-son",
    "cat": "people",
    "type": "主子",
-   "name": "史公之子\n（名佚）",
-   "alias": null,
+   "name": "史公之子",
+   "alias": "名佚",
    "family": "shi",
    "role": "主子",
    "summary": "谱系中的过渡人物，名佚，《红楼梦》正文未详。",
@@ -3260,8 +3258,8 @@
    "id": "vg-shi-father",
    "cat": "people",
    "type": "主子",
-   "name": "湘云父\n（名佚）",
-   "alias": null,
+   "name": "湘云父",
+   "alias": "名佚",
    "family": "shi",
    "role": "主子",
    "summary": "谱系中的过渡人物，名佚，《红楼梦》正文未详。",
@@ -3279,11 +3277,11 @@
    "id": "vg-wang-zhangfang",
    "cat": "people",
    "type": "主子",
-   "name": "王公长子\n（凤姐父，名佚）",
-   "alias": null,
+   "name": "王公长子",
+   "alias": "凤姐父，名佚",
    "family": "wang",
    "role": "主子",
-   "summary": "谱系中的过渡人物，名佚，《红楼梦》正文未详。",
+   "summary": "谱系中的过渡人物，凤姐父，名佚，《红楼梦》正文未详。",
    "detail": "此人在谱系中承上启下，但原作未交代姓名与事迹。保留节点只为让世系完整。",
    "refs": [
     "《红楼梦》（程乙本）相关回目",
@@ -3298,11 +3296,11 @@
    "id": "vg-xue-cifang",
    "cat": "people",
    "type": "主子",
-   "name": "薛公次子\n（薛蝌父，名佚）",
-   "alias": null,
+   "name": "薛公次子",
+   "alias": "薛蝌父，名佚",
    "family": "xue",
    "role": "主子",
-   "summary": "谱系中的过渡人物，名佚，《红楼梦》正文未详。",
+   "summary": "谱系中的过渡人物，薛蝌父，名佚，《红楼梦》正文未详。",
    "detail": "此人在谱系中承上启下，但原作未交代姓名与事迹。保留节点只为让世系完整。",
    "refs": [
     "《红楼梦》（程乙本）相关回目",
@@ -7324,12 +7322,12 @@
    "label": "诗社同人"
   },
   {
-   "a": "pl-jiadaifu",
+   "a": "pl-jiadairu",
    "b": "pl-jiarui",
    "label": "祖孙"
   },
   {
-   "a": "pl-jiadaifu",
+   "a": "pl-jiadairu",
    "b": "pl-jiazheng",
    "label": "族中长辈"
   },
@@ -8574,7 +8572,7 @@
    "label": "相关"
   },
   {
-   "a": "pl-jiadaifu",
+   "a": "pl-jiadairu",
    "b": "pl-jiazheng",
    "label": "族亲"
   },
@@ -9840,7 +9838,7 @@
   },
   {
    "a": "ev-jiaorui",
-   "b": "pl-jiadaifu",
+   "b": "pl-jiadairu",
    "label": "出场"
   },
   {
@@ -10584,6 +10582,126 @@
    "label": "回目"
   },
   {
+   "a": "pl-jiarong",
+   "b": "pl-hushi",
+   "label": "夫妻"
+  },
+  {
+   "a": "pl-jiadairu",
+   "b": "pl-jiarui",
+   "label": "父子"
+  },
+  {
+   "a": "pl-jiamin",
+   "b": "pl-linruhai",
+   "label": "夫妻"
+  },
+  {
+   "a": "pl-yingchun",
+   "b": "pl-sunshaozu",
+   "label": "夫妻"
+  },
+  {
+   "a": "pl-jiamin",
+   "b": "pl-daiyu",
+   "label": "父女"
+  },
+  {
+   "a": "pl-jiazhu",
+   "b": "pl-jialan",
+   "label": "父子"
+  },
+  {
+   "a": "pl-jiashe",
+   "b": "pl-jiacong",
+   "label": "父子"
+  },
+  {
+   "a": "pl-shigong",
+   "b": "vg-shi-son",
+   "label": "父子"
+  },
+  {
+   "a": "vg-shi-son",
+   "b": "pl-shinai",
+   "label": "父子"
+  },
+  {
+   "a": "vg-shi-son",
+   "b": "pl-shiding",
+   "label": "父子"
+  },
+  {
+   "a": "vg-shi-son",
+   "b": "vg-shi-father",
+   "label": "父子"
+  },
+  {
+   "a": "vg-shi-father",
+   "b": "pl-xiangyun",
+   "label": "父女"
+  },
+  {
+   "a": "pl-wangfuren",
+   "b": "pl-jiazheng",
+   "label": "夫妻"
+  },
+  {
+   "a": "pl-wanggong",
+   "b": "vg-wang-zhangfang",
+   "label": "父子"
+  },
+  {
+   "a": "vg-wang-zhangfang",
+   "b": "pl-wangxifeng",
+   "label": "父女"
+  },
+  {
+   "a": "pl-wangxifeng",
+   "b": "pl-jialian",
+   "label": "夫妻"
+  },
+  {
+   "a": "vg-wang-zhangfang",
+   "b": "pl-wangren",
+   "label": "父子"
+  },
+  {
+   "a": "pl-xueyima",
+   "b": "pl-xuepan",
+   "label": "父子"
+  },
+  {
+   "a": "pl-xueyima",
+   "b": "pl-xuebaochai",
+   "label": "父女"
+  },
+  {
+   "a": "pl-xuebaochai",
+   "b": "pl-baoyu",
+   "label": "夫妻"
+  },
+  {
+   "a": "pl-xuegong",
+   "b": "vg-xue-cifang",
+   "label": "父子"
+  },
+  {
+   "a": "vg-xue-cifang",
+   "b": "pl-xueke",
+   "label": "父子"
+  },
+  {
+   "a": "pl-xueke",
+   "b": "pl-xingxiuyan",
+   "label": "夫妻"
+  },
+  {
+   "a": "vg-xue-cifang",
+   "b": "pl-xuebaoqin",
+   "label": "父女"
+  },
+  {
    "a": "ev-daiyu-jin",
    "b": "pl-jiayucun",
    "label": "涉及"
@@ -11197,7 +11315,7 @@
    "family": "ning"
   },
   {
-   "id": "pl-jiadaifu",
+   "id": "pl-jiadairu",
    "label": "贾代儒",
    "parent": null,
    "spouse": null,
@@ -11207,7 +11325,7 @@
   {
    "id": "pl-jiarui",
    "label": "贾瑞",
-   "parent": "pl-jiadaifu",
+   "parent": "pl-jiadairu",
    "spouse": null,
    "gen": 3,
    "family": "ning"

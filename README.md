@@ -1,5 +1,7 @@
 # 红楼梦图谱 · Dream of the Red Chamber Atlas
 
+> [English](README.en.md) · 中文
+
 一个零依赖的《红楼梦》人物谱系、关系图谱与词条检索项目。数据以 SQLite 存储，
 前端为原生 HTML/CSS/JS，后端仅用 Python 标准库。
 
@@ -52,6 +54,10 @@ db/seed.json        生成的数据
 tools/build_seed.py 数据构建脚本
 tools/enrich_data.py 词条富化数据
 ```
+
+## 贡献
+
+见 [CONTRIBUTING.md](CONTRIBUTING.md)：新增人物、关系、事件、谱系的写法与提交前自检。
 
 ## 许可
 
