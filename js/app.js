@@ -88,7 +88,7 @@
     $$('.view').forEach(function (el) { el.classList.toggle('active', el.id === 'view-' + state.view); });
     $$('[data-nav]').forEach(function (a) { a.classList.toggle('active', a.getAttribute('data-nav') === state.view); });
     $('#mainnav').classList.remove('open');
-    if (state.view !== 'graph' && document.body.classList.contains('graph-fs')) setGraphFs(false);
+    if (state.view !== 'graph' && isGraphFs()) setGraphFs(false);
     window.scrollTo({ top: 0 });
     if (v === 'lineage') renderLineage(parts[1]);
     if (v === 'graph') renderGraph();
@@ -622,25 +622,74 @@
 
   function clampPan(v) { var lim = G.W * 0.5; return Math.max(-lim, Math.min(lim, v)); }
 
-  /* 覆盖层全屏：不依赖 Fullscreen API，移动端同样可用 */
-  function setGraphFs(on) {
+  /* 全屏：优先用浏览器原生 Fullscreen API（不改变文档流，无回流闪动），
+     不支持时退回覆盖层方案 */
+  function fsFallback(on) {
+    // 用占位块保住原高度，避免画布脱离文档流后整页塌陷（闪动的根因）
+    var el = $('#gStage'), sp = $('#stageSpacer'), svg = $('#gSvg');
+    if (sp) {
+      if (on) {
+        sp.style.height = el.offsetHeight + 'px';
+        sp.hidden = false;
+        // 固定 SVG 的像素宽度：全屏只放大可视区，不重排图谱，避免整图跳动
+        if (svg) {
+          svg.style.width = Math.round(svg.getBoundingClientRect().width) + 'px';
+          svg.style.maxWidth = 'none';
+        }
+      } else {
+        sp.hidden = true;
+        sp.style.height = '';
+        if (svg) { svg.style.width = ''; svg.style.maxWidth = ''; }
+      }
+    }
+    document.body.classList.add('fs-switching');
     document.body.classList.toggle('graph-fs', on);
+    setTimeout(function () { document.body.classList.remove('fs-switching'); }, 260);
+    syncFsUi(on);
+  }
+
+  function syncFsUi(on) {
     var btn = $('#fsToggle');
     if (btn) btn.textContent = on ? '退出全屏' : '全屏';
-    if (on) document.body.style.overflow = 'hidden';
-    else document.body.style.overflow = '';
-    // 进入/退出后画布尺寸变化，重新居中
-    setTimeout(function () {
-      var st = $('#gStage');
-      if (st && st.scrollWidth > st.clientWidth + 4) {
-        st.scrollLeft = (st.scrollWidth - st.clientWidth) / 2;
-        st.scrollTop = (st.scrollHeight - st.clientHeight) / 2;
-      }
-      applyTransform();
-      positionEdgePanel();
-    }, 60);
+    var tools = $('#stageTools');
+    if (tools) tools.style.display = '';
+    if (on) {
+      requestAnimationFrame(function () {
+        var st = $('#gStage');
+        if (st && st.scrollWidth > st.clientWidth + 4) {
+          st.scrollLeft = (st.scrollWidth - st.clientWidth) / 2;
+          st.scrollTop = (st.scrollHeight - st.clientHeight) / 2;
+        }
+      });
+    }
   }
-  function toggleGraphFs() { setGraphFs(!document.body.classList.contains('graph-fs')); }
+
+  function isGraphFs() {
+    return document.fullscreenElement === $('#gStage') ||
+      document.body.classList.contains('graph-fs');
+  }
+
+  function setGraphFs(on) {
+    var el = $('#gStage');
+    if (!el) return;
+    if (on === isGraphFs()) return;
+    if (on) {
+      if (el.requestFullscreen && document.fullscreenEnabled) {
+        el.requestFullscreen().then(function () { syncFsUi(true); })
+          .catch(function () { fsFallback(true); });
+      } else {
+        fsFallback(true);
+      }
+    } else {
+      if (document.fullscreenElement) {
+        document.exitFullscreen().finally(function () { syncFsUi(false); });
+      } else {
+        fsFallback(false);
+      }
+    }
+  }
+
+  function toggleGraphFs() { setGraphFs(!isGraphFs()); }
 
   function paintEdges() {
     var nid = gState.sel, eid = gState.edgeSel, hov = gState.edgeHover;
@@ -881,7 +930,7 @@
     $('#modal').hidden = false;
     document.body.style.overflow = 'hidden';
     var tools = document.getElementById('stageTools');
-    if (tools && document.body.classList.contains('graph-fs')) tools.style.display = 'none';
+    if (tools && isGraphFs()) tools.style.display = 'none';
   }
 
   function bindGraph() {
@@ -1440,6 +1489,9 @@
       renderGraph();
     });
 
+    document.addEventListener('fullscreenchange', function () {
+      syncFsUi(!!document.fullscreenElement);
+    });
     document.addEventListener('keydown', function (e) {
       var meta = e.metaKey || e.ctrlKey;
       if (meta && e.key.toLowerCase() === 'k') { e.preventDefault(); $('#palette').hidden ? openPalette() : closePalette(); return; }
@@ -1448,7 +1500,7 @@
         if (!$('#palette').hidden) return closePalette();
         var ep = $('#gEdgePanel');
         if (ep && !ep.hidden) return clearEdgeSel();
-        if (document.body.classList.contains('graph-fs')) return setGraphFs(false);
+        if (isGraphFs()) return setGraphFs(false);
       }
       if ((e.key === 'f' || e.key === 'F') && state.view === 'graph' &&
           document.activeElement.tagName !== 'INPUT') {
