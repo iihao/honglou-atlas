@@ -1233,6 +1233,24 @@ if not any(g["id"] == "pl-jiacong" and g["family"] == "rong" for g in seed["gene
                               "spouse": None, "gen": 4, "family": "rong"})
 GEN_NOTE.setdefault("lin", "林家：林如海 → 林黛玉；贾敏为林如海妻、黛玉之母。黛玉六岁丧母，入贾府依外祖母，是“还泪”之旅的开始。")
 
+# 谱系中「名佚」的过渡节点（如「史公之子」）没有独立词条，自动补一条轻量人物
+_item_ids = {it["id"] for it in seed["items"]}
+for g in seed["genealogy"]:
+    if g["id"] in _item_ids:
+        continue
+    label = (g.get("label") or g["id"]).replace("\\n", " ").strip()
+    name = label.split(" ")[0]
+    note = label[len(name):].strip(" （）()")
+    seed["items"].append(dict(
+        id=g["id"], cat="people", type="主子", name=name, alias=note or None,
+        family=g["family"], role="主子",
+        summary="谱系中的过渡人物，" + (note or "名佚") + "，《红楼梦》正文未详。",
+        detail="此人在谱系中承上启下，但原作未交代姓名与事迹。保留节点只为让世系完整。",
+        refs=["《红楼梦》（程乙本）相关回目", "《红楼梦大辞典》相关世系条"],
+        tags=["谱系", "名佚"],
+    ))
+    _item_ids.add(g["id"])
+
 # 统计面板按实际数据重算
 from collections import Counter
 people = [it for it in seed["items"] if it["cat"] == "people"]
