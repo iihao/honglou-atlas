@@ -198,7 +198,7 @@ table.data th,table.data td{text-align:left;padding:9px 11px;border-bottom:1px s
 table.data th{font-family:var(--serif);font-size:11px;letter-spacing:.14em;color:var(--ink-3)}
 
 /* ---------- modal ---------- */
-.modal{position:fixed;inset:0;z-index:110;background:rgba(28,22,16,.46);backdrop-filter:blur(5px);
+.modal{position:fixed;inset:0;z-index:300;background:rgba(28,22,16,.46);backdrop-filter:blur(5px);
   display:flex;justify-content:center;align-items:center;padding:26px 16px;overflow:hidden}
 .modal-box{position:relative;width:min(780px,100%);height:min(86vh,920px);max-height:calc(100vh - 52px);
   display:flex;flex-direction:column;overflow:hidden;background:var(--paper);border:1px solid var(--line-2);
@@ -238,7 +238,7 @@ table.data th{font-family:var(--serif);font-size:11px;letter-spacing:.14em;color
 .modal-nav button:hover{color:var(--red)}
 
 /* ---------- palette ---------- */
-.palette{position:fixed;inset:0;z-index:120;background:rgba(28,22,16,.4);backdrop-filter:blur(4px);
+.palette{position:fixed;inset:0;z-index:320;background:rgba(28,22,16,.4);backdrop-filter:blur(4px);
   display:flex;justify-content:center;align-items:flex-start;padding-top:12vh}
 .palette-box{width:min(680px,92vw);background:var(--paper);border:1px solid var(--line-2);border-radius:5px;
   overflow:hidden;box-shadow:0 40px 80px -30px rgba(30,20,10,.6)}
@@ -277,6 +277,8 @@ table.data th{font-family:var(--serif);font-size:11px;letter-spacing:.14em;color
 .m-refs{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
 .m-refs li{position:relative;padding-left:14px;font-size:11.5px;line-height:1.75;color:var(--ink-3)}
 .m-refs li::before{content:"·";position:absolute;left:2px;top:0;color:var(--gold);font-weight:700}
+.m-refs a{color:var(--ink-2);text-decoration:none;border-bottom:1px dotted var(--line-2)}
+.m-refs a:hover{color:var(--red);border-bottom-color:var(--red)}
 .m-refs-sec{padding-top:14px}
 .g-node.minor .g-label{opacity:0}
 .g-node.minor:hover .g-label,.g-node.sel .g-label{opacity:1}

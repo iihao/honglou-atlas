@@ -19,6 +19,15 @@
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
     });
   }
+  function refHTML(r) {
+    if (r && typeof r === 'object') {
+      if (!r.url) return esc(r.label || '');
+      return '<a href="' + esc(r.url) + '" target="_blank" rel="noopener noreferrer">' +
+        esc(r.label || r.url) + '</a>';
+    }
+    return esc(r);
+  }
+
   function catName(c) { return CAT[c] || c; }
 
   // 每个人关联的事件（出场 / 涉及）
@@ -155,7 +164,8 @@
     // 节点 + 外挂配偶
     g.forEach(function (x) {
       var bx = rowLeft(x.id), by = rowTop(x.gen);
-      if (byId[x.id]) {
+      var isVirtual = x.id.indexOf('vg-') === 0;
+      if (!isVirtual && byId[x.id]) {
         parts.push(nodeSVG(byId[x.id], bx, by, NW, NH, false, x));
       } else {
         parts.push(virtualSVG(x, bx, by, NW, NH));
@@ -744,6 +754,11 @@
   }
 
   function openItem(id) {
+    if (document.body.classList.contains('graph-fs')) {
+      // 全屏时把工具条收起，避免遮挡弹窗底部
+      var tools = document.getElementById('stageTools');
+      if (tools) tools.style.display = 'none';
+    }
     var it = byId[id];
     if (!it) return;
     var idx = state.list.findIndex(function (x) { return x.id === id; });
@@ -756,7 +771,9 @@
   }
   function closeModal() {
     $('#modal').hidden = true;
-    document.body.style.overflow = '';
+    document.body.style.overflow = document.body.classList.contains('graph-fs') ? 'hidden' : '';
+    var tools = document.getElementById('stageTools');
+    if (tools) tools.style.display = '';
     gState.sel = null;
     if (state.view === 'graph') highlight(null);
   }
@@ -797,7 +814,7 @@
       '<div class="m-detail">' + esc(it.summary || '') + (it.detail ? '\n\n' + esc(it.detail) : '') + '</div>' +
       (it.quote ? '<div class="m-quote">' + esc(it.quote) + '</div>' : '') +
       ((it.refs && it.refs.length) ? '<div class="m-sec m-refs-sec"><h3>参考与延伸</h3><ul class="m-refs">' +
-        it.refs.map(function (r) { return '<li>' + esc(r) + '</li>'; }).join('') + '</ul></div>' : '');
+        it.refs.map(function (r) { return '<li>' + refHTML(r) + '</li>'; }).join('') + '</ul></div>' : '');
 
     if (events.length) {
       var evTitle = it.cat === 'people' ? '关联事件' : '相关事件';
@@ -984,12 +1001,14 @@
       D.items.forEach(function (it) { byId[it.id] = it; });
       D.families.forEach(function (f) { famById[f.id] = f; });
       buildEventMap();
-      var refCount = D.items.filter(function (it) { return it.refs && it.refs.length; }).length;
+      var webCount = D.items.filter(function (it) {
+        return (it.refs || []).some(function (r) { return r && typeof r === 'object' && r.url; });
+      }).length;
       var cnt = {};
       D.items.forEach(function (i) { cnt[i.cat] = (cnt[i.cat] || 0) + 1; });
       $('#footerCount').textContent = '人物 ' + (cnt.people || 0) + ' · 事件 ' + (cnt.event || 0) +
         ' · 判词 ' + (cnt.fate || 0) + ' · 诗词 ' + (cnt.poetry || 0) + ' · 地点 ' + (cnt.place || 0) +
-        ' · 关系 ' + D.relations.length;
+        ' · 关系 ' + D.relations.length + ' · 外链 ' + webCount;
       bindChrome();
       route();
     })

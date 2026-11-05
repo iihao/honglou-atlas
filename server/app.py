@@ -34,13 +34,22 @@ def json_bytes(obj):
 
 
 def parse_refs(raw):
-    """refs 以 JSON 数组存储；兼容早期以换行/分号分隔的纯文本。"""
+    """refs 以 JSON 数组存储；元素可以是纯文本，也可以是 {label,url}。"""
     if not raw:
         return []
     try:
         val = json.loads(raw)
         if isinstance(val, list):
-            return [str(x) for x in val if str(x).strip()]
+            out = []
+            for x in val:
+                if isinstance(x, dict):
+                    url = x.get("url")
+                    label = x.get("label") or url
+                    if label:
+                        out.append({"label": str(label), "url": str(url) if url else ""})
+                elif isinstance(x, str) and x.strip():
+                    out.append(x)
+            return out
         if isinstance(val, str):
             return [val]
     except (ValueError, TypeError):

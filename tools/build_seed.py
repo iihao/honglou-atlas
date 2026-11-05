@@ -1026,6 +1026,7 @@ GENEALOGY = [
     ("pl-wanggong", "王公\n县伯", None, None, 1, "wang"),
     ("pl-wangziteng", "王子腾", "pl-wanggong", None, 2, "wang"),
     ("pl-wangfuren", "王夫人", "pl-wanggong", "pl-jiazheng", 2, "wang"),
+    ("pl-wangzisheng", "王子胜", "pl-wanggong", None, 2, "wang"),
     ("vg-wang-zhangfang", "王公长子\n（凤姐父，名佚）", "pl-wanggong", None, 2, "wang"),
     ("pl-wangxifeng", "王熙凤", "vg-wang-zhangfang", "pl-jialian", 3, "wang"),
     ("pl-wangren", "王仁", "vg-wang-zhangfang", None, 3, "wang"),
@@ -1042,7 +1043,7 @@ GEN_NOTE = {
     "ning": "宁国府一脉：贾演 → 贾代化 → 贾敬 → 贾珍 → 贾蓉。四代而衰，判词所谓“造衅开端实在宁”。贾代儒、贾蔷等旁支世系失考，单列于后。",
     "rong": "荣国府一脉：贾源 → 贾代善 → 贾赦 / 贾政 → 宝玉一辈 → 贾兰、巧姐。贾芸、贾芹等旁支世系失考，单列于后。",
     "shi": "史家：史公 → 史公之子（名佚）→ 史鼐 / 史鼎 / 湘云父（名佚）→ 湘云。湘云父母双亡，由叔父史鼐、史鼎抚养。",
-    "wang": "王家：王公 → 王子腾 / 王夫人 / 王公长子（凤姐、王仁父，名佚）→ 王熙凤 / 王仁。凤姐是王子腾的侄女，不是女儿。",
+    "wang": "王家：王公 → 王子腾 / 王夫人 / 王子胜 / 王公长子（凤姐、王仁父，名佚）→ 王熙凤 / 王仁。凤姐是王子腾、王子胜的侄女，不是女儿。",
     "xue": "薛家：皇商。薛姨妈一支为薛蟠、宝钗；薛公次子（名佚）一支为薛蝌、宝琴。两支同辈，非父女。",
 }
 
@@ -1102,6 +1103,18 @@ for iid, tags in ENRICH.TAGS_ADD.items():
 
 # 增补人物、地点、事件、诗词、回目
 # 若与既有补遗条目同 id，则以新数据补全旧条目，避免重复
+def dedupe_refs(refs):
+    out, seen = [], set()
+    for r in refs:
+        if not r:
+            continue
+        key = ("web", r.get("label"), r.get("url")) if isinstance(r, dict) else ("text", str(r))
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(r)
+    return out
+
 def upsert_item(item, cat):
     item = dict(item)
     item["id"] = ENRICH.ID_ALIASES.get(item["id"], item["id"])
@@ -1117,7 +1130,7 @@ def upsert_item(item, cat):
         if not dst.get("role") and item.get("role"):
             dst["role"] = item["role"]
         dst["tags"] = list(dict.fromkeys((dst.get("tags") or []) + (item.get("tags") or [])))
-        dst["refs"] = list(dict.fromkeys((dst.get("refs") or []) + (item.get("refs") or [])))
+        dst["refs"] = dedupe_refs((dst.get("refs") or []) + (item.get("refs") or []))
         return dst
     seed["items"].append(item)
     byid[iid] = item
@@ -1135,6 +1148,8 @@ for p in ENRICH.EXTRA_POEMS:
     p = dict(p)
     p.setdefault("type", "诗词")
     upsert_item(p, "poetry")
+for it in getattr(ENRICH, "EXTRA_ITEMS", []):
+    upsert_item(it, it.get("cat", ""))
 for n, title, detail, tags in ENRICH.EXTRA_CHAPTERS:
     upsert_item(dict(
         id="ch-%d" % n, cat="chapter", type="回目", name="第%d回" % n,
@@ -1157,12 +1172,23 @@ for iid, txt in ENRICH.DETAIL_OVERRIDES.items():
             parts = txt.split("\n\n", 1)
             txt = parts[1] if len(parts) > 1 else ""
         byid[iid]["detail"] = txt
+
+for iid, extra in ENRICH.DETAIL_APPEND.items():
+    if iid in byid:
+        cur = (byid[iid].get("detail") or "").rstrip()
+        if extra not in cur:
+            byid[iid]["detail"] = (cur + "\n\n" + extra).strip()
+
 for it in seed["items"]:
     own = it.get("refs") or []
     refs = list(own) + list(ENRICH.REFS.get(it["id"], []))
     if not refs:
         refs = list(ENRICH.DEFAULT_REFS.get(it["cat"], []))
-    it["refs"] = list(dict.fromkeys(r for r in refs if r))
+    it["refs"] = dedupe_refs(refs)
+
+for iid, links in ENRICH.WEB_REFS.items():
+    if iid in byid:
+        byid[iid]["refs"] = dedupe_refs((byid[iid].get("refs") or []) + links)
 
 # 关系去重后追加
 seen_rel = {(r["a"], r["b"], r["label"]) for r in seed["relations"]}
@@ -1233,23 +1259,8 @@ if not any(g["id"] == "pl-jiacong" and g["family"] == "rong" for g in seed["gene
                               "spouse": None, "gen": 4, "family": "rong"})
 GEN_NOTE.setdefault("lin", "林家：林如海 → 林黛玉；贾敏为林如海妻、黛玉之母。黛玉六岁丧母，入贾府依外祖母，是“还泪”之旅的开始。")
 
-# 谱系中「名佚」的过渡节点（如「史公之子」）没有独立词条，自动补一条轻量人物
+# 谱系中的「名佚」补位节点只存在于 genealogy 中，不再生成人物词条
 _item_ids = {it["id"] for it in seed["items"]}
-for g in seed["genealogy"]:
-    if g["id"] in _item_ids:
-        continue
-    label = (g.get("label") or g["id"]).replace("\n", " ").strip()
-    name = label.split(" ")[0]
-    note = label[len(name):].strip(" （）()")
-    seed["items"].append(dict(
-        id=g["id"], cat="people", type="主子", name=name, alias=note or None,
-        family=g["family"], role="主子",
-        summary="谱系中的过渡人物，" + (note or "名佚") + "，《红楼梦》正文未详。",
-        detail="此人在谱系中承上启下，但原作未交代姓名与事迹。保留节点只为让世系完整。",
-        refs=["《红楼梦》（程乙本）相关回目", "《红楼梦大辞典》相关世系条"],
-        tags=["谱系", "名佚"],
-    ))
-    _item_ids.add(g["id"])
 
 # 谱系中的亲子、婚姻关系补进关系表，保证谱系图与关系图一致
 FEMALE = {
@@ -1391,8 +1402,14 @@ seed["genealogy"] = gen
 
 # 事件、回目按回次排序；其余类别保持原有编排
 CAT_ORDER = {"people": 0, "place": 1, "event": 2, "chapter": 3, "fate": 4, "poetry": 5}
-seed["items"].sort(key=lambda it: (CAT_ORDER.get(it["cat"], 9),
-                                   it.get("seq") or 0 if it["cat"] in ("event", "chapter") else 0))
+def _sort_key(it):
+    cat = it["cat"]
+    if cat == "fate":
+        return (CAT_ORDER[cat], 0 if it["id"] == "fate-jinling" else 1, 0)
+    return (CAT_ORDER.get(cat, 9),
+            it.get("seq") or 0 if cat in ("event", "chapter") else 0)
+
+seed["items"].sort(key=_sort_key)
 
 # 谱系校验：同一家族内不重复、父代必须存在、配偶若也在本图则不再外挂
 for fam in sorted({x["family"] for x in seed["genealogy"]}):
