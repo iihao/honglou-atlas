@@ -541,6 +541,7 @@
   function applyTransform() {
     var vp = $('#gViewport');
     if (vp) vp.setAttribute('transform', 'translate(' + gState.tx + ',' + gState.ty + ') scale(' + gState.zoom + ')');
+    if (document.body.classList.contains('graph-fs')) positionEdgePanel();
   }
   function syncZoom() {
     $('#gZoomLabel').textContent = Math.round(gState.zoom * 100) + '%';
@@ -636,6 +637,7 @@
         st.scrollTop = (st.scrollHeight - st.clientHeight) / 2;
       }
       applyTransform();
+      positionEdgePanel();
     }, 60);
   }
   function toggleGraphFs() { setGraphFs(!document.body.classList.contains('graph-fs')); }
@@ -697,11 +699,46 @@
     gState.edgeSel = { a: a, b: b };
     paintEdges();
     renderEdgePanel(a, b, label);
+    positionEdgePanel();
   }
 
   function hideEdgePanel() {
     var p = $('#gEdgePanel');
     if (p) p.hidden = true;
+  }
+
+  /* 全屏时关系卡跟随连线中点；非全屏保持右上角固定 */
+  function svgToStagePt(x, y) {
+    var svg = $('#gSvg'), stage = $('#gStage');
+    if (!svg || !stage) return null;
+    var r = svg.getBoundingClientRect();
+    var sr = stage.getBoundingClientRect();
+    var vx = gState.tx + x * gState.zoom;
+    var vy = gState.ty + y * gState.zoom;
+    return { x: (r.left - sr.left) + vx * (r.width / G.W), y: (r.top - sr.top) + vy * (r.height / G.H) };
+  }
+
+  function positionEdgePanel() {
+    var panel = $('#gEdgePanel'), stage = $('#gStage');
+    if (!panel || !stage) return;
+    if (!document.body.classList.contains('graph-fs')) {
+      panel.style.left = ''; panel.style.top = ''; panel.style.right = '';
+      return;
+    }
+    if (panel.hidden || !gState.edgeSel) return;
+    var A = gState.nodeMap[gState.edgeSel.a], B = gState.nodeMap[gState.edgeSel.b];
+    if (!A || !B) return;
+    var pt = svgToStagePt((A.x + B.x) / 2, (A.y + B.y) / 2);
+    if (!pt) return;
+    var pw = panel.offsetWidth, ph = panel.offsetHeight;
+    var sr = stage.getBoundingClientRect();
+    var x = pt.x + 22, y = pt.y - ph / 2;
+    if (x + pw > sr.width - 10) x = pt.x - pw - 22;
+    x = Math.max(10, Math.min(x, sr.width - pw - 10));
+    y = Math.max(10, Math.min(y, sr.height - ph - 10));
+    panel.style.right = 'auto';
+    panel.style.left = Math.round(x) + 'px';
+    panel.style.top = Math.round(y) + 'px';
   }
 
   function renderEdgePanel(a, b, label) {
@@ -1430,6 +1467,9 @@
       }
     });
     window.addEventListener('hashchange', route);
+    window.addEventListener('resize', function () {
+      if (document.body.classList.contains('graph-fs')) positionEdgePanel();
+    });
   }
 
   fetchJson(['api/bootstrap', 'api/bootstrap.json'])
