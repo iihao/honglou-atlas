@@ -458,8 +458,7 @@
     $('#gCount').textContent = model.nodes.length + ' 个节点 · ' + model.edges.length + ' 条关联' +
       (state.showEvents ? '（含 ' + itemsOf('event').length + ' 个事件）' : '（人物库 ' + model.total + '）');
     var hint = $('#graphHint');
-    if (hint) hint.textContent = '全库 ' + model.total + ' 位人物、' + D.relations.length +
-      ' 条关系。悬停高亮邻域；点击节点看简介、谶语、脂评与结局；点击连线看两人关系与共同事件。';
+    if (hint) hint.textContent = '悬停高亮邻域；点节点看简介、谶语、脂评与结局；点连线看两人关系与共同事件。';
 
     if (!model.nodes.length) {
       svg.innerHTML = '';
@@ -548,6 +547,78 @@
     var f = $('#fsZoomLabel');
     if (f) f.textContent = Math.round(gState.zoom * 100) + '%';
   }
+  /* ---------- 关系列表视图 ---------- */
+  var GV_LABEL = { kin: '亲缘', servant: '主仆', love: '情缘', friend: '同人', event: '事件', other: '其他' };
+
+  function gvRows() {
+    var rows = [];
+    D.relations.forEach(function (r) {
+      var a = byId[r.a], b = byId[r.b];
+      if (!a || !b) return;
+      var isEdge = (a.cat === 'people' || a.cat === 'event') && (b.cat === 'people' || b.cat === 'event');
+      if (!isEdge) return;
+      if (!state.showEvents && (a.cat === 'event' || b.cat === 'event')) return;
+      var cat = (a.cat === 'event' || b.cat === 'event') ? 'event' : relCat(r.label);
+      if (state.gfilter !== 'all' && cat !== state.gfilter) return;
+      rows.push({ a: a, b: b, label: r.label, cat: cat });
+    });
+    var q = (state.gq || '').trim().toLowerCase();
+    if (q) {
+      rows = rows.filter(function (x) {
+        return (x.a.name + ' ' + x.b.name + ' ' + x.label + ' ' + GV_LABEL[x.cat]).toLowerCase().indexOf(q) >= 0;
+      });
+    }
+    rows.sort(function (x, y) {
+      if (x.cat !== y.cat) return Object.keys(GV_LABEL).indexOf(x.cat) - Object.keys(GV_LABEL).indexOf(y.cat);
+      return x.a.name.localeCompare(y.a.name, 'zh-Hans-CN') || x.b.name.localeCompare(y.b.name, 'zh-Hans-CN');
+    });
+    return rows;
+  }
+
+  function renderGraphList() {
+    var rows = gvRows();
+    $('#gListCount').textContent = rows.length + ' 条关系';
+    var body = $('#gListBody');
+    if (!rows.length) {
+      body.innerHTML = '<div class="glist-empty">没有符合条件的关系。</div>';
+      return;
+    }
+    var html = '', lastCat = null;
+    rows.forEach(function (r) {
+      if (r.cat !== lastCat) {
+        lastCat = r.cat;
+        html += '<div class="glist-head">' + GV_LABEL[r.cat] + '</div>';
+      }
+      html += '<button class="glist-row" data-a="' + r.a.id + '" data-b="' + r.b.id +
+        '" data-label="' + esc(r.label) + '">' +
+        '<span class="gl-a">' + esc(r.a.name) + '</span>' +
+        '<span class="gl-rel">' + esc(r.label) + '</span>' +
+        '<span class="gl-b">' + esc(r.b.name) + '</span></button>';
+    });
+    body.innerHTML = html;
+    $$('#gListBody .glist-row').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        openEdgeModal(btn.getAttribute('data-a'), btn.getAttribute('data-b'), btn.getAttribute('data-label'));
+      });
+    });
+  }
+
+  function setGraphView(v) {
+    state.gview = v;
+    $$('#gViewSeg [data-gview]').forEach(function (b) {
+      b.classList.toggle('on', b.getAttribute('data-gview') === v);
+    });
+    var isList = v === 'list';
+    $('#gListWrap').hidden = !isList;
+    $('#gStage').hidden = isList;
+    var legend = $('#gLegend');
+    if (legend) legend.hidden = isList;
+    var tools = $('#stageTools');
+    if (tools && !isList) tools.style.display = '';
+    if (isList) setGraphFs(false);
+    if (isList) renderGraphList();
+  }
+
   function clampPan(v) { var lim = G.W * 0.5; return Math.max(-lim, Math.min(lim, v)); }
 
   /* 覆盖层全屏：不依赖 Fullscreen API，移动端同样可用 */
@@ -1312,6 +1383,16 @@
       fsExit.dataset.bound = '1';
       fsExit.addEventListener('click', function () { setGraphFs(false); });
     }
+    $$('#gViewSeg [data-gview]').forEach(function (b) {
+      if (b.dataset.bound) return;
+      b.dataset.bound = '1';
+      b.addEventListener('click', function () { setGraphView(b.getAttribute('data-gview')); });
+    });
+    var gs = $('#gListSearch');
+    if (gs && !gs.dataset.bound) {
+      gs.dataset.bound = '1';
+      gs.addEventListener('input', function (e) { state.gq = e.target.value; renderGraphList(); });
+    }
     var evToggle = $('#evToggle');
     if (evToggle) evToggle.addEventListener('click', function () {
       state.showEvents = !state.showEvents;
@@ -1368,6 +1449,7 @@
         ' · 判词 ' + (cnt.fate || 0) + ' · 诗词 ' + (cnt.poetry || 0) + ' · 地点 ' + (cnt.place || 0) +
         ' · 关系 ' + D.relations.length + ' · 外链 ' + webCount;
       bindChrome();
+      setGraphView(state.gview);
       route();
     })
     .catch(function (err) {

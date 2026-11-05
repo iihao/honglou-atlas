@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>红楼梦图谱 · Dream of the Red Chamber Atlas</title>
 <meta name="description" content="红楼梦人物谱系、关系图谱、判词、诗词、事件与地点检索，附参考来源、维基/百度百科外链与红楼研究线索">
-<link rel="stylesheet" href="css/style.css?v=15">
+<link rel="stylesheet" href="css/style.css?v=17">
 </head>
 <body>
 
@@ -69,12 +69,18 @@
 <!-- ============ 关系图 ============ -->
 <section class="view" id="view-graph">
   <div class="wrap">
-    <div class="page-head">
-      <p class="eyebrow">RELATION GRAPH</p>
-      <h1>人物关系图谱</h1>
-      <p id="graphHint">悬停高亮邻域；点击节点看简介、谶语、脂评与结局；点击连线看两人关系与共同事件。</p>
+    <div class="page-head compact">
+      <div class="ph-text">
+        <p class="eyebrow">RELATION GRAPH</p>
+        <h1>人物关系图谱</h1>
+      </div>
+      <p class="ph-hint" id="graphHint">悬停高亮邻域；点节点看简介、谶语、脂评与结局；点连线看两人关系与共同事件。</p>
     </div>
     <div class="filterbar stack">
+      <div class="seg" id="gViewSeg" role="group" aria-label="视图切换">
+        <button class="seg-btn on" data-gview="graph">图谱</button>
+        <button class="seg-btn" data-gview="list">列表</button>
+      </div>
       <div class="seg" role="group" aria-label="关系筛选">
         <button class="seg-btn on" data-gfilter="all">全部</button>
         <button class="seg-btn" data-gfilter="kin">亲缘</button>
@@ -93,6 +99,14 @@
     </div>
     <div class="legend" id="gLegend"></div>
     <p class="scroll-hint">← 左右滑动查看完整关系图 · 点节点看详情 →</p>
+    <div class="glist" id="gListWrap" hidden>
+      <div class="glist-bar">
+        <input type="search" id="gListSearch" placeholder="检索关系：人物名、关系名（如 宝玉 / 主仆 / 母女）">
+        <span class="muted" id="gListCount"></span>
+      </div>
+      <div class="glist-body" id="gListBody"></div>
+    </div>
+
     <div class="stage" id="gStage">
       <svg id="gSvg" role="img" aria-label="红楼梦人物关系图"></svg>
       <div class="tip" id="gTip" hidden></div>
@@ -234,6 +248,6 @@
   </div>
 </div>
 
-<script src="js/app.js?v=25"></script>
+<script src="js/app.js?v=26"></script>
 </body>
 </html>
