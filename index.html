@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>红楼梦图谱 · Dream of the Red Chamber Atlas</title>
 <meta name="description" content="红楼梦人物谱系、关系图谱、判词、诗词、事件与地点检索，附参考来源与红楼研究线索">
-<link rel="stylesheet" href="css/style.css?v=9">
+<link rel="stylesheet" href="css/style.css?v=11">
 </head>
 <body>
 
@@ -40,9 +40,22 @@
     <div class="page-head">
       <p class="eyebrow">GENEALOGY · 世代谱系</p>
       <h1>四大家族谱系</h1>
-      <p>按世代排列的血亲树，配偶以双线相连。点击任一人物可查看其关系与出场事件。</p>
+      <p>按世代排列的血亲树：实线为亲子，虚线为婚姻，虚线框为名佚补位。点击人物可查看词条与关系。</p>
     </div>
     <div class="filterbar" id="lineageTabs"></div>
+    <div class="lg-toolbar">
+      <div class="lg-legend">
+        <span><i class="solid"></i>亲子</span>
+        <span><i class="dash"></i>婚姻</span>
+        <span><i class="vbox"></i>名佚补位</span>
+      </div>
+      <div class="lg-zoom" id="lgZoom">
+        <button type="button" data-lgzoom="out" aria-label="缩小">−</button>
+        <span id="lgZoomLabel">100%</span>
+        <button type="button" data-lgzoom="in" aria-label="放大">+</button>
+        <button type="button" data-lgzoom="fit">还原</button>
+      </div>
+    </div>
     <figure class="lg-card">
       <div class="lg-scroll" id="lgScroll">
         <svg id="lgSvg" role="img" aria-label="家族谱系图"></svg>
@@ -73,6 +86,7 @@
         <button data-zoom="out">−</button><span id="gZoomLabel">100%</span><button data-zoom="in">＋</button>
         <button data-zoom="reset" class="fit">重置</button>
       </div>
+      <button class="chip" id="evToggle">显示事件节点</button>
       <span class="muted" id="gCount"></span>
     </div>
     <div class="legend" id="gLegend"></div>
@@ -207,6 +221,6 @@
   </div>
 </div>
 
-<script src="js/app.js?v=13"></script>
+<script src="js/app.js?v=17"></script>
 </body>
 </html>

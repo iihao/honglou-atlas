@@ -78,9 +78,10 @@ SELECT i.*,
          WHERE it.item_id = i.id) AS tags
 FROM items i LEFT JOIN families f ON f.id = i.family;
 -- 谱系（世代树）：同一人物可出现在多个家族视图中
+-- item_id 允许以 vg- 开头的“名佚补位”节点，故不设外键
 CREATE TABLE IF NOT EXISTS genealogy (
   family TEXT NOT NULL,
-  item_id TEXT NOT NULL REFERENCES items(id) ON DELETE CASCADE ON UPDATE CASCADE,
+  item_id TEXT NOT NULL,
   parent_id TEXT,
   spouse_id TEXT,
   gen INTEGER NOT NULL,

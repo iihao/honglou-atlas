@@ -3200,6 +3200,44 @@
    "cat": "people"
   },
   {
+   "id": "pl-shinai",
+   "name": "史鼐",
+   "family": "shi",
+   "role": "主子",
+   "type": "侯爵",
+   "summary": "保龄侯，史湘云的叔父，湘云父母双亡后由他与史鼎抚养。",
+   "detail": "史鼐是保龄侯史公之后，袭保龄侯。第49回他迁委外省大员，要带家眷上任，贾母舍不得湘云，便留下湘云在贾府住。\n\n【评析】史鼐在书中着墨不多，却是湘云“寄人篱下”身世的直接背景：叔父待她不薄，但终究不是父母。",
+   "tags": [
+    "保龄侯",
+    "湘云叔父",
+    "史家"
+   ],
+   "refs": [
+    "《红楼梦》第14、49回",
+    "《红楼梦大辞典》“史鼐”条"
+   ],
+   "cat": "people"
+  },
+  {
+   "id": "pl-shiding",
+   "name": "史鼎",
+   "family": "shi",
+   "role": "主子",
+   "type": "侯爵",
+   "summary": "忠靖侯，史湘云的叔父，与史鼐同为史家重要人物。",
+   "detail": "史鼎是忠靖侯，第14回秦可卿送殡路祭的名单中有“忠靖侯史鼎”。他与史鼐同为湘云叔父，湘云父母双亡后由叔父抚养。\n\n【评析】史鼎与史鼐的名字，撑起了史家在朝中的侯爵门第；也说明湘云并非无家，只是那个家没有她的位置。",
+   "tags": [
+    "忠靖侯",
+    "湘云叔父",
+    "史家"
+   ],
+   "refs": [
+    "《红楼梦》第14、49回",
+    "《红楼梦大辞典》“史鼎”条"
+   ],
+   "cat": "people"
+  },
+  {
    "id": "place-daguanyuan",
    "cat": "place",
    "type": "园中院落",
@@ -9210,6 +9248,21 @@
    "label": "回目"
   },
   {
+   "a": "pl-shinai",
+   "b": "pl-xiangyun",
+   "label": "叔侄"
+  },
+  {
+   "a": "pl-shiding",
+   "b": "pl-xiangyun",
+   "label": "叔侄"
+  },
+  {
+   "a": "pl-shinai",
+   "b": "pl-shiding",
+   "label": "兄弟"
+  },
+  {
    "a": "place-luxuean",
    "b": "pl-baoyu",
    "label": "所在"
@@ -10453,6 +10506,196 @@
    "a": "ch-115",
    "b": "ev-zhenbaoyu-lai",
    "label": "回目"
+  },
+  {
+   "a": "ev-daiyu-jin",
+   "b": "pl-jiayucun",
+   "label": "涉及"
+  },
+  {
+   "a": "ev-yuanfei-shengqin",
+   "b": "pl-zhaomomo",
+   "label": "涉及"
+  },
+  {
+   "a": "ev-baoyu-aida",
+   "b": "pl-jiazhu",
+   "label": "涉及"
+  },
+  {
+   "a": "ev-baoyu-aida",
+   "b": "pl-jiahuan",
+   "label": "涉及"
+  },
+  {
+   "a": "ev-baoyu-aida",
+   "b": "pl-jiangyuhan",
+   "label": "涉及"
+  },
+  {
+   "a": "ev-baoyu-aida",
+   "b": "pl-zhongshunwang",
+   "label": "涉及"
+  },
+  {
+   "a": "ev-chaojian",
+   "b": "pl-xingfuren",
+   "label": "涉及"
+  },
+  {
+   "a": "ev-chaojian",
+   "b": "pl-wangshanbao",
+   "label": "涉及"
+  },
+  {
+   "a": "ev-chaojian",
+   "b": "pl-zhourui",
+   "label": "涉及"
+  },
+  {
+   "a": "ev-chaojian",
+   "b": "pl-shadajie",
+   "label": "涉及"
+  },
+  {
+   "a": "ev-daiyu-fengao",
+   "b": "pl-livan",
+   "label": "涉及"
+  },
+  {
+   "a": "ev-daiyu-fengao",
+   "b": "pl-xueyan",
+   "label": "涉及"
+  },
+  {
+   "a": "ev-baoyu-quqin",
+   "b": "pl-wangfuren",
+   "label": "涉及"
+  },
+  {
+   "a": "ev-yousanjie",
+   "b": "pl-yuanyang",
+   "label": "涉及"
+  },
+  {
+   "a": "ev-erjie",
+   "b": "pl-yousanjie",
+   "label": "涉及"
+  },
+  {
+   "a": "ev-erjie",
+   "b": "pl-qiutong",
+   "label": "涉及"
+  },
+  {
+   "a": "ev-liulaolao",
+   "b": "pl-qiaojie",
+   "label": "涉及"
+  },
+  {
+   "a": "ev-liulaolao",
+   "b": "pl-miaoyu",
+   "label": "涉及"
+  },
+  {
+   "a": "ev-liulaolao",
+   "b": "pl-yuanyang",
+   "label": "涉及"
+  },
+  {
+   "a": "ev-lengzixing",
+   "b": "pl-jiashe",
+   "label": "涉及"
+  },
+  {
+   "a": "ev-lengzixing",
+   "b": "pl-jiazheng",
+   "label": "涉及"
+  },
+  {
+   "a": "ev-lengzixing",
+   "b": "pl-jiajing",
+   "label": "涉及"
+  },
+  {
+   "a": "ev-taixu-meng",
+   "b": "pl-jiamu",
+   "label": "涉及"
+  },
+  {
+   "a": "ev-liulaolao-yijin",
+   "b": "pl-wangfuren",
+   "label": "涉及"
+  },
+  {
+   "a": "ev-liulaolao-yijin",
+   "b": "pl-wanggouer",
+   "label": "涉及"
+  },
+  {
+   "a": "ev-tiekansi",
+   "b": "pl-qinkeqing",
+   "label": "涉及"
+  },
+  {
+   "a": "ev-baochai-pudie",
+   "b": "pl-zhuier",
+   "label": "涉及"
+  },
+  {
+   "a": "ev-xiangling-xueshi",
+   "b": "pl-xuepan",
+   "label": "涉及"
+  },
+  {
+   "a": "ev-qingwen-buqiu",
+   "b": "pl-jiamu",
+   "label": "涉及"
+  },
+  {
+   "a": "ev-tanchun-lijia",
+   "b": "pl-wangfuren",
+   "label": "涉及"
+  },
+  {
+   "a": "ev-tanchun-lijia",
+   "b": "pl-zhaoyiniang",
+   "label": "涉及"
+  },
+  {
+   "a": "ev-zijuan-shiyu",
+   "b": "pl-ziyuan",
+   "label": "涉及"
+  },
+  {
+   "a": "ev-zhongqiu-lianju",
+   "b": "pl-jiamu",
+   "label": "涉及"
+  },
+  {
+   "a": "ev-yingchun-chujia",
+   "b": "pl-jiamu",
+   "label": "涉及"
+  },
+  {
+   "a": "ev-yingchun-chujia",
+   "b": "pl-jiazheng",
+   "label": "涉及"
+  },
+  {
+   "a": "ev-xifeng-zhi-si",
+   "b": "pl-youerjie",
+   "label": "涉及"
+  },
+  {
+   "a": "ev-xifeng-zhi-si",
+   "b": "pl-liulaolao",
+   "label": "涉及"
+  },
+  {
+   "a": "ev-xifeng-zhi-si",
+   "b": "pl-zhenyingjia",
+   "label": "涉及"
   }
  ],
  "panels": [
@@ -10463,7 +10706,7 @@
    "rows": [
     {
      "label": "主子",
-     "value": 42
+     "value": 44
     },
     {
      "label": "妾室",
@@ -10514,7 +10757,7 @@
     },
     {
      "label": "史家",
-     "value": 2
+     "value": 4
     },
     {
      "label": "王家",
@@ -11022,6 +11265,14 @@
    "family": "rong"
   },
   {
+   "id": "pl-jiacong",
+   "label": "贾琮",
+   "parent": "pl-jiashe",
+   "spouse": null,
+   "gen": 4,
+   "family": "rong"
+  },
+  {
    "id": "pl-jiayun",
    "label": "贾芸",
    "parent": null,
@@ -11046,19 +11297,11 @@
    "family": "lin"
   },
   {
-   "id": "pl-jiamin",
-   "label": "贾敏",
+   "id": "pl-daiyu",
+   "label": "林黛玉",
    "parent": "pl-linruhai",
    "spouse": null,
    "gen": 2,
-   "family": "lin"
-  },
-  {
-   "id": "pl-daiyu",
-   "label": "林黛玉",
-   "parent": "pl-jiamin",
-   "spouse": null,
-   "gen": 3,
    "family": "lin"
   },
   {
@@ -11070,9 +11313,41 @@
    "family": "shi"
   },
   {
+   "id": "vg-shi-son",
+   "label": "史公之子\n（名佚）",
+   "parent": "pl-shigong",
+   "spouse": null,
+   "gen": 2,
+   "family": "shi"
+  },
+  {
+   "id": "pl-shinai",
+   "label": "史鼐\n保龄侯",
+   "parent": "vg-shi-son",
+   "spouse": null,
+   "gen": 3,
+   "family": "shi"
+  },
+  {
+   "id": "pl-shiding",
+   "label": "史鼎\n忠靖侯",
+   "parent": "vg-shi-son",
+   "spouse": null,
+   "gen": 3,
+   "family": "shi"
+  },
+  {
+   "id": "vg-shi-father",
+   "label": "湘云父\n（名佚）",
+   "parent": "vg-shi-son",
+   "spouse": null,
+   "gen": 3,
+   "family": "shi"
+  },
+  {
    "id": "pl-xiangyun",
    "label": "史湘云",
-   "parent": "pl-shigong",
+   "parent": "vg-shi-father",
    "spouse": null,
    "gen": 4,
    "family": "shi"
@@ -11102,10 +11377,26 @@
    "family": "wang"
   },
   {
+   "id": "vg-wang-zhangfang",
+   "label": "王公长子\n（凤姐父，名佚）",
+   "parent": "pl-wanggong",
+   "spouse": null,
+   "gen": 2,
+   "family": "wang"
+  },
+  {
    "id": "pl-wangxifeng",
    "label": "王熙凤",
-   "parent": "pl-wangziteng",
+   "parent": "vg-wang-zhangfang",
    "spouse": "pl-jialian",
+   "gen": 3,
+   "family": "wang"
+  },
+  {
+   "id": "pl-wangren",
+   "label": "王仁",
+   "parent": "vg-wang-zhangfang",
+   "spouse": null,
    "gen": 3,
    "family": "wang"
   },
@@ -11142,9 +11433,17 @@
    "family": "xue"
   },
   {
+   "id": "vg-xue-cifang",
+   "label": "薛公次子\n（薛蝌父，名佚）",
+   "parent": "pl-xuegong",
+   "spouse": null,
+   "gen": 2,
+   "family": "xue"
+  },
+  {
    "id": "pl-xueke",
    "label": "薛蝌",
-   "parent": null,
+   "parent": "vg-xue-cifang",
    "spouse": "pl-xingxiuyan",
    "gen": 3,
    "family": "xue"
@@ -11152,26 +11451,18 @@
   {
    "id": "pl-xuebaoqin",
    "label": "薛宝琴",
-   "parent": "pl-xueke",
+   "parent": "vg-xue-cifang",
    "spouse": null,
    "gen": 3,
    "family": "xue"
-  },
-  {
-   "id": "pl-jiacong",
-   "label": "贾琮",
-   "parent": "pl-jiashe",
-   "spouse": null,
-   "gen": 4,
-   "family": "rong"
   }
  ],
  "genealogy_notes": {
   "ning": "宁国府一脉：贾演 → 贾代化 → 贾敬 → 贾珍 → 贾蓉。四代而衰，判词所谓“造衅开端实在宁”。",
   "rong": "荣国府一脉：贾源 → 贾代善 → 贾赦 / 贾政 → 宝玉一辈 → 贾兰、巧姐。",
-  "shi": "史家：保龄侯史公之后，贾母娘家，湘云自幼父母双亡，由叔父抚养。",
-  "wang": "王家：王子腾一系，王夫人、薛姨妈之兄，王熙凤之叔，贾府最重要的外援。",
-  "xue": "薛家：皇商，薛姨妈携子女寄居贾府；薛蝌、宝琴为堂房一支。",
-  "lin": "林家：林如海、贾敏、林黛玉。黛玉六岁丧母，入贾府依外祖母，是“还泪”之旅的开始。"
+  "shi": "史家：史公 → 史公之子（名佚）→ 史鼐 / 史鼎 / 湘云父（名佚）→ 湘云。湘云父母双亡，由叔父史鼐、史鼎抚养。",
+  "wang": "王家：王公 → 王子腾 / 王夫人 / 王公长子（凤姐、王仁父，名佚）→ 王熙凤 / 王仁。凤姐是王子腾的侄女，不是女儿。",
+  "xue": "薛家：皇商。薛姨妈一支为薛蟠、宝钗；薛公次子（名佚）一支为薛蝌、宝琴。两支同辈，非父女。",
+  "lin": "林家：林如海 → 林黛玉；贾敏为林如海妻、黛玉之母。黛玉六岁丧母，入贾府依外祖母，是“还泪”之旅的开始。"
  }
 }

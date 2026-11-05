@@ -988,6 +988,7 @@ GENEALOGY = [
     ("pl-jiazhen", "贾珍", "pl-jiajing", "pl-youshi", 4, "ning"),
     ("pl-xichun", "贾惜春", "pl-jiajing", None, 4, "ning"),
     ("pl-jiarong", "贾蓉", "pl-jiazhen", "pl-hushi", 5, "ning"),
+    # 宁府旁支：代字辈另出，不强行接世系
     ("pl-jiadairu", "贾代儒", None, None, 2, "ning"),
     ("pl-jiarui", "贾瑞", "pl-jiadairu", None, 3, "ning"),
     ("pl-jiaqiang", "贾蔷", None, None, 4, "ning"),
@@ -1007,35 +1008,42 @@ GENEALOGY = [
     ("pl-daiyu", "林黛玉", "pl-jiamin", None, 4, "rong"),
     ("pl-qiaojie", "巧姐", "pl-jialian", None, 5, "rong"),
     ("pl-jialan", "贾兰", "pl-jiazhu", None, 5, "rong"),
+    ("pl-jiacong", "贾琮", "pl-jiashe", None, 4, "rong"),
+    # 荣府旁支：世系失考，单列
     ("pl-jiayun", "贾芸", None, None, 4, "rong"),
     ("pl-jiaqin", "贾芹", None, None, 4, "rong"),
-    # 林家（与荣府交叉，单列一图）
+    # 林家：贾敏为林如海妻，不在林家图中重复为女
     ("pl-linruhai", "林如海", None, "pl-jiamin", 1, "lin"),
-    ("pl-jiamin", "贾敏", "pl-linruhai", None, 2, "lin"),
-    ("pl-daiyu", "林黛玉", "pl-jiamin", None, 3, "lin"),
-    # 史家
+    ("pl-daiyu", "林黛玉", "pl-linruhai", None, 2, "lin"),
+    # 史家：史公 → 史公之子（名佚）→ 史鼐、史鼎、湘云父（名佚）→ 湘云
     ("pl-shigong", "史公\n保龄侯", None, None, 1, "shi"),
-    ("pl-xiangyun", "史湘云", "pl-shigong", None, 4, "shi"),
-    # 王家
+    ("vg-shi-son", "史公之子\n（名佚）", "pl-shigong", None, 2, "shi"),
+    ("pl-shinai", "史鼐\n保龄侯", "vg-shi-son", None, 3, "shi"),
+    ("pl-shiding", "史鼎\n忠靖侯", "vg-shi-son", None, 3, "shi"),
+    ("vg-shi-father", "湘云父\n（名佚）", "vg-shi-son", None, 3, "shi"),
+    ("pl-xiangyun", "史湘云", "vg-shi-father", None, 4, "shi"),
+    # 王家：王公 → 王公长子（凤姐、王仁父，名佚）→ 凤姐、王仁
     ("pl-wanggong", "王公\n县伯", None, None, 1, "wang"),
     ("pl-wangziteng", "王子腾", "pl-wanggong", None, 2, "wang"),
     ("pl-wangfuren", "王夫人", "pl-wanggong", None, 2, "wang"),
-    ("pl-wangxifeng", "王熙凤", "pl-wangziteng", "pl-jialian", 3, "wang"),
-    # 薛家
+    ("vg-wang-zhangfang", "王公长子\n（凤姐父，名佚）", "pl-wanggong", None, 2, "wang"),
+    ("pl-wangxifeng", "王熙凤", "vg-wang-zhangfang", "pl-jialian", 3, "wang"),
+    ("pl-wangren", "王仁", "vg-wang-zhangfang", None, 3, "wang"),
+    # 薛家：薛公 → 薛公次子（薛蝌、宝琴父，名佚）→ 薛蝌、宝琴
     ("pl-xuegong", "薛公\n紫薇舍人", None, None, 1, "xue"),
     ("pl-xueyima", "薛姨妈", "pl-xuegong", None, 2, "xue"),
     ("pl-xuepan", "薛蟠", "pl-xueyima", "pl-xiajingui", 3, "xue"),
     ("pl-xuebaochai", "薛宝钗", "pl-xueyima", None, 3, "xue"),
-    ("pl-xueke", "薛蝌", None, "pl-xingxiuyan", 3, "xue"),
-    ("pl-xuebaoqin", "薛宝琴", "pl-xueke", None, 3, "xue"),
+    ("vg-xue-cifang", "薛公次子\n（薛蝌父，名佚）", "pl-xuegong", None, 2, "xue"),
+    ("pl-xueke", "薛蝌", "vg-xue-cifang", "pl-xingxiuyan", 3, "xue"),
+    ("pl-xuebaoqin", "薛宝琴", "vg-xue-cifang", None, 3, "xue"),
 ]
-
 GEN_NOTE = {
     "ning": "宁国府一脉：贾演 → 贾代化 → 贾敬 → 贾珍 → 贾蓉。四代而衰，判词所谓“造衅开端实在宁”。",
     "rong": "荣国府一脉：贾源 → 贾代善 → 贾赦 / 贾政 → 宝玉一辈 → 贾兰、巧姐。",
-    "shi": "史家：保龄侯史公之后，贾母娘家，湘云自幼父母双亡，由叔父抚养。",
-    "wang": "王家：王子腾一系，王夫人、薛姨妈之兄，王熙凤之叔，贾府最重要的外援。",
-    "xue": "薛家：皇商，薛姨妈携子女寄居贾府；薛蝌、宝琴为堂房一支。",
+    "shi": "史家：史公 → 史公之子（名佚）→ 史鼐 / 史鼎 / 湘云父（名佚）→ 湘云。湘云父母双亡，由叔父史鼐、史鼎抚养。",
+    "wang": "王家：王公 → 王子腾 / 王夫人 / 王公长子（凤姐、王仁父，名佚）→ 王熙凤 / 王仁。凤姐是王子腾的侄女，不是女儿。",
+    "xue": "薛家：皇商。薛姨妈一支为薛蟠、宝钗；薛公次子（名佚）一支为薛蝌、宝琴。两支同辈，非父女。",
 }
 
 # 统一与补遗人物重名的 id
@@ -1223,7 +1231,7 @@ for ev in [it for it in seed["items"] if it["cat"] == "event"]:
 if not any(g["id"] == "pl-jiacong" and g["family"] == "rong" for g in seed["genealogy"]):
     seed["genealogy"].append({"id": "pl-jiacong", "label": "贾琮", "parent": "pl-jiashe",
                               "spouse": None, "gen": 4, "family": "rong"})
-GEN_NOTE.setdefault("lin", "林家：林如海、贾敏、林黛玉。黛玉六岁丧母，入贾府依外祖母，是“还泪”之旅的开始。")
+GEN_NOTE.setdefault("lin", "林家：林如海 → 林黛玉；贾敏为林如海妻、黛玉之母。黛玉六岁丧母，入贾府依外祖母，是“还泪”之旅的开始。")
 
 # 统计面板按实际数据重算
 from collections import Counter
@@ -1242,6 +1250,34 @@ for p in all_panels:
     if p["title"] not in seen_panel:
         seen_panel.add(p["title"])
         seed["panels"].append(p)
+
+# 事件与人物：文本里提到的人名/别号补「涉及」关系（手工的「出场」优先保留）
+event_items = [it for it in seed["items"] if it["cat"] == "event"]
+people_items = [it for it in seed["items"] if it["cat"] == "people"]
+existing_cast = {}
+for r in seed["relations"]:
+    if r["label"] == "出场":
+        existing_cast[(r["a"], r["b"])] = 1
+
+# 每个人可用于匹配的名字：全名 + 别名（别名短且有歧义的只用全名）
+NAME_INDEX = []
+for p in people_items:
+    names = [p["name"]]
+    alias = (p.get("alias") or "").strip()
+    if alias:
+        for a in re.split(r"[、，,]", alias):
+            a = a.strip()
+            if len(a) >= 2 and a != p["name"] and a not in ("凤姐", "宝玉", "黛玉", "宝钗"):
+                names.append(a)
+    NAME_INDEX.append((p["id"], names))
+
+for ev in event_items:
+    text = (ev.get("summary") or "") + (ev.get("detail") or "") + (ev.get("alias") or "")
+    for pid, names in NAME_INDEX:
+        if (ev["id"], pid) in existing_cast:
+            continue
+        if any(n and n in text for n in names):
+            seed["relations"].append({"a": ev["id"], "b": pid, "label": "涉及"})
 
 # 去重合并：同一 id 只保留一份，后到的（富化数据）优先，缺失字段用前一份补
 merged = {}
@@ -1313,6 +1349,26 @@ seed["genealogy"] = gen
 CAT_ORDER = {"people": 0, "place": 1, "event": 2, "chapter": 3, "fate": 4, "poetry": 5}
 seed["items"].sort(key=lambda it: (CAT_ORDER.get(it["cat"], 9),
                                    it.get("seq") or 0 if it["cat"] in ("event", "chapter") else 0))
+
+# 谱系校验：同一家族内不重复、父代必须存在、配偶若也在本图则不再外挂
+for fam in sorted({x["family"] for x in seed["genealogy"]}):
+    rows = [x for x in seed["genealogy"] if x["family"] == fam]
+    ids = {x["id"] for x in rows}
+    dup = [x["id"] for x in rows if [y["id"] for y in rows].count(x["id"]) > 1]
+    if dup:
+        print("  ! 谱系重复节点", fam, sorted(set(dup)))
+    for x in rows:
+        if x.get("parent") and x["parent"] not in ids:
+            print("  ! 谱系父节点缺失", fam, x["id"], "->", x["parent"])
+        if x.get("parent") and x["parent"] in ids:
+            pgen = next(y["gen"] for y in rows if y["id"] == x["parent"])
+            if pgen >= x["gen"]:
+                print("  ! 谱系世代倒置", fam, x["id"], pgen, "->", x["gen"])
+        if x.get("spouse") and x["spouse"] not in ids and x["spouse"] not in byid:
+            print("  ! 谱系配偶缺失", fam, x["id"], "->", x["spouse"])
+    both = [(x["id"], x["spouse"]) for x in rows if x.get("spouse") in ids]
+    if both:
+        print("  ! 配偶同时是本图节点（会自动改画婚线）", fam, both)
 
 out = os.path.join(ROOT, "db", "seed.json")
 with open(out, "w", encoding="utf-8") as f:

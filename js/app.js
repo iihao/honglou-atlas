@@ -4,7 +4,7 @@
 
   var D = null, byId = {}, famById = {}, state = {
     view: 'lineage', geo: 'rong', gfilter: 'all', family: 'all', role: 'all',
-    q: '', selected: null, list: []
+    q: '', selected: null, list: [], lgZoom: 1, showEvents: false
   };
   var G = { W: 1500, H: 980, pad: 50 };
   var gState = { nodes: [], edges: [], nodeMap: {}, pos: {}, laid: false, zoom: 1, tx: 0, ty: 0, hover: null, sel: null };
@@ -20,6 +20,19 @@
     });
   }
   function catName(c) { return CAT[c] || c; }
+
+  // 每个人关联的事件（出场 / 涉及）
+  var EVENT_MAP = {};
+  function buildEventMap() {
+    EVENT_MAP = {};
+    D.relations.forEach(function (r) {
+      if (r.label !== '出场' && r.label !== '涉及') return;
+      var ev = byId[r.a], pe = byId[r.b];
+      if (!ev || !pe || ev.cat !== 'event' || pe.cat !== 'people') return;
+      (EVENT_MAP[pe.id] = EVENT_MAP[pe.id] || []).push({ ev: ev, kind: r.label });
+    });
+  }
+  function eventCount(pid) { return (EVENT_MAP[pid] || []).length; }
   function itemsOf(cat) { return D.items.filter(function (i) { return i.cat === cat; }); }
 
   /* ---------------- 路由 ---------------- */
@@ -60,8 +73,8 @@
     });
 
     var g = D.genealogy.filter(function (x) { return x.family === state.geo; });
-    var set = {};
-    g.forEach(function (x) { set[x.id] = x; });
+    var set = {}, rowIds = {};
+    g.forEach(function (x) { set[x.id] = x; rowIds[x.id] = 1; });
 
     var NW = 82, NH = 34, SP = 44, ROW = 104, L = 64, T = 50, GAP = 18;
     var SW = NW - 8;
@@ -79,53 +92,104 @@
       pos[id] = (Math.min.apply(null, xs) + Math.max.apply(null, xs)) / 2;
       return pos[id];
     }
-    roots.forEach(walk);
+    // 不同房支之间留出呼吸空间
+    roots.forEach(function (id, i) {
+      if (i) cursor += 0.45;
+      walk(id);
+    });
 
     var slotW = NW + SP + SW + GAP;
     var maxGen = Math.max.apply(null, g.map(function (x) { return x.gen; }));
-    var W = (cursor || 1) * slotW + L + 40;
+    var W = Math.max((cursor || 1) * slotW + L + 40, 360);
     var H = T + maxGen * ROW + 30;
     var svg = $('#lgSvg');
     svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
-    svg.setAttribute('width', '100%');
     svg.setAttribute('height', 'auto');
+    svg.style.width = (state.lgZoom * 100) + '%';
+    syncLgZoom();
+
+    function rowLeft(id) { return L + (pos[id] || 0) * slotW; }
+    function rowTop(gen) { return T + (gen - 1) * ROW; }
+    function attachedSpouse(x) {
+      return x.spouse && byId[x.spouse] && !rowIds[x.spouse];
+    }
+    // 有配偶时，子代连线从“夫妻中点”出发；否则从本人中心出发
+    function parentAnchor(x) {
+      var base = rowLeft(x.id) + NW / 2;
+      if (attachedSpouse(x)) {
+        var spCenter = rowLeft(x.id) + NW + SP + (NW - 6) / 2;
+        return (base + spCenter) / 2;
+      }
+      if (x.spouse && rowIds[x.spouse]) {
+        return (base + rowLeft(x.spouse) + NW / 2) / 2;
+      }
+      return base;
+    }
 
     var parts = [];
     // 世代底纹与标签
     for (var gi = 1; gi <= maxGen; gi++) {
       var y = T + (gi - 1) * ROW - NH / 2 - 10;
       parts.push('<rect class="lg-band" x="0" y="' + y + '" width="' + W + '" height="' + ROW + '"/>');
-      parts.push('<text class="lg-gen-label" x="18" y="' + (y + ROW / 2 + 4) + '">' + ['一', '二', '三', '四', '五', '六', '七'][gi - 1] + '代</text>');
+      parts.push('<text class="lg-gen-label" x="18" y="' + (y + ROW / 2 + 4) + '">' +
+        (['一', '二', '三', '四', '五', '六', '七'][gi - 1] || gi) + '代</text>');
     }
 
-    // 连接线
+    // 亲子连接线
     g.forEach(function (x) {
       if (!x.parent || !set[x.parent]) return;
-      var p = set[x.parent], px = L + pos[x.parent] * slotW + NW / 2;
-      var cx = L + pos[x.id] * slotW + NW / 2;
-      var py = T + (p.gen - 1) * ROW + NH / 2 + 6;
-      var cy = T + (x.gen - 1) * ROW - NH / 2 - 6;
+      var p = set[x.parent], px = parentAnchor(p);
+      var cx = rowLeft(x.id) + NW / 2;
+      var py = rowTop(p.gen) + NH / 2 + 6;
+      var cy = rowTop(x.gen) - NH / 2 - 6;
       var midY = (py + cy) / 2;
-      parts.push('<path class="lg-link" d="M' + px + ',' + py + ' L' + px + ',' + midY +
-        ' L' + cx + ',' + midY + ' L' + cx + ',' + cy + '"/>');
+      var skip = x.gen - p.gen > 1;
+      parts.push('<path class="lg-link' + (skip ? ' skip' : '') + '" d="M' + px + ',' + py +
+        ' L' + px + ',' + midY + ' L' + cx + ',' + midY + ' L' + cx + ',' + cy + '"/>');
+      if (skip) {
+        parts.push('<text class="lg-link-label" x="' + ((px + cx) / 2) + '" y="' + (midY - 4) + '">隔代</text>');
+      }
     });
 
-    // 节点 + 配偶
+    // 节点 + 外挂配偶
     g.forEach(function (x) {
-      var it = byId[x.id];
-      if (!it) return;
-      var bx = L + pos[x.id] * slotW, by = T + (x.gen - 1) * ROW;
-      parts.push(nodeSVG(it, bx, by, NW, NH, false, x));
-      if (x.spouse && byId[x.spouse]) {
+      var bx = rowLeft(x.id), by = rowTop(x.gen);
+      if (byId[x.id]) {
+        parts.push(nodeSVG(byId[x.id], bx, by, NW, NH, false, x));
+      } else {
+        parts.push(virtualSVG(x, bx, by, NW, NH));
+      }
+      if (attachedSpouse(x)) {
         var sp = byId[x.spouse];
-        parts.push('<path class="lg-marriage" d="M' + (bx + NW) + ',' + (by + NH / 2) + ' L' + (bx + NW + SP) + ',' + (by + NH / 2) + '"/>');
+        parts.push('<path class="lg-marriage" d="M' + (bx + NW) + ',' + (by + NH / 2) +
+          ' L' + (bx + NW + SP) + ',' + (by + NH / 2) + '"/>');
         parts.push(nodeSVG(sp, bx + NW + SP, by, NW - 6, NH, true, null));
       }
     });
 
+    // 若夫妻双方都在本图中，画一条横向婚线，避免重复节点
+    var drawnMarriage = {};
+    g.forEach(function (x) {
+      if (!x.spouse || !rowIds[x.spouse] || x.spouse === x.id) return;
+      var key = x.id < x.spouse ? x.id + '|' + x.spouse : x.spouse + '|' + x.id;
+      if (drawnMarriage[key]) return;
+      drawnMarriage[key] = 1;
+      var a = set[x.id], b = set[x.spouse];
+      if (!a || !b || a.gen !== b.gen) return;
+      var left = rowLeft(a.id) < rowLeft(b.id) ? a : b;
+      var right = left === a ? b : a;
+      var yy = rowTop(left.gen) + NH / 2;
+      parts.push('<path class="lg-marriage" d="M' + (rowLeft(left.id) + NW) + ',' + yy +
+        ' L' + rowLeft(right.id) + ',' + yy + '"/>');
+    });
+
     svg.innerHTML = parts.join('');
-    $$('.lg-node', svg).forEach(function (el) {
-      el.addEventListener('click', function () { openItem(el.getAttribute('data-id')); });
+    $$('.lg-node[data-id]', svg).forEach(function (el) {
+      var id = el.getAttribute('data-id');
+      el.addEventListener('click', function () { openItem(id); });
+      el.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openItem(id); }
+      });
     });
     $('#lgNote').textContent = (D.genealogyNotes || {})[state.geo] || '';
     // 小屏时谱系宽度大于容器，首次渲染把根节点滚到视野中间
@@ -162,11 +226,32 @@
     var name = it.name.length > 6 ? it.name.slice(0, 6) : it.name;
     var sub = it.alias ? String(it.alias).split('、')[0] : (it.role || '');
     if (sub.length > 7) sub = sub.slice(0, 7);
-    return '<g class="lg-node' + (isSpouse ? ' spouse' : '') + '" data-id="' + esc(it.id) + '" tabindex="0" role="button">' +
+    return '<g class="lg-node' + (isSpouse ? ' spouse' : '') + '" data-id="' + esc(it.id) +
+      '" tabindex="0" role="button" aria-label="' + esc(it.name) + '">' +
       '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="3" stroke="' + color + '"/>' +
       '<text class="lg-name" x="' + (x + w / 2) + '" y="' + (y + h / 2 + (sub ? -2 : 4)) + '">' + esc(name) + '</text>' +
       (sub ? '<text class="lg-sub" x="' + (x + w / 2) + '" y="' + (y + h - 7) + '">' + esc(sub) + '</text>' : '') +
       '</g>';
+  }
+
+  function virtualSVG(x, x0, y0, w, h) {
+    var lines = String(x.label || '名佚').split('\n');
+    var name = lines[0] || '名佚';
+    var sub = lines.slice(1).join(' ');
+    return '<g class="lg-node virtual" role="img" aria-label="' + esc(lines.join(' ')) + '">' +
+      '<rect x="' + x0 + '" y="' + y0 + '" width="' + w + '" height="' + h + '" rx="3"/>' +
+      '<text class="lg-name" x="' + (x0 + w / 2) + '" y="' + (y0 + h / 2 + (sub ? -2 : 4)) + '">' + esc(name) + '</text>' +
+      (sub ? '<text class="lg-sub" x="' + (x0 + w / 2) + '" y="' + (y0 + h - 7) + '">' + esc(sub) + '</text>' : '') +
+      '</g>';
+  }
+
+  function syncLgZoom() {
+    var svg = $('#lgSvg');
+    if (!svg) return;
+    svg.style.width = (state.lgZoom * 100) + '%';
+    svg.style.minWidth = state.lgZoom >= 1 ? '760px' : '0';
+    var lbl = $('#lgZoomLabel');
+    if (lbl) lbl.textContent = Math.round(state.lgZoom * 100) + '%';
   }
 
   /* ---------------- 关系图 ---------------- */
@@ -198,12 +283,27 @@
       edges.push({ a: r.a, b: r.b, label: r.label });
     });
 
+    // 可选：把事件作为节点接进来
+    if (state.showEvents) {
+      itemsOf('event').forEach(function (ev) {
+        var cast = D.relations.filter(function (r) {
+          return r.a === ev.id && (r.label === '出场' || r.label === '涉及') && ids[r.b];
+        });
+        if (!cast.length) return;
+        ids[ev.id] = ev;
+        cast.forEach(function (r) {
+          edges.push({ a: ev.id, b: r.b, label: r.label });
+        });
+      });
+    }
+
     var deg = {};
     edges.forEach(function (e) { deg[e.a] = (deg[e.a] || 0) + 1; deg[e.b] = (deg[e.b] || 0) + 1; });
     var nodes = Object.keys(deg).map(function (id, i) {
       return { id: id, item: ids[id], deg: deg[id], i: i, x: 0, y: 0, vx: 0, vy: 0 };
     });
-    return { nodes: nodes, edges: edges, edgesAll: edges.length, total: people.length };
+    return { nodes: nodes, edges: edges, edgesAll: edges.length,
+      total: people.length, events: itemsOf('event').length };
   }
 
   /* 分簇布局：每个家族拆成「主仆两侧」两个岛，按人数定半径后货架式排布 */
@@ -220,16 +320,16 @@
     var clusters = [];
     var index = {};
     nodes.forEach(function (nd) {
-      var raw = nd.item.family || 'other';
+      var raw = nd.item.cat === 'event' ? 'events' : (nd.item.family || 'other');
       // 主岛白名单；其余小家族（李、甄、尤、邢、史等）并入「其他家族」
-      var f = (['rong', 'ning', 'xue', 'wang', 'lin', 'other'].indexOf(raw) >= 0) ? raw : 'minor';
+      var f = (['rong', 'ning', 'xue', 'wang', 'lin', 'other', 'events'].indexOf(raw) >= 0) ? raw : 'minor';
       var inner = INNER_ROLES.indexOf(nd.item.role) >= 0;
       var key = f + (inner ? '#m' : '#s');
       if (!index[key]) {
         var fam = famById[f];
         index[key] = { key: key, family: f, inner: inner, nodes: [],
-          title: f === 'minor' ? '其他家族' : ((fam ? fam.name : '其他') + (inner ? '' : ' · 仆从')),
-          color: fam ? fam.color : '#8a8073' };
+          title: f === 'events' ? '情节事件' : (f === 'minor' ? '其他家族' : ((fam ? fam.name : '其他') + (inner ? '' : ' · 仆从'))),
+          color: f === 'events' ? '#7a6a52' : (fam ? fam.color : '#8a8073') };
         clusters.push(index[key]);
       }
       index[key].nodes.push(nd);
@@ -279,10 +379,11 @@
     $('#gLegend').innerHTML = D.families.map(function (f) {
       return '<span><i style="background:' + f.color + '"></i>' + esc(f.name) + '</span>';
     }).join('');
-    $('#gCount').textContent = model.nodes.length + ' 人 · ' + model.edges.length + ' 条关系（人物库 ' + model.total + '）';
+    $('#gCount').textContent = model.nodes.length + ' 个节点 · ' + model.edges.length + ' 条关联' +
+      (state.showEvents ? '（含 ' + itemsOf('event').length + ' 个事件）' : '（人物库 ' + model.total + '）');
     var hint = $('#graphHint');
     if (hint) hint.textContent = '全库 ' + model.total + ' 位人物、' + D.relations.length +
-      ' 条关系。悬停高亮邻域并显示关系名，点击看详情与出场事件。';
+      ' 条关系。悬停高亮邻域并显示关系名，点击看详情与关联事件。';
 
     if (!model.nodes.length) {
       svg.innerHTML = '';
@@ -325,10 +426,15 @@
     });
     model.nodes.forEach(function (nd) {
       var r = Math.min(8.5, 3.0 + Math.sqrt(nd.deg) * (model.nodes.length > 100 ? 1.5 : 1.8));
-      parts.push('<g class="g-node' + (nd.deg < (model.nodes.length > 100 ? 5 : 3) ? ' minor' : '') +
+      var isEv = nd.item.cat === 'event';
+      parts.push('<g class="g-node' + (isEv ? ' ev' : '') +
+        ((isEv || nd.deg < (model.nodes.length > 100 ? 5 : 3)) ? ' minor' : '') +
         '" data-id="' + nd.id + '" tabindex="0" role="button">' +
-        '<circle class="dot" cx="' + nd.x.toFixed(1) + '" cy="' + nd.y.toFixed(1) + '" r="' + r.toFixed(1) +
-        '" fill="' + famColor(nd.item) + '"/>' +
+        (isEv
+          ? '<rect class="dot" x="' + (nd.x - r).toFixed(1) + '" y="' + (nd.y - r).toFixed(1) +
+            '" width="' + (r * 2).toFixed(1) + '" height="' + (r * 2).toFixed(1) + '" rx="2" fill="#7a6a52"/>'
+          : '<circle class="dot" cx="' + nd.x.toFixed(1) + '" cy="' + nd.y.toFixed(1) + '" r="' + r.toFixed(1) +
+            '" fill="' + famColor(nd.item) + '"/>') +
         '<text class="g-label" x="' + (nd.x + r + 3).toFixed(1) + '" y="' + (nd.y + 3.2).toFixed(1) + '">' +
         esc(nd.item.name) + '</text></g>');
     });
@@ -461,7 +567,8 @@
       return '<div class="person" data-id="' + p.id + '">' +
         '<div class="avatar" style="border-color:' + (f ? f.color : '#c0b195') + '">' + esc(p.name.slice(0, 1)) + '</div>' +
         '<div><div class="pname">' + esc(p.name) + '</div>' +
-        '<div class="pmeta">' + esc([f ? f.name : '', p.role].filter(Boolean).join(' · ')) + '</div>' +
+        '<div class="pmeta">' + esc([f ? f.name : '', p.role].filter(Boolean).join(' · ')) +
+          (eventCount(p.id) ? '<span class="ev-badge">' + eventCount(p.id) + ' 事</span>' : '') + '</div>' +
         '<div class="pdesc">' + esc(p.summary || '') + '</div></div></div>';
     }).join('');
     $$('#peopleGrid .person').forEach(function (el) {
@@ -668,13 +775,18 @@
         it.refs.map(function (r) { return '<li>' + esc(r) + '</li>'; }).join('') + '</ul></div>' : '');
 
     if (events.length) {
-      var evTitle = it.cat === 'chapter' ? '相关事件' : '出场事件';
-      html += '<div class="m-sec"><h3>' + evTitle + '（' + events.length + '）</h3><div class="m-ev">' +
+      var evTitle = it.cat === 'people' ? '关联事件' : '相关事件';
+      var castN = events.filter(function (r) { return r.label !== '涉及'; }).length;
+      html += '<div class="m-sec"><h3>' + evTitle + '（' + events.length + '）' +
+        (it.cat === 'people' && events.length !== castN
+          ? '<span class="sec-note">出场 ' + castN + ' · 涉及 ' + (events.length - castN) + '</span>' : '') +
+        '</h3><div class="m-ev">' +
         events.sort(function (a, b) { return (a.other.seq || 0) - (b.other.seq || 0); })
           .map(function (r) {
+            var kind = r.label === '涉及' ? '<em class="e-kind">涉及</em>' : '';
             return '<button data-go="' + r.other.id + '">' +
               '<span class="e-ch">' + esc(r.other.alias || '') + '</span>' +
-              '<span>' + esc(r.other.name) + ' — ' + esc(r.other.summary || '') + '</span></button>';
+              '<span>' + kind + esc(r.other.name) + ' — ' + esc(r.other.summary || '') + '</span></button>';
           }).join('') + '</div></div>';
     }
 
@@ -758,6 +870,21 @@
     $('#modalPrev').addEventListener('click', function () { step(-1); });
     $('#modalNext').addEventListener('click', function () { step(1); });
 
+    $$('#lgZoom [data-lgzoom]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var sc = $('#lgScroll');
+        var ratio = sc && sc.scrollWidth ? sc.scrollLeft / sc.scrollWidth : 0;
+        var m = b.getAttribute('data-lgzoom');
+        if (m === 'in') state.lgZoom = Math.min(2.6, state.lgZoom * 1.2);
+        else if (m === 'out') state.lgZoom = Math.max(0.5, state.lgZoom / 1.2);
+        else state.lgZoom = 1;
+        syncLgZoom();
+        requestAnimationFrame(function () {
+          if (sc) sc.scrollLeft = ratio * sc.scrollWidth;
+        });
+      });
+    });
+
     $$('.seg-btn[data-gfilter]').forEach(function (b) {
       b.addEventListener('click', function () {
         state.gfilter = b.getAttribute('data-gfilter');
@@ -765,6 +892,14 @@
         gState.laid = false; gState.pos = {}; gState.sel = null;
         renderGraph();
       });
+    });
+    var evToggle = $('#evToggle');
+    if (evToggle) evToggle.addEventListener('click', function () {
+      state.showEvents = !state.showEvents;
+      evToggle.classList.toggle('on', state.showEvents);
+      evToggle.textContent = state.showEvents ? '隐藏事件节点' : '显示事件节点';
+      gState.laid = false; gState.pos = {}; gState.sel = null;
+      renderGraph();
     });
 
     document.addEventListener('keydown', function (e) {
@@ -794,6 +929,7 @@
       D = data;
       D.items.forEach(function (it) { byId[it.id] = it; });
       D.families.forEach(function (f) { famById[f.id] = f; });
+      buildEventMap();
       var refCount = D.items.filter(function (it) { return it.refs && it.refs.length; }).length;
       var cnt = {};
       D.items.forEach(function (i) { cnt[i.cat] = (cnt[i.cat] || 0) + 1; });
