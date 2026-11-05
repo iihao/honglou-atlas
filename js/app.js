@@ -800,10 +800,17 @@
     if (!pt) return;
     var pw = panel.offsetWidth, ph = panel.offsetHeight;
     var sr = stage.getBoundingClientRect();
+    // 顶部筛选条下方留出安全区，避免卡片被压住
+    var topSafe = 10;
+    var bar = document.querySelector('.filterbar.stack');
+    if (bar && getComputedStyle(bar).visibility !== 'hidden') {
+      topSafe = Math.max(topSafe, bar.getBoundingClientRect().bottom - sr.top + 8);
+    }
     var x = pt.x + 22, y = pt.y - ph / 2;
     if (x + pw > sr.width - 10) x = pt.x - pw - 22;
     x = Math.max(10, Math.min(x, sr.width - pw - 10));
-    y = Math.max(10, Math.min(y, sr.height - ph - 10));
+    y = (ph > sr.height - topSafe - 10) ? topSafe
+      : Math.max(topSafe, Math.min(y, sr.height - ph - 10));
     panel.style.right = 'auto';
     panel.style.left = Math.round(x) + 'px';
     panel.style.top = Math.round(y) + 'px';
