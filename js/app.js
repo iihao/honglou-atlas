@@ -1092,7 +1092,7 @@
       });
       var rect = svg.getBoundingClientRect();
       var unit = (rect.width ? G.W / rect.width : 1) / gState.zoom;  // 图坐标 → 屏幕像素
-      var thr = 7 * unit;
+      var thr = 10 * unit;
       if (best && bestD <= thr) {
         if (!gState.edgeHover || gState.edgeHover.a !== best.a || gState.edgeHover.b !== best.b) {
           gState.edgeHover = { a: best.a, b: best.b };

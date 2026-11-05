@@ -131,7 +131,9 @@ input[type=search]:focus,select:focus{border-color:var(--red);box-shadow:0 0 0 3
   max-width:82%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tip b{color:#e8c07a;margin-right:6px}
 .g-edge{stroke:rgba(140,115,80,.30);stroke-width:.9;transition:.15s}
-.g-edge-g .g-edge.hl{stroke:var(--red);stroke-width:1.9;opacity:.95;stroke-dasharray:none}
+/* .hl 需要压过各分类的 stroke/opacity（同优先级时后者胜），故提高特异性 */
+.g-edge-g.show .g-edge.hl,.g-edge-g.sel .g-edge.hl,.g-edge-g .g-edge.hl{
+  stroke:var(--red);stroke-width:1.9;opacity:.95;stroke-dasharray:none}
 .g-edge-g .g-edge.dim{opacity:.10}
 .g-edge-label{font-family:var(--sans);font-size:8.5px;fill:#8a7f6d;paint-order:stroke;
   stroke:#f7f2e7;stroke-width:2.6px;opacity:0;transition:opacity .15s;pointer-events:none}
@@ -410,8 +412,8 @@ table.data th{font-family:var(--serif);font-size:11px;letter-spacing:.14em;color
   .filterbar.stack .zoom{margin-left:0}
 }
 .g-fam{font-family:var(--serif);font-size:15px;letter-spacing:.14em;text-anchor:middle;opacity:.5}
-.g-edge-g.cross .g-edge{opacity:.07}
-.g-edge-g.cross.hl .g-edge{opacity:.9}
+.g-edge-g.cross .g-edge{opacity:.5}
+.g-edge-g.cross .g-edge.hl{opacity:.95}
 .g-fam{font-size:12px;letter-spacing:.1em;paint-order:stroke;stroke:#faf6ec;stroke-width:3px;stroke-linejoin:round}
 .ev-badge{display:inline-block;margin-left:6px;font-size:9px;letter-spacing:.04em;padding:1px 5px;
   border-radius:999px;background:rgba(154,106,53,.14);color:#7a5a24}
@@ -564,7 +566,7 @@ body.graph-fs #gZoom{display:none} /* 缩放已在底部工具条 */
 .g-edge-hit{stroke:transparent;stroke-width:18;cursor:pointer;pointer-events:stroke}
 .g-edge-g{pointer-events:visibleStroke;transition:opacity .14s ease}
 /* 跨族连线默认几乎隐形，避免长线穿满画布；悬停/选中或打开开关时再显示 */
-.g-edge-g.cross{opacity:.05}
+.g-edge-g.cross{opacity:.16}
 .g-edge-g.cross.show,.g-edge-g.cross.hl,.g-edge-g.cross.sel{opacity:1}
 body.cross-on .g-edge-g.cross{opacity:.32}
 body.cross-on .g-edge-g.cross.show{opacity:1}
