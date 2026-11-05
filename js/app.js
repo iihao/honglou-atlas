@@ -7,7 +7,8 @@
     q: '', selected: null, list: [], lgZoom: 1, showEvents: false
   };
   var G = { W: 1500, H: 980, pad: 50 };
-  var gState = { nodes: [], edges: [], nodeMap: {}, pos: {}, laid: false, zoom: 1, tx: 0, ty: 0, hover: null, sel: null };
+  var gState = { nodes: [], edges: [], nodeMap: {}, pos: {}, laid: false, zoom: 1, tx: 0, ty: 0,
+    hover: null, sel: null, edgeSel: null, edgeHover: null };
   var CAT = { people: '人物', event: '事件', fate: '判词', poetry: '诗词', place: '地点', chapter: '回目' };
   var KIN = ['父子', '父女', '母子', '母女', '兄弟', '兄妹', '姐妹', '姐弟', '祖孙', '外祖母', '曾祖母',
     '姑祖母', '夫妻', '妾室', '嫡母', '养父女', '堂兄弟', '堂姐妹', '姑嫂', '姨甥', '叔侄', '姑侄', '舅甥', '继母女', '翁媳', '岳婿', '族亲', '未婚夫妻'];
@@ -42,6 +43,39 @@
     });
   }
   function eventCount(pid) { return (EVENT_MAP[pid] || []).length; }
+
+  // 每人对应的判词（谶语）：fate —对应→ people
+  var FATE_MAP = {}, FATED = {};
+  function buildFateMap() {
+    FATE_MAP = {}; FATED = {};
+    var cnt = {};
+    D.relations.forEach(function (r) {
+      if (r.label !== '对应') return;
+      var f = byId[r.a], p = byId[r.b];
+      if (!f || !p || f.cat !== 'fate' || p.cat !== 'people') return;
+      cnt[f.id] = (cnt[f.id] || 0) + 1;
+    });
+    D.relations.forEach(function (r) {
+      if (r.label !== '对应') return;
+      var f = byId[r.a], p = byId[r.b];
+      if (!f || !p || f.cat !== 'fate' || p.cat !== 'people') return;
+      if (cnt[f.id] > 3) return; // 总览类判词（如「金陵十二钗」）不在个人页展开
+      (FATE_MAP[p.id] = FATE_MAP[p.id] || []).push(f);
+      FATED[p.id] = 1;
+    });
+  }
+
+  // 两人共同出场/涉及的事件
+  function sharedEvents(a, b) {
+    var mb = {};
+    (EVENT_MAP[b] || []).forEach(function (x) { mb[x.ev.id] = x.kind; });
+    var out = [];
+    (EVENT_MAP[a] || []).forEach(function (x) {
+      if (mb[x.ev.id]) out.push({ ev: x.ev, ka: x.kind, kb: mb[x.ev.id] });
+    });
+    out.sort(function (x, y) { return (x.ev.seq || 0) - (y.ev.seq || 0); });
+    return out;
+  }
   function itemsOf(cat) { return D.items.filter(function (i) { return i.cat === cat; }); }
 
   /* ---------------- 路由 ---------------- */
@@ -174,7 +208,7 @@
         var sp = byId[x.spouse];
         parts.push('<path class="lg-marriage" d="M' + (bx + NW) + ',' + (by + NH / 2) +
           ' L' + (bx + NW + SP) + ',' + (by + NH / 2) + '"/>');
-        parts.push(nodeSVG(sp, bx + NW + SP, by, NW - 6, NH, true, null));
+        if (sp) parts.push(nodeSVG(sp, bx + NW + SP, by, NW - 6, NH, true, null));
       }
     });
 
@@ -232,6 +266,15 @@
     }
   }
 
+  // 谱系里的「名佚」节点：没有词条，用 genealogy.label 拼一个只读节点
+  function virtualItem(g) {
+    if (!g || !g.id) return null;
+    var label = (g.label || g.id).replace(/\n/g, ' ').trim();
+    var name = label.split(' ')[0];
+    var rest = label.slice(name.length).replace(/[（）()]/g, '').trim();
+    return { id: g.id, name: name, alias: rest || '名佚', family: g.family, virtual: true };
+  }
+
   function nodeSVG(it, x, y, w, h, isSpouse, g) {
     var color = famById[it.family] ? famById[it.family].color : '#8a8073';
     var name = it.name.length > 6 ? it.name.slice(0, 6) : it.name;
@@ -278,6 +321,17 @@
     if (/同人|同窗|同伴|友人|诗友|方外|旧交|盟友/.test(label)) return 'friend';
     return 'other';
   }
+
+  // 连线的视觉分类：亲缘 / 情缘 / 主仆 / 同人 / 事件 / 其他
+  var EDGE_STYLE = {
+    kin:     { color: '#b07a3a', label: '亲缘' },
+    love:    { color: '#a83a41', label: '情缘' },
+    servant: { color: '#7d8a93', label: '主仆' },
+    friend:  { color: '#3f7d6b', label: '同人' },
+    event:   { color: '#8a6a30', label: '事件' },
+    other:   { color: '#b3a78d', label: '其他' }
+  };
+  var EDGE_ORDER = ['kin', 'love', 'servant', 'friend', 'event', 'other'];
 
   function buildGraphModel() {
     var people = itemsOf('people');
@@ -354,22 +408,29 @@
         var rb = ROLE_ORDER.indexOf(b.item.role); rb = rb < 0 ? 99 : rb;
         return ra - rb || a.item.name.localeCompare(b.item.name, 'zh-Hans-CN');
       });
-      c.R = c.nodes.length <= 3 ? 40 : 24 + 24 * Math.sqrt(c.nodes.length);
+      c.R = c.nodes.length <= 3 ? 44 : 26 + 26 * Math.sqrt(c.nodes.length);
     });
-    clusters.sort(function (a, b) { return b.nodes.length - a.nodes.length; });
+    var famTotal = {};
+    clusters.forEach(function (c) { famTotal[c.family] = (famTotal[c.family] || 0) + c.nodes.length; });
+    clusters.sort(function (a, b) {
+      var fa = famTotal[a.family] || 0, fb = famTotal[b.family] || 0;
+      if (fa !== fb) return fb - fa;                 // 家族总人数多的排前面
+      if (a.family === b.family) return (a.inner ? 0 : 1) - (b.inner ? 0 : 1);  // 主子岛在前，仆从岛紧随
+      return 0;
+    });
 
-    var TARGET_W = 1440, PAD = 34, GAPY = 48;
+    var TARGET_W = 1440, PAD = 36, GAPY = 66;
     var x = PAD, y = PAD, rowH = 0;
     clusters.forEach(function (c) {
       if (x + c.R * 2 > TARGET_W - PAD && x > PAD) { x = PAD; y += rowH + GAPY; rowH = 0; }
       c.cx = x + c.R; c.cy = y + c.R;
-      x += c.R * 2 + (c.R > 120 ? 52 : 22);
+      x += c.R * 2 + (c.R > 120 ? 74 : 30);
       rowH = Math.max(rowH, c.R * 2);
       // 环状排布：每环按周长决定容量
       var per = Math.max(6, Math.round((2 * Math.PI * Math.max(24, c.R * 0.45)) / 42));
       var placed = 0;
       for (var ring = 0; placed < c.nodes.length; ring++) {
-        var r = Math.max(24, c.R * 0.42) + ring * 44;
+        var r = Math.max(24, c.R * 0.42) + ring * 50;
         var cap = Math.max(6, Math.round((2 * Math.PI * r) / 46));
         for (var i = 0; i < cap && placed < c.nodes.length; i++, placed++) {
           var a = (i / cap) * Math.PI * 2 + ring * 0.6;
@@ -391,12 +452,14 @@
 
     $('#gLegend').innerHTML = D.families.map(function (f) {
       return '<span><i style="background:' + f.color + '"></i>' + esc(f.name) + '</span>';
-    }).join('');
+    }).join('') + EDGE_ORDER.map(function (k) {
+      return '<span class="el"><i style="border-color:' + EDGE_STYLE[k].color + '"></i>' + EDGE_STYLE[k].label + '</span>';
+    }).join('') + '<span class="el ring"><i></i>有判词</span>';
     $('#gCount').textContent = model.nodes.length + ' 个节点 · ' + model.edges.length + ' 条关联' +
       (state.showEvents ? '（含 ' + itemsOf('event').length + ' 个事件）' : '（人物库 ' + model.total + '）');
     var hint = $('#graphHint');
     if (hint) hint.textContent = '全库 ' + model.total + ' 位人物、' + D.relations.length +
-      ' 条关系。悬停高亮邻域并显示关系名，点击看详情与关联事件。';
+      ' 条关系。悬停高亮邻域；点击节点看简介、谶语、脂评与结局；点击连线看两人关系与共同事件。';
 
     if (!model.nodes.length) {
       svg.innerHTML = '';
@@ -429,9 +492,13 @@
     model.edges.forEach(function (e) {
       var a = gState.nodeMap[e.a], b = gState.nodeMap[e.b];
       if (!a || !b) return;
+      var cat = (a.item.cat === 'event' || b.item.cat === 'event') ? 'event' : relCat(e.label);
       var mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
       var cross = (a.item.family || 'other') !== (b.item.family || 'other');
-      parts.push('<g class="g-edge-g' + (cross ? ' cross' : '') + '" data-a="' + e.a + '" data-b="' + e.b + '">' +
+      parts.push('<g class="g-edge-g ' + cat + (cross ? ' cross' : '') + '" data-a="' + e.a + '" data-b="' + e.b +
+        '" data-cat="' + cat + '" data-label="' + esc(e.label) + '">' +
+        '<line class="g-edge-hit" x1="' + a.x.toFixed(1) + '" y1="' + a.y.toFixed(1) +
+        '" x2="' + b.x.toFixed(1) + '" y2="' + b.y.toFixed(1) + '"/>' +
         '<line class="g-edge" x1="' + a.x.toFixed(1) + '" y1="' + a.y.toFixed(1) +
         '" x2="' + b.x.toFixed(1) + '" y2="' + b.y.toFixed(1) + '"/>' +
         '<text class="g-edge-label" x="' + mx.toFixed(1) + '" y="' + (my - 3).toFixed(1) + '" text-anchor="middle">' +
@@ -440,14 +507,17 @@
     model.nodes.forEach(function (nd) {
       var r = Math.min(8.5, 3.0 + Math.sqrt(nd.deg) * (model.nodes.length > 100 ? 1.5 : 1.8));
       var isEv = nd.item.cat === 'event';
-      parts.push('<g class="g-node' + (isEv ? ' ev' : '') +
+      var fated = !isEv && FATED[nd.id];
+      parts.push('<g class="g-node' + (isEv ? ' ev' : '') + (fated ? ' fated' : '') +
         ((isEv || nd.deg < (model.nodes.length > 100 ? 5 : 3)) ? ' minor' : '') +
         '" data-id="' + nd.id + '" tabindex="0" role="button">' +
         (isEv
           ? '<rect class="dot" x="' + (nd.x - r).toFixed(1) + '" y="' + (nd.y - r).toFixed(1) +
             '" width="' + (r * 2).toFixed(1) + '" height="' + (r * 2).toFixed(1) + '" rx="2" fill="#7a6a52"/>'
           : '<circle class="dot" cx="' + nd.x.toFixed(1) + '" cy="' + nd.y.toFixed(1) + '" r="' + r.toFixed(1) +
-            '" fill="' + famColor(nd.item) + '"/>') +
+            '" fill="' + famColor(nd.item) + '"/>' +
+            (fated ? '<circle class="ring" cx="' + nd.x.toFixed(1) + '" cy="' + nd.y.toFixed(1) +
+              '" r="' + (r + 2.6).toFixed(1) + '"/>' : '')) +
         '<text class="g-label" x="' + (nd.x + r + 3).toFixed(1) + '" y="' + (nd.y + 3.2).toFixed(1) + '">' +
         esc(nd.item.name) + '</text></g>');
     });
@@ -499,6 +569,22 @@
   }
   function toggleGraphFs() { setGraphFs(!document.body.classList.contains('graph-fs')); }
 
+  function paintEdges() {
+    var nid = gState.sel, eid = gState.edgeSel, hov = gState.edgeHover;
+    var any = !!nid || !!eid || !!hov;
+    $$('.g-edge-g').forEach(function (g) {
+      var a = g.getAttribute('data-a'), b = g.getAttribute('data-b');
+      var onNode = !!nid && (a === nid || b === nid);
+      var onEdge = !!eid && a === eid.a && b === eid.b;
+      var onHov = !!hov && a === hov.a && b === hov.b;
+      var on = onNode || onEdge || onHov;
+      g.classList.toggle('show', on);
+      g.classList.toggle('sel', onEdge);
+      g.querySelector('.g-edge').classList.toggle('hl', on);
+      g.querySelector('.g-edge').classList.toggle('dim', any && !on);
+    });
+  }
+
   function highlight(id) {
     var near = {};
     if (id) {
@@ -513,12 +599,7 @@
       g.classList.toggle('faded', !!id && !near[nid]);
       g.classList.toggle('sel', nid === gState.sel);
     });
-    $$('.g-edge-g').forEach(function (g) {
-      var on = !!id && (g.getAttribute('data-a') === id || g.getAttribute('data-b') === id);
-      g.classList.toggle('show', on);
-      g.querySelector('.g-edge').classList.toggle('hl', on);
-      g.querySelector('.g-edge').classList.toggle('dim', !!id && !on);
-    });
+    paintEdges();
     var tip = $('#gTip');
     if (id && gState.nodeMap[id]) {
       tip.innerHTML = '<b>' + esc(gState.nodeMap[id].item.name) + '</b>' +
@@ -527,17 +608,199 @@
     } else tip.hidden = true;
   }
 
+  function clearEdgeSel() {
+    gState.edgeSel = null;
+    gState.edgeHover = null;
+    var p = $('#gEdgePanel');
+    if (p) p.hidden = true;
+    paintEdges();
+  }
+
+  function castIds(eid) {
+    return D.relations.filter(function (r) { return r.a === eid && r.label === '出场' && byId[r.b]; })
+      .map(function (r) { return byId[r.b]; });
+  }
+
+  /* 点击连线：两人关系 + 共同事件 */
+  function openEdge(a, b, label) {
+    gState.edgeSel = { a: a, b: b };
+    paintEdges();
+    renderEdgePanel(a, b, label);
+  }
+
+  function hideEdgePanel() {
+    var p = $('#gEdgePanel');
+    if (p) p.hidden = true;
+  }
+
+  function renderEdgePanel(a, b, label) {
+    var A = byId[a], B = byId[b];
+    var panel = $('#gEdgePanel');
+    if (!A || !B || !panel) { hideEdgePanel(); return; }
+    var html = '<div class="edge-head">' +
+      '<button class="edge-p" data-go="' + a + '"><small>' + esc(A.familyName || A.role || catName(A.cat)) + '</small>' +
+      esc(A.name) + '</button>' +
+      '<span class="edge-rel">' + esc(label) + '</span>' +
+      '<button class="edge-p" data-go="' + b + '"><small>' + esc(B.familyName || B.role || catName(B.cat)) + '</small>' +
+      esc(B.name) + '</button></div>';
+    var inv = INV_LABEL[label] || label;
+    html += '<p class="edge-note">' + esc(A.name) + ' 对 ' + esc(B.name) + ' 是「' + label +
+      '」；从 ' + esc(B.name) + ' 一方看则是「' + inv + '」。' +
+      (REL_NOTE[label] ? esc(REL_NOTE[label]) + ' ' : '') + '点姓名可看人物详情。</p>';
+
+    if (A.cat === 'event' || B.cat === 'event') {
+      var ev = A.cat === 'event' ? A : B;
+      var cast = castIds(ev.id);
+      html += '<div class="edge-events"><h4>事件 · ' + esc(ev.alias || '') + '</h4>' +
+        '<p class="edge-evsum">' + esc(ev.summary || '') + '</p>' +
+        '<div class="m-rel"><div class="grp"><span class="lb">出场</span>' +
+        cast.map(function (p) { return '<button data-go="' + p.id + '">' + esc(p.name) + '</button>'; }).join('') +
+        '</div></div></div>';
+    } else {
+      var shared = sharedEvents(a, b);
+      if (shared.length) {
+        html += '<div class="edge-events"><h4>两人相关的事件（' + shared.length + '）</h4><div class="m-ev">' +
+          shared.map(function (x) {
+            return '<button data-go="' + x.ev.id + '"><span class="e-ch">' + esc(x.ev.alias || '') + '</span>' +
+              '<span>' + esc(x.ev.name) + ' — ' + esc(x.ev.summary || '') + '</span></button>';
+          }).join('') + '</div></div>';
+      } else {
+        html += '<div class="edge-events"><h4>两人相关的事件</h4>' +
+          '<p class="edge-none">两人在本库中没有共同出场或涉及的事件。</p>' +
+          '<p class="edge-none">' + esc(A.name) + ' 关联 ' + eventCount(a) + ' 个事件 · ' +
+          esc(B.name) + ' 关联 ' + eventCount(b) + ' 个事件。</p></div>';
+      }
+      var fates = (FATE_MAP[a] || []).concat(FATE_MAP[b] || []);
+      if (fates.length) {
+        html += '<div class="edge-events"><h4>谶语线索</h4><div class="m-rel"><div class="grp">' +
+          fates.map(function (f) { return '<button data-go="' + f.id + '">判词 · ' + esc(f.name) + '</button>'; }).join('') +
+          '</div></div></div>';
+      }
+    }
+    // 精确切换：列出 A 的其他关系，点一下即选中对应连线
+    var others = D.relations.filter(function (r) {
+      return (r.a === a || r.b === a) && byId[r.a] && byId[r.b] &&
+        !(r.a === a && r.b === b && r.label === label);
+    }).slice(0, 12);
+    if (others.length) {
+      html += '<div class="edge-events"><h4>' + esc(A.name) + ' 的其他关系</h4><div class="edge-more">' +
+        others.map(function (r) {
+          var other = byId[r.a === a ? r.b : r.a];
+          var lab = r.a === a ? r.label : (INV_LABEL[r.label] || r.label);
+          return '<button data-edge="' + (r.a === a ? r.a : r.b) + '|' +
+            (r.a === a ? r.b : r.a) + '|' + esc(r.label) + '">' +
+            '<span class="em-lab">' + esc(lab) + '</span>' + esc(other.name) + '</button>';
+        }).join('') + '</div></div>';
+    }
+
+    html += '<div class="edge-foot"><button class="edge-more-btn" id="edgeExpand">查看完整关系 ↗</button>' +
+      '<span class="edge-tip">Esc 或点空白处关闭</span></div>';
+
+    panel.innerHTML = html;
+    panel.hidden = false;
+    $$('#gEdgePanel [data-go]').forEach(function (btn) {
+      btn.addEventListener('click', function () { hideEdgePanel(); openItem(btn.getAttribute('data-go')); });
+    });
+    var expand = $('#edgeExpand');
+    if (expand) expand.addEventListener('click', function () { openEdgeModal(a, b, label); });
+    $$('#gEdgePanel [data-edge]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var p = btn.getAttribute('data-edge').split('|');
+        openEdge(p[0], p[1], p[2]);
+      });
+    });
+  }
+
+  /* 完整关系弹窗：长文阅读用，侧栏做主入口 */
+  function openEdgeModal(ida, idb, label) {
+    var a = byId[ida], b = byId[idb];
+    if (!a || !b) return;
+    var inv = INV_LABEL[label] || label;
+    var shared = sharedEvents(ida, idb);
+    var fates = (FATE_MAP[ida] || []).concat(FATE_MAP[idb] || []);
+    var others = D.relations.filter(function (r) {
+      return (r.a === ida || r.b === ida) && byId[r.a] && byId[r.b] &&
+        !(r.a === ida && r.b === idb && r.label === label);
+    }).slice(0, 10);
+
+    var html = '<div class="m-eyebrow">关系 · ' + esc(label) + '</div>' +
+      '<h2><span class="rel-a">' + esc(a.name) + '</span><span class="rel-arrow">—' + esc(label) + '→</span>' +
+      '<span class="rel-b">' + esc(b.name) + '</span></h2>' +
+      '<div class="m-sub">' + esc(REL_NOTE[label] || '') + '　反向写作「' + esc(inv) + '」</div>' +
+      '<div class="m-tags">' +
+        (a.familyName ? '<span class="tag f">' + esc(a.familyName) + '</span>' : '') +
+        '<span class="tag">' + esc(a.role || '') + '</span>' +
+        (b.familyName ? '<span class="tag f">' + esc(b.familyName) + '</span>' : '') +
+        '<span class="tag">' + esc(b.role || '') + '</span></div>' +
+      '<div class="m-rel2">' +
+        '<button data-go="' + a.id + '"><b>' + esc(a.name) + '</b><span>' + esc(a.summary || '') + '</span></button>' +
+        '<button data-go="' + b.id + '"><b>' + esc(b.name) + '</b><span>' + esc(b.summary || '') + '</span></button>' +
+      '</div>' +
+      (shared.length
+        ? '<div class="m-sec"><h3>共同事件（' + shared.length + '）</h3><div class="m-ev">' +
+          shared.sort(function (x, y) { return (x.ev.seq || 0) - (y.ev.seq || 0); }).map(function (x) {
+            var ev = x.ev;
+            return '<button data-go="' + ev.id + '"><span class="e-ch">' + esc(ev.alias || '') + '</span>' +
+              '<span>' + esc(ev.name) + ' — ' + esc(ev.summary || '') + '</span></button>';
+          }).join('') + '</div></div>'
+        : '<div class="m-sec"><h3>共同事件</h3><p class="m-none">两人在现有条目中没有共同出场的事件。</p></div>') +
+      (fates.length
+        ? '<div class="m-sec"><h3>谶语线索</h3><div class="m-rel"><div class="grp">' +
+          fates.map(function (f) { return '<button data-go="' + f.id + '">' + esc(f.name) + '</button>'; }).join('') +
+          '</div></div></div>' : '') +
+      (others.length
+        ? '<div class="m-sec"><h3>' + esc(a.name) + ' 的其他关系</h3><div class="edge-more">' +
+          others.map(function (r) {
+            var other = byId[r.a === ida ? r.b : r.a];
+            var lab = r.a === ida ? r.label : (INV_LABEL[r.label] || r.label);
+            return '<button data-switch="' + (r.a === ida ? r.a : r.b) + '|' +
+              (r.a === ida ? r.b : r.a) + '|' + esc(r.label) + '"><span class="em-lab">' +
+              esc(lab) + '</span>' + esc(other.name) + '</button>';
+          }).join('') + '</div></div>' : '');
+
+    $('#modalBody').innerHTML = html;
+    $$('#modalBody [data-go]').forEach(function (btn) {
+      btn.addEventListener('click', function () { openItem(btn.getAttribute('data-go')); });
+    });
+    $$('#modalBody [data-switch]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var p = btn.getAttribute('data-switch').split('|');
+        openEdgeModal(p[0], p[1], p[2]);
+      });
+    });
+    state.list = [];
+    state.idx = 0;
+    $('#modal').hidden = false;
+    document.body.style.overflow = 'hidden';
+    var tools = document.getElementById('stageTools');
+    if (tools && document.body.classList.contains('graph-fs')) tools.style.display = 'none';
+  }
+
   function bindGraph() {
     $$('.g-node').forEach(function (g) {
       var id = g.getAttribute('data-id');
       g.addEventListener('mouseenter', function () { gState.hover = id; highlight(id); });
       g.addEventListener('mouseleave', function () { gState.hover = null; highlight(gState.sel); });
-      g.addEventListener('click', function (e) { e.stopPropagation(); gState.sel = id; highlight(id); openItem(id); });
+      g.addEventListener('click', function (e) { e.stopPropagation(); gState.sel = id; clearEdgeSel(); highlight(id); openItem(id); });
+    });
+    // 连线可点：看两人关系与共同事件
+    $$('.g-edge-g').forEach(function (g) {
+      var a = g.getAttribute('data-a'), b = g.getAttribute('data-b'), label = g.getAttribute('data-label');
+      g.addEventListener('mouseenter', function () { gState.edgeHover = { a: a, b: b }; paintEdges(); });
+      g.addEventListener('mouseleave', function () { gState.edgeHover = null; paintEdges(); });
+      g.addEventListener('click', function (e) { e.stopPropagation(); openEdge(a, b, label); });
     });
 
     var stage = $('#gStage');
     if (stage.dataset.bound) return;
     stage.dataset.bound = '1';
+
+    var closeBtn = $('#gEdgeClose');
+    if (closeBtn) closeBtn.addEventListener('click', clearEdgeSel);
+    $('#gSvg').addEventListener('click', function (e) {
+      if (e.target.closest('.g-node') || e.target.closest('.g-edge-g')) return;
+      clearEdgeSel();
+    });
 
     $$('[data-zoom]').forEach(function (b) {
       b.addEventListener('click', function () {
@@ -744,6 +1007,25 @@
     '夫妻（续）': '夫妻', '主仆（陪房）': '主子'
   };
 
+  var REL_NOTE = {
+    '父子': '父与子。', '父女': '父与女。', '母子': '母与子。', '母女': '母与女。',
+    '夫妻': '夫妻。', '妾室': '夫主与妾室。', '未婚夫妻': '订有婚约。',
+    '祖孙': '祖辈与孙辈。', '外祖母': '外祖母与外孙/女。', '曾祖母': '曾祖母与曾孙/女。',
+    '姑祖母': '姑祖母与侄孙/女。', '嫡母': '嫡母与庶子/女。', '养父女': '养父与养女。',
+    '兄弟': '同辈兄弟。', '兄妹': '兄妹。', '姐妹': '姐妹。', '姐弟': '姐弟。',
+    '堂兄弟': '堂房兄弟。', '堂姐妹': '堂房姐妹。', '姑嫂': '姑嫂。', '姨甥': '姨母与甥。',
+    '叔侄': '叔侄。', '姑侄': '姑侄。', '翁婿': '岳父与女婿。', '继母女': '继母与继女。',
+    '主仆': '主仆。', '陪房': '陪房仆妇与主子。', '老仆': '老仆与主子。', '大管家': '管家与主子。',
+    '小厮': '小厮与主子。', '奶兄': '乳母之子与主子。', '同房': '同房丫鬟。', '同侪': '同辈。',
+    '同僚': '同僚。', '同班': '同班戏子。', '师徒': '师徒。', '抚养': '抚养关系。',
+    '请托': '请托与受托。', '相思': '单方面思慕。', '提亲': '提亲。', '引荐': '引荐。',
+    '传话': '传话。', '串通': '串通。', '供奉': '供奉关系。', '抄检': '抄检与被抄检。',
+    '被撵': '撵逐。', '镜像': '互为镜像。', '求差事': '谋差事。', '宗族': '同族。',
+    '族中长辈': '族中长辈与晚辈。', '私交': '私下交好。', '情人': '情人。',
+    '知己': '知己。', '诗友': '诗友。', '诗社同人': '诗社同人。', '同窗': '同窗。',
+    '友人': '友人。', '点化': '点化。', '引游幻境': '引游幻境。'
+  };
+
   function relationsOf(id) {
     var out = [];
     D.relations.forEach(function (r) {
@@ -785,16 +1067,31 @@
     renderModal(state.list[ni]);
   }
 
+  /* 把 detail 里的【段落】解析成结构化块 */
+  function parseSections(text) {
+    if (!text) return [];
+    var chunks = String(text).split(/(?=【[^】]{1,12}】)/).map(function (s) { return s.trim(); }).filter(Boolean);
+    return chunks.map(function (c) {
+      var m = c.match(/^【([^】]{1,12})】\s*([\s\S]*)$/);
+      return m ? { title: m[1], text: m[2].trim() } : { title: '', text: c };
+    }).filter(function (s) { return s.text; });
+  }
+  function splitSents(t) {
+    return String(t).replace(/([。！？；])/g, '$1\u0001').split('\u0001')
+      .map(function (s) { return s.trim(); }).filter(Boolean);
+  }
+  var ZHI_RE = /脂批|脂砚|畸笏|批者|批语/;
+  function extractZhi(sections) {
+    var out = [], seen = {};
+    sections.forEach(function (s) {
+      if (s.title === '脂批' || s.title === '脂评') { out.push(s.text); return; }
+      splitSents(s.text).forEach(function (sent) { if (ZHI_RE.test(sent)) out.push(sent); });
+    });
+    return out.filter(function (t) { if (seen[t]) return false; seen[t] = 1; return true; });
+  }
+
   function renderModal(it) {
     var rels = relationsOf(it.id);
-    var groups = {};
-    rels.forEach(function (r) {
-      if (r.other.cat !== 'people' && r.other.cat !== 'event' && r.other.cat !== 'fate' &&
-          r.other.cat !== 'poetry' && r.other.cat !== 'place') return;
-      var key = r.show || r.label;
-      (groups[key] = groups[key] || []).push(r.other);
-    });
-
     var people = [], events = [], others = [];
     rels.forEach(function (r) {
       if (r.other.cat === 'people') people.push(r);
@@ -811,10 +1108,57 @@
       (sub ? '<div class="m-sub">' + esc(sub) + '</div>' : '') +
       '<div class="m-tags">' + (it.familyName ? '<span class="tag f">' + esc(it.familyName) + '</span>' : '') +
       (it.tags || []).map(function (t) { return '<span class="tag">' + esc(t) + '</span>'; }).join('') + '</div>' +
-      '<div class="m-detail">' + esc(it.summary || '') + (it.detail ? '\n\n' + esc(it.detail) : '') + '</div>' +
-      (it.quote ? '<div class="m-quote">' + esc(it.quote) + '</div>' : '') +
-      ((it.refs && it.refs.length) ? '<div class="m-sec m-refs-sec"><h3>参考与延伸</h3><ul class="m-refs">' +
-        it.refs.map(function (r) { return '<li>' + refHTML(r) + '</li>'; }).join('') + '</ul></div>' : '');
+      (it.quote ? '<div class="m-quote">' + esc(it.quote) + '</div>' : '');
+
+    // 简介
+    if (it.summary) html += '<div class="m-lead">' + esc(it.summary) + '</div>';
+
+    // 详情按【段落】拆分：谶语 / 脂评 / 结局 单独成块
+    var sections = parseSections(it.detail || '');
+    var fateSecs = [], endSecs = [], rest = [];
+    sections.forEach(function (s) {
+      if (s.title === '判词' || s.title === '谶语') fateSecs.push(s.text);
+      else if (s.title === '结局') endSecs.push(s.text);
+      else if (s.title === '脂批' || s.title === '脂评') return;
+      else rest.push(s);
+    });
+    var zhi = extractZhi(sections);
+    if (it.zhipi) {
+      var z0 = String(it.zhipi).trim();
+      if (z0 && zhi.indexOf(z0) < 0) zhi.unshift(z0);
+    }
+    var fates = FATE_MAP[it.id] || [];
+    if (fates.length) others = others.filter(function (r) { return r.other.cat !== 'fate'; });
+
+    if (it.cat === 'people' && (fateSecs.length || fates.length)) {
+      html += '<div class="m-sec m-block m-fate"><h3>谶语 · 判词</h3>';
+      fates.forEach(function (ft) { if (ft.quote) html += '<div class="m-quote">' + esc(ft.quote) + '</div>'; });
+      if (fateSecs.length) html += '<div class="m-detail">' + esc(fateSecs.join('\n')) + '</div>';
+      fates.forEach(function (ft) { if (ft.detail) html += '<div class="m-detail">' + esc(ft.detail) + '</div>'; });
+      if (fates.length) html += '<div class="m-rel"><div class="grp"><span class="lb">判词词条</span>' +
+        fates.map(function (ft) { return '<button data-go="' + ft.id + '">' + esc(ft.name) + '</button>'; }).join('') +
+        '</div></div>';
+      html += '</div>';
+    }
+    if (zhi.length) {
+      html += '<div class="m-sec m-block m-zhi"><h3>脂评 · 脂批</h3><div class="m-detail">' +
+        esc(zhi.join('\n')) + '</div></div>';
+    }
+    var endText = (it.ending || '').trim() || endSecs.join('\n');
+    if (endText) {
+      html += '<div class="m-sec m-block m-end"><h3>结局</h3><div class="m-detail">' +
+        esc(endText) + '</div></div>';
+    }
+    rest.forEach(function (s) {
+      if (!s.title) { html += '<div class="m-detail">' + esc(s.text) + '</div>'; return; }
+      html += '<div class="m-sec m-block"><h3>' + esc(s.title) + '</h3><div class="m-detail">' +
+        esc(s.text) + '</div></div>';
+    });
+
+    if (it.refs && it.refs.length) {
+      html += '<div class="m-sec m-refs-sec"><h3>参考与延伸</h3><ul class="m-refs">' +
+        it.refs.map(function (r) { return '<li>' + refHTML(r) + '</li>'; }).join('') + '</ul></div>';
+    }
 
     if (events.length) {
       var evTitle = it.cat === 'people' ? '关联事件' : '相关事件';
@@ -945,9 +1289,19 @@
         state.gfilter = b.getAttribute('data-gfilter');
         $$('.seg-btn[data-gfilter]').forEach(function (x) { x.classList.toggle('on', x === b); });
         gState.laid = false; gState.pos = {}; gState.sel = null;
+        clearEdgeSel();
         renderGraph();
       });
     });
+    var crossToggle = $('#crossToggle');
+    if (crossToggle && !crossToggle.dataset.bound) {
+      crossToggle.dataset.bound = '1';
+      crossToggle.addEventListener('click', function () {
+        var on = document.body.classList.toggle('cross-on');
+        crossToggle.classList.toggle('on', on);
+        crossToggle.textContent = on ? '隐藏跨族连线' : '显示跨族连线';
+      });
+    }
     var fsToggle = $('#fsToggle');
     if (fsToggle && !fsToggle.dataset.bound) {
       fsToggle.dataset.bound = '1';
@@ -964,6 +1318,7 @@
       evToggle.classList.toggle('on', state.showEvents);
       evToggle.textContent = state.showEvents ? '隐藏事件节点' : '显示事件节点';
       gState.laid = false; gState.pos = {}; gState.sel = null;
+      clearEdgeSel();
       renderGraph();
     });
 
@@ -973,6 +1328,8 @@
       if (e.key === 'Escape') {
         if (!$('#modal').hidden) return closeModal();
         if (!$('#palette').hidden) return closePalette();
+        var ep = $('#gEdgePanel');
+        if (ep && !ep.hidden) return clearEdgeSel();
         if (document.body.classList.contains('graph-fs')) return setGraphFs(false);
       }
       if ((e.key === 'f' || e.key === 'F') && state.view === 'graph' &&
@@ -1001,6 +1358,7 @@
       D.items.forEach(function (it) { byId[it.id] = it; });
       D.families.forEach(function (f) { famById[f.id] = f; });
       buildEventMap();
+      buildFateMap();
       var webCount = D.items.filter(function (it) {
         return (it.refs || []).some(function (r) { return r && typeof r === 'object' && r.url; });
       }).length;

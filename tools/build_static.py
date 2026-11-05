@@ -41,6 +41,7 @@ def build():
             "alias": r["alias"], "family": r["family"], "familyName": r["family_name"],
             "role": r["role"], "seq": r["seq"], "summary": r["summary"],
             "detail": r["detail"], "quote": r["quote"],
+            "ending": r["ending"], "comment": r["comment"], "zhipi": r["zhipi"],
             "refs": json.loads(r["refs"]) if r["refs"] and r["refs"].startswith("[") else ([r["refs"]] if r["refs"] else []),
             "tags": tags.get(r["id"], []),
         })

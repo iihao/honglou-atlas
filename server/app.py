@@ -62,7 +62,9 @@ def row_item(r, tags=None):
         "id": r["id"], "cat": r["cat"], "type": r["type"], "name": r["name"],
         "alias": r["alias"], "family": r["family"], "familyName": r["family_name"],
         "role": r["role"], "seq": r["seq"], "summary": r["summary"],
-        "detail": r["detail"], "quote": r["quote"], "refs": parse_refs(r["refs"]),
+        "detail": r["detail"], "quote": r["quote"],
+        "ending": r["ending"], "comment": r["comment"], "zhipi": r["zhipi"],
+        "refs": parse_refs(r["refs"]),
         "tags": tags or [],
     }
 

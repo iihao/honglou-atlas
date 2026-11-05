@@ -1288,6 +1288,36 @@ for g in seed["genealogy"]:
     if g.get("spouse"):
         _link(g["id"], g["spouse"], "夫妻")
 
+# 从详述里拆出【结局】【评析】，供人物弹窗单独展示
+import re as _re
+
+def _sections(text):
+    out = {}
+    parts = _re.split(r"【([^】]+)】", text or "")
+    for i in range(1, len(parts) - 1, 2):
+        out[parts[i].strip()] = parts[i + 1].strip()
+    return out
+
+for it in seed["items"]:
+    if it["cat"] != "people":
+        continue
+    sec = _sections(it.get("detail"))
+    if not it.get("ending") and sec.get("结局"):
+        it["ending"] = sec["结局"]
+    if not it.get("comment") and sec.get("评析"):
+        it["comment"] = sec["评析"]
+
+# 脂评：只收广为引用、出处明确的几条，其余留空（前端会显示「暂无」）
+ZHIPI = {
+    "pl-qingwen": "「晴有林风，袭乃钗副。」——脂砚斋批语（庚辰本）",
+    "pl-xiren": "「晴有林风，袭乃钗副。」——脂砚斋批语（庚辰本）",
+    "pl-daiyu": "「能解者方有辛酸之泪，哭成此书。」——甲戌本第一回脂批",
+    "pl-baoyu": "「字字看来皆是血，十年辛苦不寻常。」——甲戌本凡例诗（脂批系统）",
+}
+for it in seed["items"]:
+    if it["id"] in ZHIPI and not it.get("zhipi"):
+        it["zhipi"] = ZHIPI[it["id"]]
+
 # 统计面板按实际数据重算
 from collections import Counter
 people = [it for it in seed["items"] if it["cat"] == "people"]

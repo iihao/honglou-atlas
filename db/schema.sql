@@ -32,6 +32,9 @@ CREATE TABLE IF NOT EXISTS items (
   summary  TEXT,
   detail   TEXT,
   quote    TEXT,                    -- 判词 / 诗句原文
+  ending   TEXT,                    -- 结局（从详述【结局】段提取）
+  comment  TEXT,                    -- 评析
+  zhipi    TEXT,                    -- 脂评（有则显示）
   refs     TEXT,
   sort     INTEGER NOT NULL DEFAULT 0
 );

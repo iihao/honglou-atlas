@@ -33,11 +33,13 @@ def build(conn, seed):
         if isinstance(refs, (list, tuple)):
             refs = json.dumps(list(refs), ensure_ascii=False)
         conn.execute(
-            """INSERT INTO items(id,cat,type,name,alias,family,role,seq,summary,detail,quote,refs,sort)
-               VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            """INSERT INTO items(id,cat,type,name,alias,family,role,seq,summary,detail,quote,
+                                ending,comment,zhipi,refs,sort)
+               VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (it["id"], it["cat"], it.get("type"), it["name"], it.get("alias"),
              it.get("family"), it.get("role"), it.get("seq"), it.get("summary"),
-             it.get("detail"), it.get("quote"), refs, i))
+             it.get("detail"), it.get("quote"), it.get("ending"), it.get("comment"),
+             it.get("zhipi"), refs, i))
         for t in it.get("tags") or []:
             conn.execute("INSERT OR IGNORE INTO tags(name) VALUES(?)", (t,))
             tid = conn.execute("SELECT id FROM tags WHERE name=?", (t,)).fetchone()[0]

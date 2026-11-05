@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>红楼梦图谱 · Dream of the Red Chamber Atlas</title>
 <meta name="description" content="红楼梦人物谱系、关系图谱、判词、诗词、事件与地点检索，附参考来源、维基/百度百科外链与红楼研究线索">
-<link rel="stylesheet" href="css/style.css?v=13">
+<link rel="stylesheet" href="css/style.css?v=15">
 </head>
 <body>
 
@@ -72,7 +72,7 @@
     <div class="page-head">
       <p class="eyebrow">RELATION GRAPH</p>
       <h1>人物关系图谱</h1>
-      <p id="graphHint">悬停高亮邻域并显示关系名，点击看详情与出场事件。</p>
+      <p id="graphHint">悬停高亮邻域；点击节点看简介、谶语、脂评与结局；点击连线看两人关系与共同事件。</p>
     </div>
     <div class="filterbar stack">
       <div class="seg" role="group" aria-label="关系筛选">
@@ -87,6 +87,7 @@
         <button data-zoom="reset" class="fit">重置</button>
       </div>
       <button class="chip" id="evToggle">显示事件节点</button>
+      <button class="chip" id="crossToggle">显示跨族连线</button>
       <button class="chip" id="fsToggle">全屏</button>
       <span class="muted" id="gCount"></span>
     </div>
@@ -95,6 +96,9 @@
     <div class="stage" id="gStage">
       <svg id="gSvg" role="img" aria-label="红楼梦人物关系图"></svg>
       <div class="tip" id="gTip" hidden></div>
+      <aside class="edge-panel" id="gEdgePanel" hidden aria-label="关系详情">
+        <button class="edge-close" id="gEdgeClose" aria-label="关闭">✕</button>
+      </aside>
       <div class="stage-tools" id="stageTools">
         <span class="st-hint">拖拽平移 · 滚轮/双指缩放 · ESC 退出</span>
         <button data-zoom="out" aria-label="缩小">−</button>
@@ -230,6 +234,6 @@
   </div>
 </div>
 
-<script src="js/app.js?v=24"></script>
+<script src="js/app.js?v=25"></script>
 </body>
 </html>

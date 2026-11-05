@@ -34,10 +34,13 @@ jobs:
           names = collections.Counter(i['name'] for i in d['items'] if i['cat'] == 'people')
           dupe = [k for k, v in names.items() if v > 1]
           assert not dupe, f'重名人物: {dupe[:5]}'
+          # vg-* 是「名佚」谱系占位节点，允许只存在于 genealogy
+          def ok(i):
+              return i in idset or str(i).startswith('vg-')
           for g in d['genealogy']:
-              assert g['id'] in idset, g['id']
-              if g['parent']: assert g['parent'] in idset, g['parent']
-              if g['spouse']: assert g['spouse'] in idset, g['spouse']
+              assert ok(g['id']), g['id']
+              if g['parent']: assert ok(g['parent']), g['parent']
+              if g['spouse']: assert ok(g['spouse']), g['spouse']
           print(f"OK 条目 {len(ids)} 关系 {len(d['relations'])} 谱系 {len(d['genealogy'])}")
           PY
       - name: 前端语法
