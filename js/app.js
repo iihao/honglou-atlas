@@ -860,6 +860,19 @@
   }
 
   /* ---------------- 初始化 ---------------- */
+  // 本地服务用 /api/bootstrap；静态托管（GitHub Pages）回退到 /api/bootstrap.json
+  function fetchJson(urls) {
+    var i = 0;
+    function next() {
+      if (i >= urls.length) return Promise.reject(new Error('数据文件缺失'));
+      return fetch(urls[i++], { cache: 'no-store' }).then(function (r) {
+        if (!r.ok) return next();
+        return r.json();
+      }).catch(next);
+    }
+    return next();
+  }
+
   function bindChrome() {
     $('.menu-toggle').addEventListener('click', function () { $('#mainnav').classList.toggle('open'); });
     $('#searchBtn').addEventListener('click', openPalette);
@@ -923,8 +936,8 @@
     window.addEventListener('hashchange', route);
   }
 
-  fetch('api/bootstrap', { cache: 'no-store' })
-    .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+  fetchJson(['api/bootstrap', 'api/bootstrap.json'])
+    .then(function (data) { return data; })
     .then(function (data) {
       D = data;
       D.items.forEach(function (it) { byId[it.id] = it; });

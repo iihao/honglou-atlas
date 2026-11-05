@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: 重建数据与数据库
+        run: |
+          python3 tools/build_seed.py
+          python3 db/init_db.py --force
+      - name: 数据完整性
+        run: |
+          python3 - <<'PY'
+          import json, collections
+          d = json.load(open('db/seed.json', encoding='utf-8'))
+          ids = [i['id'] for i in d['items']]
+          dup = [k for k, v in collections.Counter(ids).items() if v > 1]
+          assert not dup, f'重复 id: {dup[:5]}'
+          idset = set(ids)
+          bad = [r for r in d['relations'] if r['a'] not in idset or r['b'] not in idset]
+          assert not bad, f'悬空关系 {len(bad)} 条'
+          names = collections.Counter(i['name'] for i in d['items'] if i['cat'] == 'people')
+          dupe = [k for k, v in names.items() if v > 1]
+          assert not dupe, f'重名人物: {dupe[:5]}'
+          for g in d['genealogy']:
+              assert g['id'] in idset, g['id']
+              if g['parent']: assert g['parent'] in idset, g['parent']
+              if g['spouse']: assert g['spouse'] in idset, g['spouse']
+          print(f"OK 条目 {len(ids)} 关系 {len(d['relations'])} 谱系 {len(d['genealogy'])}")
+          PY
+      - name: 前端语法
+        run: node --check js/app.js
+      - name: 静态构建
+        run: python3 tools/build_static.py
