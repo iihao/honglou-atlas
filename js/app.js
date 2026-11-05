@@ -558,7 +558,10 @@
     });
     parts.push('</g>');
     svg.innerHTML = parts.join('');
-    svg.setAttribute('viewBox', '0 0 ' + G.W + ' ' + G.H);
+    // 全屏下保留适配后的 viewBox，只重排节点，不恢复整图视野
+    if (!(document.body.classList.contains('graph-fs') && FS_VIEWBOX)) {
+      svg.setAttribute('viewBox', '0 0 ' + G.W + ' ' + G.H);
+    }
     applyTransform();
     bindGraph();
     syncZoom();
@@ -572,6 +575,11 @@
     requestAnimationFrame(centerStage);
     setTimeout(centerStage, 120);
     highlight(gState.sel);
+    // 全屏中切换筛选后，按新内容重新铺满
+    if (document.body.classList.contains('graph-fs')) {
+      fitSvgToStage(true);
+      syncZoom();
+    }
   }
 
   function applyTransform() {
@@ -680,8 +688,10 @@
     if (on) {
       var bb = graphContentBBox();
       if (!bb) return;
-      FS_VIEWBOX = svg.getAttribute('viewBox') || ('0 0 ' + G.W + ' ' + G.H);
-      FS_TRANSFORM = { zoom: gState.zoom, tx: gState.tx, ty: gState.ty };
+      if (!FS_VIEWBOX) {
+        FS_VIEWBOX = svg.getAttribute('viewBox') || ('0 0 ' + G.W + ' ' + G.H);
+        FS_TRANSFORM = { zoom: gState.zoom, tx: gState.tx, ty: gState.ty };
+      }
       var sr = $('#gStage').getBoundingClientRect();
       var aspect = sr.width / Math.max(1, sr.height);
       // 内容范围 + 内边距；viewBox 宽高比对齐舞台，保证放大后铺满
@@ -852,7 +862,8 @@
   function positionEdgePanel() {
     var panel = $('#gEdgePanel'), stage = $('#gStage');
     if (!panel || !stage) return;
-    if (!document.body.classList.contains('graph-fs')) {
+    // 非全屏或窄屏（移动端）保持固定位置：右上角 / 底部抽屉
+    if (!document.body.classList.contains('graph-fs') || window.innerWidth <= 820) {
       panel.style.left = ''; panel.style.top = ''; panel.style.right = '';
       return;
     }
@@ -1606,7 +1617,10 @@
     });
     window.addEventListener('hashchange', route);
     window.addEventListener('resize', function () {
-      if (document.body.classList.contains('graph-fs')) positionEdgePanel();
+      if (document.body.classList.contains('graph-fs')) {
+        if (FS_VIEWBOX) fitSvgToStage(true); // 窗口变化后重新铺满
+        positionEdgePanel();
+      }
     });
   }
 
