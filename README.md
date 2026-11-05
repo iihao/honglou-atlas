@@ -52,3 +52,19 @@ db/seed.json        生成的数据
 tools/build_seed.py 数据构建脚本
 tools/enrich_data.py 词条富化数据
 ```
+
+## 许可
+
+代码以 **MIT** 许可开源，见 [LICENSE](LICENSE)。
+
+《红楼梦》原文已进入公有领域；本库的提要、评析、结构数据为项目自撰，
+判词、诗词取通行本文字（程乙本为主），参考书目见各条目 `refs` 字段。
+
+## 参与
+
+- 数据在 `tools/build_seed.py` 与 `tools/enrich_data.py`，改完重建即可：
+  ```bash
+  python3 tools/build_seed.py && python3 db/init_db.py --force
+  ```
+- 新增人物请同时补关系与谱系；事件请补 `cast`，不要只写正文。
+- 提交前建议跑一遍：`python3 -c "import json;json.load(open('db/seed.json'))"` 确认格式。

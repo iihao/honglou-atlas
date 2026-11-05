@@ -1025,7 +1025,7 @@ GENEALOGY = [
     # 王家：王公 → 王公长子（凤姐、王仁父，名佚）→ 凤姐、王仁
     ("pl-wanggong", "王公\n县伯", None, None, 1, "wang"),
     ("pl-wangziteng", "王子腾", "pl-wanggong", None, 2, "wang"),
-    ("pl-wangfuren", "王夫人", "pl-wanggong", None, 2, "wang"),
+    ("pl-wangfuren", "王夫人", "pl-wanggong", "pl-jiazheng", 2, "wang"),
     ("vg-wang-zhangfang", "王公长子\n（凤姐父，名佚）", "pl-wanggong", None, 2, "wang"),
     ("pl-wangxifeng", "王熙凤", "vg-wang-zhangfang", "pl-jialian", 3, "wang"),
     ("pl-wangren", "王仁", "vg-wang-zhangfang", None, 3, "wang"),
@@ -1033,14 +1033,14 @@ GENEALOGY = [
     ("pl-xuegong", "薛公\n紫薇舍人", None, None, 1, "xue"),
     ("pl-xueyima", "薛姨妈", "pl-xuegong", None, 2, "xue"),
     ("pl-xuepan", "薛蟠", "pl-xueyima", "pl-xiajingui", 3, "xue"),
-    ("pl-xuebaochai", "薛宝钗", "pl-xueyima", None, 3, "xue"),
+    ("pl-xuebaochai", "薛宝钗", "pl-xueyima", "pl-baoyu", 3, "xue"),
     ("vg-xue-cifang", "薛公次子\n（薛蝌父，名佚）", "pl-xuegong", None, 2, "xue"),
     ("pl-xueke", "薛蝌", "vg-xue-cifang", "pl-xingxiuyan", 3, "xue"),
     ("pl-xuebaoqin", "薛宝琴", "vg-xue-cifang", None, 3, "xue"),
 ]
 GEN_NOTE = {
-    "ning": "宁国府一脉：贾演 → 贾代化 → 贾敬 → 贾珍 → 贾蓉。四代而衰，判词所谓“造衅开端实在宁”。",
-    "rong": "荣国府一脉：贾源 → 贾代善 → 贾赦 / 贾政 → 宝玉一辈 → 贾兰、巧姐。",
+    "ning": "宁国府一脉：贾演 → 贾代化 → 贾敬 → 贾珍 → 贾蓉。四代而衰，判词所谓“造衅开端实在宁”。贾代儒、贾蔷等旁支世系失考，单列于后。",
+    "rong": "荣国府一脉：贾源 → 贾代善 → 贾赦 / 贾政 → 宝玉一辈 → 贾兰、巧姐。贾芸、贾芹等旁支世系失考，单列于后。",
     "shi": "史家：史公 → 史公之子（名佚）→ 史鼐 / 史鼎 / 湘云父（名佚）→ 湘云。湘云父母双亡，由叔父史鼐、史鼎抚养。",
     "wang": "王家：王公 → 王子腾 / 王夫人 / 王公长子（凤姐、王仁父，名佚）→ 王熙凤 / 王仁。凤姐是王子腾的侄女，不是女儿。",
     "xue": "薛家：皇商。薛姨妈一支为薛蟠、宝钗；薛公次子（名佚）一支为薛蝌、宝琴。两支同辈，非父女。",
@@ -1358,6 +1358,8 @@ for fam in sorted({x["family"] for x in seed["genealogy"]}):
     if dup:
         print("  ! 谱系重复节点", fam, sorted(set(dup)))
     for x in rows:
+        if x["id"] not in byid and not x["id"].startswith("vg-"):
+            print("  ! 谱系节点无对应词条", fam, x["id"])
         if x.get("parent") and x["parent"] not in ids:
             print("  ! 谱系父节点缺失", fam, x["id"], "->", x["parent"])
         if x.get("parent") and x["parent"] in ids:
