@@ -20,8 +20,9 @@ relationship graph, the twelve beauties' fates (判词), poems, 51 plot events a
 
 - **Genealogy** (`#lineage`): generation-by-generation trees for the Jia (Ning & Rong), Shi, Wang,
   Xue and Lin clans; spouses linked by dashed lines; unknown-name nodes are auto-generated.
-- **Relationship graph** (`#graph`): clustered layout by clan × master/servant, with optional event
-  nodes; filters for kinship / service / romance / friendship; labels on hover.
+- **Relationship graph** (`#graph`): fullscreen mode (`F` to toggle, `ESC` to exit, floating toolbar for
+  zoom); clustered layout by clan × master/servant, with optional event nodes; filters for kinship /
+  service / romance / friendship; labels on hover.
 - **Events**: every character page lists related events, split into *appears* (curated) and
   *mentioned* (auto-matched from event text).
 - Works offline; runs on SQLite + Python standard library with a zero-dependency frontend.

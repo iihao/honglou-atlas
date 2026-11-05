@@ -416,3 +416,28 @@ table.data th{font-family:var(--serif);font-size:11px;letter-spacing:.14em;color
   .lg-legend{gap:10px;font-size:10px}
   .lg-zoom{margin-left:auto}
 }
+
+/* ---------- 关系图全屏覆盖层 ---------- */
+.stage-tools{display:none}
+body.graph-fs{overflow:hidden}
+body.graph-fs #gStage{
+  position:fixed;inset:0;z-index:200;border:0;border-radius:0;
+  background:radial-gradient(900px 500px at 50% 0%,rgba(140,31,40,.05),transparent 70%),
+             linear-gradient(180deg,#faf6ec,#f3ecdd);
+  box-shadow:none;padding-bottom:0;
+}
+body.graph-fs .stage-tools{
+  display:flex;align-items:center;gap:6px;position:fixed;left:50%;bottom:18px;transform:translateX(-50%);
+  z-index:210;padding:6px 10px;border:1px solid var(--line-2);border-radius:999px;
+  background:rgba(250,246,236,.94);backdrop-filter:blur(10px);box-shadow:0 10px 30px -18px rgba(40,25,10,.7)
+}
+.stage-tools button{border:1px solid transparent;background:none;font-size:12px;color:var(--ink-2);
+  padding:5px 9px;border-radius:999px;cursor:pointer;font-family:var(--sans)}
+.stage-tools button:hover{background:rgba(140,31,40,.08);color:var(--red)}
+.stage-tools #fsZoomLabel{font-size:10.5px;color:var(--ink-3);min-width:38px;text-align:center}
+.stage-tools .st-hint{font-size:10px;color:var(--ink-3);letter-spacing:.04em;margin:0 6px 0 4px}
+.stage-tools .st-exit{border-color:var(--line-2);color:var(--red)}
+@media(max-width:820px){
+  body.graph-fs .stage-tools{left:10px;right:10px;transform:none;justify-content:space-between;gap:2px}
+  .stage-tools .st-hint{display:none}
+}

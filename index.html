@@ -87,6 +87,7 @@
         <button data-zoom="reset" class="fit">重置</button>
       </div>
       <button class="chip" id="evToggle">显示事件节点</button>
+      <button class="chip" id="fsToggle">全屏</button>
       <span class="muted" id="gCount"></span>
     </div>
     <div class="legend" id="gLegend"></div>
@@ -94,6 +95,14 @@
     <div class="stage" id="gStage">
       <svg id="gSvg" role="img" aria-label="红楼梦人物关系图"></svg>
       <div class="tip" id="gTip" hidden></div>
+      <div class="stage-tools" id="stageTools">
+        <span class="st-hint">拖拽平移 · 滚轮/双指缩放 · ESC 退出</span>
+        <button data-zoom="out" aria-label="缩小">−</button>
+        <span id="fsZoomLabel">100%</span>
+        <button data-zoom="in" aria-label="放大">＋</button>
+        <button data-zoom="reset">重置</button>
+        <button id="fsExit" class="st-exit">退出全屏 ✕</button>
+      </div>
     </div>
   </div>
 </section>
@@ -221,6 +230,6 @@
   </div>
 </div>
 
-<script src="js/app.js?v=18"></script>
+<script src="js/app.js?v=19"></script>
 </body>
 </html>

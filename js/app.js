@@ -45,6 +45,7 @@
     $$('.view').forEach(function (el) { el.classList.toggle('active', el.id === 'view-' + state.view); });
     $$('[data-nav]').forEach(function (a) { a.classList.toggle('active', a.getAttribute('data-nav') === state.view); });
     $('#mainnav').classList.remove('open');
+    if (state.view !== 'graph' && document.body.classList.contains('graph-fs')) setGraphFs(false);
     window.scrollTo({ top: 0 });
     if (v === 'lineage') renderLineage(parts[1]);
     if (v === 'graph') renderGraph();
@@ -464,8 +465,29 @@
   }
   function syncZoom() {
     $('#gZoomLabel').textContent = Math.round(gState.zoom * 100) + '%';
+    var f = $('#fsZoomLabel');
+    if (f) f.textContent = Math.round(gState.zoom * 100) + '%';
   }
   function clampPan(v) { var lim = G.W * 0.5; return Math.max(-lim, Math.min(lim, v)); }
+
+  /* 覆盖层全屏：不依赖 Fullscreen API，移动端同样可用 */
+  function setGraphFs(on) {
+    document.body.classList.toggle('graph-fs', on);
+    var btn = $('#fsToggle');
+    if (btn) btn.textContent = on ? '退出全屏' : '全屏';
+    if (on) document.body.style.overflow = 'hidden';
+    else document.body.style.overflow = '';
+    // 进入/退出后画布尺寸变化，重新居中
+    setTimeout(function () {
+      var st = $('#gStage');
+      if (st && st.scrollWidth > st.clientWidth + 4) {
+        st.scrollLeft = (st.scrollWidth - st.clientWidth) / 2;
+        st.scrollTop = (st.scrollHeight - st.clientHeight) / 2;
+      }
+      applyTransform();
+    }, 60);
+  }
+  function toggleGraphFs() { setGraphFs(!document.body.classList.contains('graph-fs')); }
 
   function highlight(id) {
     var near = {};
@@ -507,13 +529,14 @@
     if (stage.dataset.bound) return;
     stage.dataset.bound = '1';
 
-    $$('#gZoom [data-zoom]').forEach(function (b) {
+    $$('[data-zoom]').forEach(function (b) {
       b.addEventListener('click', function () {
         var m = b.getAttribute('data-zoom');
         if (m === 'in') gState.zoom = Math.min(3, gState.zoom * 1.2);
         else if (m === 'out') gState.zoom = Math.max(0.5, gState.zoom / 1.2);
         else { gState.zoom = 1; gState.tx = 0; gState.ty = 0; }
         applyTransform(); syncZoom();
+        var lbl = $('#fsZoomLabel'); if (lbl) lbl.textContent = Math.round(gState.zoom * 100) + '%';
       });
     });
 
@@ -908,6 +931,16 @@
         renderGraph();
       });
     });
+    var fsToggle = $('#fsToggle');
+    if (fsToggle && !fsToggle.dataset.bound) {
+      fsToggle.dataset.bound = '1';
+      fsToggle.addEventListener('click', toggleGraphFs);
+    }
+    var fsExit = $('#fsExit');
+    if (fsExit && !fsExit.dataset.bound) {
+      fsExit.dataset.bound = '1';
+      fsExit.addEventListener('click', function () { setGraphFs(false); });
+    }
     var evToggle = $('#evToggle');
     if (evToggle) evToggle.addEventListener('click', function () {
       state.showEvents = !state.showEvents;
@@ -923,6 +956,12 @@
       if (e.key === 'Escape') {
         if (!$('#modal').hidden) return closeModal();
         if (!$('#palette').hidden) return closePalette();
+        if (document.body.classList.contains('graph-fs')) return setGraphFs(false);
+      }
+      if ((e.key === 'f' || e.key === 'F') && state.view === 'graph' &&
+          document.activeElement.tagName !== 'INPUT') {
+        e.preventDefault();
+        toggleGraphFs();
       }
       if (!$('#palette').hidden) {
         if (e.key === 'ArrowDown') { e.preventDefault(); palMove(1); }

@@ -2842,3 +2842,181 @@ EXTRA_RELATIONS.extend([
     ("pl-shiding", "pl-xiangyun", "叔侄"),
     ("pl-shinai", "pl-shiding", "兄弟"),
 ])
+
+# 程高本与清客群体补遗
+EXTRA_PEOPLE.extend([
+    {
+        "id": "pl-wangzisheng", "name": "王子胜", "family": "wang", "role": "亲戚", "type": "亲戚",
+        "summary": "王夫人、王子腾之弟，王熙凤、王仁的叔父，程高本第114回提及，被评“无能”“啬刻”。",
+        "detail": "王子胜是王公之后，王夫人、王子腾、薛姨妈的弟弟，王熙凤、王仁的叔父。第114回写王子腾死后，朝廷着落王子胜、王仁赔补海疆任内亏空；王子胜“又是无能的人”，约束不住王仁，王家“六亲不和”。\n\n【评析】王子胜是王家败落的注脚：王子腾一死，王家再无人撑持。凤姐的娘家，和贾府一样，只剩空架子。",
+        "tags": ["王家", "王子腾之弟", "凤姐叔父", "无能"],
+        "refs": ["《红楼梦》第114回", "《红楼梦大辞典》“王子胜”条"],
+    },
+    {
+        "id": "pl-chengrixing", "name": "程日兴", "family": "other", "role": "清客", "type": "清客",
+        "summary": "贾政门下清客，古董商，善画美人，第16回参与大观园规划。",
+        "detail": "程日兴是贾政门下的清客相公，本业古董商，善画美人。第16回参与规划设计大观园；第26回薛蟠生日，他送去鲜藕、西瓜、鲟鱼、暹猪四样寿礼；贾府败落后，清客星散，不知所踪。\n\n【评析】程日兴兼有古董商与清客双重身份，既能替贾府办事，也能从贾府获利。他是“帮闲”群体中较有实际能力的一个。",
+        "tags": ["清客", "古董商", "善画美人", "大观园"],
+        "refs": ["《红楼梦》第16、26回", "《红楼梦大辞典》“程日兴”条"],
+    },
+    {
+        "id": "pl-husilai", "name": "胡斯来", "family": "other", "role": "清客", "type": "清客",
+        "summary": "贾政门下清客，第26回与詹光、程日兴等同在贾府书房活动。",
+        "detail": "胡斯来是贾府豢养的清客之一，仅见于第26回，与詹光、程日兴等同在贾政书房陪谈。其名谐“胡来”，与“詹光”（沾光）、“单聘仁”（善骗人）、“卜固修”（不顾羞）同属作者对帮闲文人的讽刺。\n\n【评析】胡斯来没有独立情节，却是贾府清客群像中不可少的一笔：他们靠主子的风雅与权势吃饭，也随主子的败落而散。",
+        "tags": ["清客", "谐音", "帮闲"],
+        "refs": ["《红楼梦》第26回", "《红楼梦大辞典》“胡斯来”条"],
+    },
+    {
+        "id": "pl-wangertiao", "name": "王尔调", "alias": "王作梅", "family": "other", "role": "清客", "type": "清客",
+        "summary": "贾政门下清客，名作梅，善下围棋，第84回为宝玉提亲张官人之女。",
+        "detail": "王尔调名作梅，是贾政门下新来的清客，善下大棋。第84回他劝贾政为宝玉定亲，提议娶做过南韶道的张大老爷之女，说张家与邢夫人那边有亲，包管一说就成。\n\n【评析】王尔调的出现，说明贾府到了需要用婚姻换钱、换关系的境地。他提的亲事没有成，却把贾府的窘迫写得很清楚。",
+        "tags": ["清客", "王作梅", "提亲", "围棋"],
+        "refs": ["《红楼梦》第84回", "《红楼梦大辞典》“王尔调”条"],
+    },
+])
+
+EXTRA_RELATIONS.extend([
+    ("pl-wangzisheng", "pl-wangziteng", "兄弟"),
+    ("pl-wangzisheng", "pl-wangfuren", "姐弟"),
+    ("pl-wangzisheng", "pl-xueyima", "姐弟"),
+    ("pl-wangzisheng", "pl-wangxifeng", "叔侄"),
+    ("pl-wangzisheng", "pl-wangren", "叔侄"),
+    ("pl-chengrixing", "pl-jiazheng", "清客"),
+    ("pl-chengrixing", "pl-xuepan", "贺寿"),
+    ("pl-husilai", "pl-jiazheng", "清客"),
+    ("pl-wangertiao", "pl-jiazheng", "清客"),
+    ("pl-wangertiao", "pl-baoyu", "提亲"),
+])
+
+# 金陵十二钗总目
+EXTRA_ITEMS = [
+    {
+        "id": "fate-jinling", "cat": "fate", "type": "总目", "name": "金陵十二钗",
+        "alias": "正册十二人",
+        "quote": "正册：林黛玉、薛宝钗、贾元春、贾探春、史湘云、妙玉、贾迎春、贾惜春、王熙凤、巧姐、李纨、秦可卿。",
+        "summary": "《红楼梦》第五回太虚幻境薄命司册子中的十二位女性，是全书人物命运的总纲。",
+        "detail": "【册次】第5回宝玉梦游太虚幻境，见“金陵十二钗正册”十二人，另有副册（以香菱为代表）与又副册（以晴雯、袭人为代表）。正册十二人即黛玉、宝钗、元春、探春、湘云、妙玉、迎春、惜春、凤姐、巧姐、李纨、可卿。\n\n【结构】正册以钗黛合为一图一判开篇，以秦可卿“造衅开端实在宁”收束；十二支曲则逐人咏叹。判词与曲词把结局提前告诉读者，使全书成为“已知结局的梦”。\n\n【情榜】脂批与探佚研究提到太虚幻境末回有“情榜”，以“情不情”“情情”等评语总括人物。今本情榜已佚，只能从脂批与人物言行中推想。\n\n【评析】“金陵十二钗”不是十二个并列的女子，而是一组互相映照的命运：钗黛对峙、元探对照、迎惜相形、凤巧因果、纨卿盛衰。读十二钗，就是读贾府由盛而衰的全部。",
+        "tags": ["金陵十二钗", "正册", "副册", "又副册", "情榜"],
+        "refs": ["《红楼梦》第5回", "蔡义江《红楼梦诗词曲赋鉴赏》", "《红楼梦大辞典》“金陵十二钗”条"],
+    },
+]
+
+EXTRA_RELATIONS.extend([
+    ("fate-jinling", "pl-daiyu", "对应"),
+    ("fate-jinling", "pl-xuebaochai", "对应"),
+    ("fate-jinling", "pl-jiayuanchun", "对应"),
+    ("fate-jinling", "pl-tanchun", "对应"),
+    ("fate-jinling", "pl-xiangyun", "对应"),
+    ("fate-jinling", "pl-miaoyu", "对应"),
+    ("fate-jinling", "pl-yingchun", "对应"),
+    ("fate-jinling", "pl-xichun", "对应"),
+    ("fate-jinling", "pl-wangxifeng", "对应"),
+    ("fate-jinling", "pl-qiaojie", "对应"),
+    ("fate-jinling", "pl-livan", "对应"),
+    ("fate-jinling", "pl-qinkeqing", "对应"),
+])
+
+# 依据维基百科/百度百科核对后补入的细节
+DETAIL_APPEND = {
+    "pl-baoyu": "【补记】“宝玉”是小名，并非正式名字；其真名在红学界有贾瑛、贾玑、贾宝、贾璋等说。警幻情榜评为“情不情”。",
+    "pl-daiyu": "【补记】字颦颦（宝玉所赠），情榜评为“情情”；祖籍姑苏，祖上曾袭四代列侯，有一弟早夭。",
+    "pl-xuebaochai": "【补记】第63回抽花名签得牡丹“艳冠群芳”；常服冷香丸；第74回抄检后以母病为由搬出大观园。",
+    "pl-wangxifeng": "【补记】她起初不识字，后因长期看账本，也略识了几个字。小厮兴儿评她“嘴甜心苦，两面三刀”。程高本第114回写她病死。",
+    "pl-tanchun": "【补记】第63回抽花名签得杏花“瑶池仙品”；脂批评她“看得透、拿得定、说得出、办得来”。",
+    "pl-xiangyun": "【补记】第63回抽花名签得海棠“香梦沉酣”；周汝昌考证脂砚斋可能以湘云为原型，属探佚之说。",
+    "pl-qinkeqing": "【补记】乳名可儿，昵称可卿；判词画高楼自缢。甲戌本批原稿有“遗簪”“更衣”等情节，今本已删改。",
+    "pl-qingwen": "【补记】又副册第一；甲戌本脂批“晴有林风，袭乃钗副”，故有“晴为黛影”之说。",
+    "pl-xiangling": "【补记】第48回向黛玉学诗，第三首《咏月》被赞“新巧有意趣”；第103回夏金桂死后被扶正，第120回难产而亡。",
+    "pl-pinger": "【补记】第61回“判冤决狱平儿行权”，在玫瑰露、茯苓霜一案中保全柳五儿；第119回被贾琏扶正。",
+    "pl-zijuan": "【补记】原名鹦哥，贾母房中丫头，后服侍黛玉；第57回“慧紫鹃情辞试忙玉”。",
+    "pl-yuanyang": "【补记】第46回当众铰发拒嫁贾赦；第111回贾母死后自缢殉主。",
+    "pl-jiayucun": "【补记】名化，字时飞，别号雨村，湖州人；“假语存焉”的谐音人物。",
+    "pl-zhenshiyin": "【补记】名费，字士隐；家住阊门外十里街仁清巷葫芦庙旁；“真事隐”的谐音人物。",
+    "pl-jiazheng": "【补记】字存周；并非科甲出身，因代善遗本蒙恩赐主事，后升工部员外郎。",
+    "pl-jiamu": "【补记】史太君，保龄侯史公之女；第110回“史太君寿终归地府”。",
+    "pl-wangfuren": "【补记】王子腾之妹、薛姨妈之姐；第74回主导抄检大观园。",
+    "pl-jiayuanchun": "【补记】第16回封凤藻宫尚书、加封贤德妃；第95回“因讹成实元妃薨逝”。",
+    "pl-livan": "【补记】字宫裁，国子监祭酒李守中之女；第119回贾兰中举。",
+    "pl-qiaojie": "【补记】名字由刘姥姥所取；第119回被刘姥姥救出，续书嫁与乡间周姓富户。",
+}
+
+# 在线参考：维基百科 / 百度百科（均为外部链接）
+def _wiki(name):
+    return "https://zh.wikipedia.org/wiki/" + name
+
+def _baike(name):
+    return "https://baike.baidu.com/item/" + name
+
+def _web(label, url):
+    return {"label": label, "url": url}
+
+def _both(name, wiki_name=None):
+    return [
+        _web("维基百科：" + name, _wiki(wiki_name or name)),
+        _web("百度百科：" + name, _baike(name)),
+    ]
+
+WEB_REFS = {
+    "pl-baoyu": _both("贾宝玉"),
+    "pl-daiyu": _both("林黛玉"),
+    "pl-xuebaochai": _both("薛宝钗"),
+    "pl-wangxifeng": _both("王熙凤"),
+    "pl-jiamu": _both("贾母"),
+    "pl-jiazheng": _both("贾政"),
+    "pl-wangfuren": _both("王夫人", "王夫人_(红楼梦)"),
+    "pl-jiayuanchun": _both("贾元春"),
+    "pl-livan": _both("李纨"),
+    "pl-tanchun": _both("贾探春"),
+    "pl-yingchun": _both("贾迎春"),
+    "pl-xichun": _both("贾惜春"),
+    "pl-qiaojie": _both("巧姐", "贾巧姐"),
+    "pl-qinkeqing": _both("秦可卿"),
+    "pl-miaoyu": _both("妙玉"),
+    "pl-xiangyun": _both("史湘云"),
+    "pl-xiangling": _both("香菱"),
+    "pl-pinger": _both("平儿"),
+    "pl-qingwen": _both("晴雯"),
+    "pl-xiren": _both("袭人"),
+    "pl-zijuan": _both("紫鹃"),
+    "pl-yuanyang": _both("鸳鸯", "鸳鸯_(红楼梦)"),
+    "pl-liulaolao": _both("刘姥姥"),
+    "pl-jiayucun": _both("贾雨村"),
+    "pl-zhenshiyin": _both("甄士隐"),
+    "pl-jialian": _both("贾琏"),
+    "pl-jiazhen": _both("贾珍"),
+    "pl-xuepan": _both("薛蟠"),
+    "pl-qinzhong": _both("秦钟"),
+    "pl-yousanjie": _both("尤三姐"),
+    "pl-youerjie": _both("尤二姐"),
+    "pl-liuxianglian": _both("柳湘莲"),
+    "pl-jiangyuhan": _both("蒋玉菡"),
+    "pl-jiaqiang": _both("贾蔷"),
+    "pl-jiayun": _both("贾芸"),
+    "pl-jiarui": _both("贾瑞"),
+    "place-daguanyuan": _both("大观园"),
+    "fate-jinling": _both("金陵十二钗"),
+    "pl-wangzisheng": [
+        _web("维基百科：红楼梦角色列表", _wiki("红楼梦角色列表")),
+        _web("百度百科：王子胜", _baike("王子胜")),
+    ],
+    "pl-shinai": [
+        _web("维基百科：红楼梦角色列表", _wiki("红楼梦角色列表")),
+        _web("百度百科：史鼐", _baike("史鼐")),
+    ],
+    "pl-shiding": [
+        _web("维基百科：红楼梦角色列表", _wiki("红楼梦角色列表")),
+        _web("百度百科：史鼎", _baike("史鼎")),
+    ],
+    "pl-chengrixing": [
+        _web("维基百科：红楼梦角色列表", _wiki("红楼梦角色列表")),
+        _web("百度百科：程日兴", _baike("程日兴")),
+    ],
+    "pl-husilai": [
+        _web("维基百科：红楼梦角色列表", _wiki("红楼梦角色列表")),
+        _web("百度百科：胡斯来", _baike("胡斯来")),
+    ],
+    "pl-wangertiao": [
+        _web("维基百科：红楼梦角色列表", _wiki("红楼梦角色列表")),
+        _web("百度百科：王尔调", _baike("王尔调")),
+    ],
+}
