@@ -10,7 +10,7 @@
   var gState = { nodes: [], edges: [], nodeMap: {}, pos: {}, laid: false, zoom: 1, tx: 0, ty: 0, hover: null, sel: null };
   var CAT = { people: '人物', event: '事件', fate: '判词', poetry: '诗词', place: '地点', chapter: '回目' };
   var KIN = ['父子', '父女', '母子', '母女', '兄弟', '兄妹', '姐妹', '姐弟', '祖孙', '外祖母', '曾祖母',
-    '姑祖母', '夫妻', '妾室', '嫡母', '养父女', '堂兄弟', '姑嫂', '姨甥', '叔侄', '姑侄', '未婚夫妻'];
+    '姑祖母', '夫妻', '妾室', '嫡母', '养父女', '堂兄弟', '堂姐妹', '姑嫂', '姨甥', '叔侄', '姑侄', '舅甥', '继母女', '翁媳', '岳婿', '族亲', '未婚夫妻'];
 
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
@@ -177,9 +177,9 @@
 
   function relCat(label) {
     if (KIN.indexOf(label) >= 0) return 'kin';
-    if (/主仆|大管家|老仆/.test(label)) return 'servant';
-    if (/知己|夫妻|妾室|未婚|情/.test(label)) return 'love';
-    if (/同人|同窗|友人|诗友|方外|旧交|盟友/.test(label)) return 'friend';
+    if (/主仆|大管家|老仆|乳母|陪房|管家|心腹|小厮/.test(label)) return 'servant';
+    if (/知己|夫妻|妾室|未婚|恋人|情人|通房|情/.test(label)) return 'love';
+    if (/同人|同窗|同伴|友人|诗友|方外|旧交|盟友/.test(label)) return 'friend';
     return 'other';
   }
 
@@ -206,79 +206,70 @@
     return { nodes: nodes, edges: edges, edgesAll: edges.length, total: people.length };
   }
 
+  /* 分簇布局：每个家族拆成「主仆两侧」两个岛，按人数定半径后货架式排布 */
+  var ROLE_ORDER = ['主子', '妾室', '亲戚', '僧道', '外人', '清客', '仆役', '丫鬟', '小厮'];
+  var INNER_ROLES = ['主子', '妾室', '亲戚', '僧道', '外人', '清客'];
+
   function layout(model) {
-    var nodes = model.nodes, edges = model.edges, n = nodes.length;
-    if (!n) return;
-    var cx = G.W / 2, cy = G.H / 2;
+    var nodes = model.nodes;
+    if (!nodes.length) return;
 
-    var anchors = {}, keys = [];
+    // 归入岛：family + 主/仆；人数过少的家族并入「其他家族」，避免一堆碎岛
+    var famCount = {};
+    nodes.forEach(function (nd) { var f = nd.item.family || 'other'; famCount[f] = (famCount[f] || 0) + 1; });
+    var clusters = [];
+    var index = {};
     nodes.forEach(function (nd) {
-      var f = nd.item.family || 'other';
-      if (keys.indexOf(f) < 0) keys.push(f);
-    });
-    var R = Math.min(G.W, G.H) * 0.35;
-    keys.forEach(function (k, i) {
-      var a = (i / keys.length) * Math.PI * 2 - Math.PI / 2;
-      anchors[k] = { x: cx + Math.cos(a) * R, y: cy + Math.sin(a) * R };
-    });
-
-    nodes.forEach(function (nd, i) {
-      var an = anchors[nd.item.family || 'other'];
-      var a = i * 2.399963229728653, rr = 40 + (i % 9) * 6;
-      nd.x = an.x + Math.cos(a) * rr;
-      nd.y = an.y + Math.sin(a) * rr;
-      nd.ax = an.x; nd.ay = an.y;
+      var raw = nd.item.family || 'other';
+      // 主岛白名单；其余小家族（李、甄、尤、邢、史等）并入「其他家族」
+      var f = (['rong', 'ning', 'xue', 'wang', 'lin', 'other'].indexOf(raw) >= 0) ? raw : 'minor';
+      var inner = INNER_ROLES.indexOf(nd.item.role) >= 0;
+      var key = f + (inner ? '#m' : '#s');
+      if (!index[key]) {
+        var fam = famById[f];
+        index[key] = { key: key, family: f, inner: inner, nodes: [],
+          title: f === 'minor' ? '其他家族' : ((fam ? fam.name : '其他') + (inner ? '' : ' · 仆从')),
+          color: fam ? fam.color : '#8a8073' };
+        clusters.push(index[key]);
+      }
+      index[key].nodes.push(nd);
     });
 
-    var m = {}, links = [];
-    nodes.forEach(function (nd) { m[nd.id] = nd; });
-    edges.forEach(function (e) { if (m[e.a] && m[e.b]) links.push({ s: m[e.a], t: m[e.b] }); });
+    clusters.forEach(function (c) {
+      c.nodes.sort(function (a, b) {
+        var ra = ROLE_ORDER.indexOf(a.item.role); ra = ra < 0 ? 99 : ra;
+        var rb = ROLE_ORDER.indexOf(b.item.role); rb = rb < 0 ? 99 : rb;
+        return ra - rb || a.item.name.localeCompare(b.item.name, 'zh-Hans-CN');
+      });
+      c.R = c.nodes.length <= 3 ? 40 : 24 + 24 * Math.sqrt(c.nodes.length);
+    });
+    clusters.sort(function (a, b) { return b.nodes.length - a.nodes.length; });
 
-    var alpha = 1, decay = 0.972, iters = 460;
-    var repulse = 3400, springK = 0.06, springLen = 62, anchorK = 0.085, centerK = 0.012;
-
-    for (var it = 0; it < iters; it++) {
-      alpha *= decay;
-      for (var i = 0; i < n; i++) {
-        var a = nodes[i];
-        for (var j = i + 1; j < n; j++) {
-          var b = nodes[j];
-          var dx = b.x - a.x, dy = b.y - a.y, d2 = dx * dx + dy * dy;
-          if (d2 < 4) { d2 = 4; dx = (i % 7 - 3) * .4; dy = (j % 7 - 3) * .4; }
-          if (d2 > 160000) continue;
-          var f = repulse * alpha / d2, d = Math.sqrt(d2);
-          var fx = dx / d * f, fy = dy / d * f;
-          a.vx -= fx; a.vy -= fy; b.vx += fx; b.vy += fy;
+    var TARGET_W = 1440, PAD = 34, GAPY = 48;
+    var x = PAD, y = PAD, rowH = 0;
+    clusters.forEach(function (c) {
+      if (x + c.R * 2 > TARGET_W - PAD && x > PAD) { x = PAD; y += rowH + GAPY; rowH = 0; }
+      c.cx = x + c.R; c.cy = y + c.R;
+      x += c.R * 2 + (c.R > 120 ? 52 : 22);
+      rowH = Math.max(rowH, c.R * 2);
+      // 环状排布：每环按周长决定容量
+      var per = Math.max(6, Math.round((2 * Math.PI * Math.max(24, c.R * 0.45)) / 42));
+      var placed = 0;
+      for (var ring = 0; placed < c.nodes.length; ring++) {
+        var r = Math.max(24, c.R * 0.42) + ring * 44;
+        var cap = Math.max(6, Math.round((2 * Math.PI * r) / 46));
+        for (var i = 0; i < cap && placed < c.nodes.length; i++, placed++) {
+          var a = (i / cap) * Math.PI * 2 + ring * 0.6;
+          var nd = c.nodes[placed];
+          nd.x = c.cx + Math.cos(a) * r;
+          nd.y = c.cy + Math.sin(a) * r;
         }
       }
-      links.forEach(function (l) {
-        var dx = l.t.x - l.s.x, dy = l.t.y - l.s.y, d = Math.sqrt(dx * dx + dy * dy) || 1;
-        var f = (d - springLen) * springK * alpha;
-        var fx = dx / d * f, fy = dy / d * f;
-        l.s.vx += fx; l.s.vy += fy; l.t.vx -= fx; l.t.vy -= fy;
-      });
-      nodes.forEach(function (nd) {
-        nd.vx += (nd.ax - nd.x) * anchorK * alpha;
-        nd.vy += (nd.ay - nd.y) * anchorK * alpha;
-        nd.vx += (cx - nd.x) * centerK * alpha;
-        nd.vy += (cy - nd.y) * centerK * alpha;
-        nd.vx *= 0.8; nd.vy *= 0.8;
-        nd.x += nd.vx; nd.y += nd.vy;
-        nd.x = Math.max(G.pad, Math.min(G.W - G.pad, nd.x));
-        nd.y = Math.max(G.pad, Math.min(G.H - G.pad, nd.y));
-      });
-    }
-
-    // 居中归一化
-    var minX = 1e9, maxX = -1e9, minY = 1e9, maxY = -1e9;
-    nodes.forEach(function (nd) {
-      minX = Math.min(minX, nd.x); maxX = Math.max(maxX, nd.x);
-      minY = Math.min(minY, nd.y); maxY = Math.max(maxY, nd.y);
     });
-    var w = Math.max(1, maxX - minX), h = Math.max(1, maxY - minY);
-    var k = Math.min((G.W - G.pad * 2) / w, (G.H - G.pad * 2) / h, 1.2);
-    var ox = (G.W - w * k) / 2 - minX * k, oy = (G.H - h * k) / 2 - minY * k;
-    nodes.forEach(function (nd) { nd.x = nd.x * k + ox; nd.y = nd.y * k + oy; });
+
+    G.W = TARGET_W;
+    G.H = Math.max(720, y + rowH + PAD + 26);
+    model.clusters = clusters;
   }
 
   function renderGraph() {
@@ -289,6 +280,9 @@
       return '<span><i style="background:' + f.color + '"></i>' + esc(f.name) + '</span>';
     }).join('');
     $('#gCount').textContent = model.nodes.length + ' 人 · ' + model.edges.length + ' 条关系（人物库 ' + model.total + '）';
+    var hint = $('#graphHint');
+    if (hint) hint.textContent = '全库 ' + model.total + ' 位人物、' + D.relations.length +
+      ' 条关系。悬停高亮邻域并显示关系名，点击看详情与出场事件。';
 
     if (!model.nodes.length) {
       svg.innerHTML = '';
@@ -312,19 +306,27 @@
     gState.edges = model.edges;
 
     var parts = ['<g id="gViewport">'];
+    // 每个岛的名称（与分簇布局一致）
+    (model.clusters || []).forEach(function (c) {
+      var top = Math.min.apply(null, c.nodes.map(function (nd) { return nd.y; }));
+      parts.push('<text class="g-fam" x="' + c.cx.toFixed(1) + '" y="' + (top - 14).toFixed(1) +
+        '" fill="' + c.color + '">' + esc(c.title) + '</text>');
+    });
     model.edges.forEach(function (e) {
       var a = gState.nodeMap[e.a], b = gState.nodeMap[e.b];
       if (!a || !b) return;
       var mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
-      parts.push('<g class="g-edge-g" data-a="' + e.a + '" data-b="' + e.b + '">' +
+      var cross = (a.item.family || 'other') !== (b.item.family || 'other');
+      parts.push('<g class="g-edge-g' + (cross ? ' cross' : '') + '" data-a="' + e.a + '" data-b="' + e.b + '">' +
         '<line class="g-edge" x1="' + a.x.toFixed(1) + '" y1="' + a.y.toFixed(1) +
         '" x2="' + b.x.toFixed(1) + '" y2="' + b.y.toFixed(1) + '"/>' +
         '<text class="g-edge-label" x="' + mx.toFixed(1) + '" y="' + (my - 3).toFixed(1) + '" text-anchor="middle">' +
         esc(e.label) + '</text></g>');
     });
     model.nodes.forEach(function (nd) {
-      var r = Math.min(9, 3.4 + Math.sqrt(nd.deg) * 1.8);
-      parts.push('<g class="g-node' + (nd.deg < 3 ? ' minor' : '') + '" data-id="' + nd.id + '" tabindex="0" role="button">' +
+      var r = Math.min(8.5, 3.0 + Math.sqrt(nd.deg) * (model.nodes.length > 100 ? 1.5 : 1.8));
+      parts.push('<g class="g-node' + (nd.deg < (model.nodes.length > 100 ? 5 : 3) ? ' minor' : '') +
+        '" data-id="' + nd.id + '" tabindex="0" role="button">' +
         '<circle class="dot" cx="' + nd.x.toFixed(1) + '" cy="' + nd.y.toFixed(1) + '" r="' + r.toFixed(1) +
         '" fill="' + famColor(nd.item) + '"/>' +
         '<text class="g-label" x="' + (nd.x + r + 3).toFixed(1) + '" y="' + (nd.y + 3.2).toFixed(1) + '">' +
@@ -581,11 +583,30 @@
   }
 
   /* ---------------- 详情 ---------------- */
+
+  // 反向关系的中文称谓：让「宝玉」页面显示「父」而不是「父子」
+  var INV_LABEL = {
+    '父子': '父', '父女': '父', '母子': '母', '母女': '母',
+    '祖孙': '祖辈', '外祖母': '外孙/女', '曾祖母': '曾孙/女', '姑祖母': '侄孙/女',
+    '夫妻': '配偶', '妾室': '夫主', '未婚夫妻': '未婚夫/妻',
+    '兄弟': '兄弟', '兄妹': '兄妹', '姐妹': '姐妹', '姐弟': '姐弟',
+    '堂兄弟': '堂兄弟', '堂姐妹': '堂姐妹', '嫡母': '庶子/女', '养父女': '养女',
+    '姑嫂': '姑/嫂', '姨甥': '姨母/甥', '叔侄': '侄', '姑侄': '侄', '翁婿': '婿',
+    '继母女': '继女', '主仆': '仆从', '陪房': '陪房', '老仆': '仆从',
+    '大管家': '管家', '小厮': '小厮', '奶兄': '奶兄', '同房': '同房',
+    '同侪': '同侪', '同僚': '同僚', '同班': '同班', '师徒': '师父',
+    '抚养': '被抚养', '请托': '受托', '相思': '被思慕', '提亲': '被提亲',
+    '引荐': '被引荐', '传话': '受托传话', '串通': '串通', '供奉': '受供奉',
+    '抄检': '被抄检', '被撵': '撵人', '镜像': '镜像', '求差事': '给差事',
+    '宗族': '宗族', '族中长辈': '族中晚辈', '私交': '私交', '情人': '情人',
+    '夫妻（续）': '夫妻', '主仆（陪房）': '主子'
+  };
+
   function relationsOf(id) {
     var out = [];
     D.relations.forEach(function (r) {
-      if (r.a === id && byId[r.b]) out.push({ other: byId[r.b], label: r.label, dir: 'out' });
-      else if (r.b === id && byId[r.a]) out.push({ other: byId[r.a], label: r.label, dir: 'in' });
+      if (r.a === id && byId[r.b]) out.push({ other: byId[r.b], label: r.label, show: r.label, dir: 'out' });
+      else if (r.b === id && byId[r.a]) out.push({ other: byId[r.a], label: r.label, show: INV_LABEL[r.label] || r.label, dir: 'in' });
     });
     return out;
   }
@@ -621,7 +642,7 @@
     rels.forEach(function (r) {
       if (r.other.cat !== 'people' && r.other.cat !== 'event' && r.other.cat !== 'fate' &&
           r.other.cat !== 'poetry' && r.other.cat !== 'place') return;
-      var key = r.label;
+      var key = r.show || r.label;
       (groups[key] = groups[key] || []).push(r.other);
     });
 
@@ -633,7 +654,8 @@
     });
 
     var f = famById[it.family];
-    var sub = [f ? f.name : '', it.role, it.alias ? '号 ' + it.alias : ''].filter(Boolean).join(' · ');
+    var aliasText = it.alias ? (it.cat === 'people' ? '号 ' + it.alias : it.alias) : '';
+    var sub = [f ? f.name : '', it.role, aliasText].filter(Boolean).join(' · ');
 
     var html = '<div class="m-eyebrow">' + esc(catName(it.cat)) + (it.type ? ' · ' + esc(it.type) : '') + '</div>' +
       '<h2>' + esc(it.name) + '</h2>' +
@@ -646,7 +668,8 @@
         it.refs.map(function (r) { return '<li>' + esc(r) + '</li>'; }).join('') + '</ul></div>' : '');
 
     if (events.length) {
-      html += '<div class="m-sec"><h3>出场事件（' + events.length + '）</h3><div class="m-ev">' +
+      var evTitle = it.cat === 'chapter' ? '相关事件' : '出场事件';
+      html += '<div class="m-sec"><h3>' + evTitle + '（' + events.length + '）</h3><div class="m-ev">' +
         events.sort(function (a, b) { return (a.other.seq || 0) - (b.other.seq || 0); })
           .map(function (r) {
             return '<button data-go="' + r.other.id + '">' +
@@ -657,7 +680,7 @@
 
     if (people.length) {
       var byLabel = {};
-      people.forEach(function (r) { (byLabel[r.label] = byLabel[r.label] || []).push(r.other); });
+      people.forEach(function (r) { var k = r.show || r.label; (byLabel[k] = byLabel[k] || []).push(r.other); });
       html += '<div class="m-sec"><h3>人物关系</h3><div class="m-rel">' +
         Object.keys(byLabel).map(function (lb) {
           return '<div class="grp"><span class="lb">' + esc(lb) + '</span>' +

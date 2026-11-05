@@ -131,7 +131,7 @@ input[type=search]:focus,select:focus{border-color:var(--red);box-shadow:0 0 0 3
 .g-node{cursor:pointer}
 .g-node circle.dot{stroke:#fffdf7;stroke-width:1.1;transition:r .12s,filter .12s}
 .g-node:hover circle.dot{filter:drop-shadow(0 2px 6px rgba(40,28,14,.3))}
-.g-node .g-label{font-family:var(--sans);font-size:9.5px;fill:var(--ink-2);paint-order:stroke;
+.g-node .g-label{font-family:var(--sans);font-size:10.5px;fill:var(--ink-2);paint-order:stroke;
   stroke:#f7f2e7;stroke-width:2.4px;pointer-events:none}
 .g-node.sel circle.dot{stroke:var(--ink);stroke-width:2}
 .g-node.sel .g-label{fill:var(--red);font-weight:600;font-size:10.5px}
@@ -381,3 +381,7 @@ table.data th{font-family:var(--serif);font-size:11px;letter-spacing:.14em;color
   .filterbar.stack .seg{width:100%}
   .filterbar.stack .zoom{margin-left:0}
 }
+.g-fam{font-family:var(--serif);font-size:15px;letter-spacing:.14em;text-anchor:middle;opacity:.5}
+.g-edge-g.cross .g-edge{opacity:.07}
+.g-edge-g.cross.hl .g-edge{opacity:.9}
+.g-fam{font-size:12px;letter-spacing:.1em}

@@ -24,7 +24,7 @@ FAMILIES = [
     {"id": "other", "name": "方外与外人", "color": "#6b6458", "note": "僧道、清客、乡邻与优伶"},
 ]
 
-ROLES = ["主子", "妾室", "丫鬟", "仆役", "亲戚", "僧道", "外人"]
+ROLES = ["主子", "妾室", "丫鬟", "仆役", "小厮", "清客", "亲戚", "僧道", "外人"]
 
 P = []
 R = []
@@ -369,6 +369,158 @@ person("pl-xuegong", "薛公", alias="紫薇舍人", family="xue", role="主子"
        detail="薛家世代为皇商，薛公这一代最盛。到薛蟠时只剩银子与官司，家声早不如前。",
        tags=["紫薇舍人", "皇商"])
 
+
+# ---------------- 族中旁支 ----------------
+person("pl-jiadairu", "贾代儒", family="ning", role="主子",
+       summary="贾氏族中长辈，家塾塾师，贾瑞之祖。",
+       detail="贾代儒是贾代化一辈的族兄弟，掌管贾府家塾，课徒极严而不得法。孙子贾瑞被他管束过紧，反生邪念，终至丧命。",
+       tags=["家塾", "族中长辈"])
+person("pl-jiarui", "贾瑞", alias="贾天祥", family="ning", role="主子",
+       summary="贾代儒之孙，痴恋王熙凤，被相思局所害，正照风月鉴而死。",
+       detail="贾瑞在会芳园遇见凤姐，屡次纠缠，反被凤姐设局捉弄，冻饿受辱而病。跛足道人赠“风月宝鉴”，嘱其只照背面，他却只照正面，终至精尽而亡。此事是全书“情”之妄的一记警钟。",
+       tags=["风月宝鉴", "相思局", "痴妄"])
+person("pl-jiaqiang", "贾蔷", family="ning", role="主子",
+       summary="宁府正派玄孙，自幼随贾珍过活，与龄官有情。",
+       detail="贾蔷生得风流俊俏，靠贾珍、贾蓉照应，曾下姑苏采买戏子。他与龄官相恋，龄官画“蔷”正为此人。",
+       tags=["龄官", "采买戏子"])
+person("pl-jiayun", "贾芸", family="rong", role="主子",
+       summary="荣府旁支子弟，机变能干，得凤姐差事，与小红有情。",
+       detail="贾芸西廊下五嫂子之子，先求贾琏不成，转送凤姐冰麝得种树差事。他与小红以手帕传情，是府中少见的“自己挣出路”的年轻人。",
+       tags=["种树差事", "小红", "机变"])
+person("pl-jiaqin", "贾芹", family="rong", role="主子",
+       summary="贾府旁支，管领家庙和尚道士，好赌贪财。",
+       detail="贾芹靠母亲周氏求凤姐得了管理小沙弥、小道士的差事，却在铁槛寺聚赌，后被人告发。",
+       tags=["家庙", "聚赌"])
+
+# ---------------- 妾室与姻亲 ----------------
+person("pl-zhouyiniang", "周姨娘", family="rong", role="妾室",
+       summary="贾政之妾，安分守己，无子女。",
+       detail="周姨娘在书中几乎没有戏份，与赵姨娘的张扬形成对照：同样是妾，一个安分，一个生事。",
+       tags=["妾室", "安分"])
+person("pl-hushi", "胡氏", family="ning", role="主子",
+       summary="贾蓉续弦之妻，秦可卿死后入府。",
+       detail="胡氏在续书中出场，是宁府第四代的媳妇，存在感极低，反衬秦可卿之死的余波。",
+       tags=["续弦"])
+person("pl-sunshaozu", "孙绍祖", family="other", role="外人",
+       summary="迎春之夫，大同府人，武职出身，暴虐成性。",
+       detail="孙绍祖以五千两银子相挟娶迎春，婚后“作践”至极。迎春回门哭诉“我不信我的命就这么苦”，不到一年即亡。判词“子系中山狼”即指此人。",
+       tags=["中山狼", "迎春之死"])
+person("pl-youlaniang", "尤老娘", family="other", role="亲戚",
+       summary="尤氏继母，尤二姐、尤三姐之母，带女寄居宁府。",
+       detail="尤老娘贪图宁府接济，对女儿的名节疏于保护，二姐、三姐的悲剧与她有直接关系。",
+       tags=["尤氏继母"])
+person("pl-liwen", "李纹", family="other", role="亲戚",
+       summary="李纨堂妹，随母入府，参与诗社。",
+       detail="李纹与妹妹李绮同来贾府，容貌才情俱佳，诗社中亦有作品。她们的出现使大观园的青春群像更完整。",
+       tags=["李纨堂妹", "诗社"])
+person("pl-liqi", "李绮", family="other", role="亲戚",
+       summary="李纨堂妹，李纹之妹，后嫁甄宝玉。",
+       detail="李绮在诗社中出场不多，续书安排她嫁与甄宝玉，与宝玉、宝钗一线形成镜像。",
+       tags=["李纨堂妹", "甄宝玉"])
+
+# ---------------- 僧道与方外 ----------------
+person("pl-jingxu", "净虚", family="other", role="僧道",
+       summary="馒头庵（水月庵）老尼，替张家说情，促成凤姐弄权。",
+       detail="净虚在铁槛寺对凤姐说“张家有钱，只求府里一句话”，凤姐遂假托贾琏之名逼婚，得银三千两。这是凤姐干政敛财的开端。",
+       tags=["馒头庵", "弄权铁槛寺"])
+person("pl-zhinenger", "智能儿", family="other", role="僧道",
+       summary="馒头庵小尼，与秦钟相恋，后私逃入城寻秦钟。",
+       detail="智能儿自幼在庵中长大，与秦钟相好。秦钟病中她私逃进城探望，被秦业逐出，下落不明。",
+       tags=["秦钟", "私逃"])
+person("pl-madaopo", "马道婆", family="other", role="僧道",
+       summary="贾府常往来的道婆，受赵姨娘之贿，以魇魔法害宝玉与凤姐。",
+       detail="马道婆一面替贾母供奉“大光明普照菩萨”，一面收赵姨娘银钱与欠契，剪纸人作法。事发后被打入监牢。",
+       tags=["魇魔法", "赵姨娘"])
+person("pl-zhangdaoshi", "张道士", family="other", role="僧道",
+       summary="清虚观道士，荣国公替身，贾母旧识，曾为宝玉提亲。",
+       detail="张道士是当日荣国公的出家替身，清虚观打醮时他替宝玉说亲，引出“金麒麟”一段，暗伏湘云姻缘。",
+       tags=["清虚观", "替身", "提亲"])
+
+# ---------------- 镜像与友人 ----------------
+person("pl-zhenbaoyu", "甄宝玉", family="other", role="外人",
+       summary="金陵甄家公子，与贾宝玉同名同貌，性情却相反。",
+       detail="甄宝玉是贾宝玉的镜像：同样衔玉而生，却好谈经济仕途。两人梦中相见，互称“臭男人”“禄蠹”，是全书“真假”主题的关键一笔。",
+       tags=["镜像", "真假"])
+person("pl-fengziying", "冯紫英", family="other", role="外人",
+       summary="神武将军冯唐之子，宝玉友人，豪爽任侠。",
+       detail="冯紫英与宝玉、薛蟠、蒋玉菡等交往，席间行令唱曲，是贵族公子社交圈的代表。",
+       tags=["宝玉友人", "行令"])
+person("pl-weiruolan", "卫若兰", family="other", role="外人",
+       summary="世家公子，与宝玉交好，脂批暗示与史湘云有姻缘。",
+       detail="卫若兰在书中仅于射圃一段露面。脂砚斋批语有“卫若兰射圃”与金麒麟伏笔，探佚者多认为他后娶湘云。",
+       tags=["金麒麟", "湘云", "探佚"])
+
+# ---------------- 清客 ----------------
+for pid, name, note in [("pl-zhanguang", "詹光", "善画，帮闲凑趣"),
+                        ("pl-shanpinren", "单聘仁", "清客，善逢迎"),
+                        ("pl-buguxiu", "卜固修", "清客，帮闲")]:
+    person(pid, name, family="other", role="清客",
+           summary="贾政门下清客，陪谈陪游，姓名皆有谐音。",
+           detail=note + "。“詹光”谐“沾光”，“单聘仁”谐“善骗人”，“卜固修”谐“不顾羞”，是作者对帮闲文人的讽刺。",
+           tags=["清客", "谐音"])
+
+# ---------------- 仆役与陪房 ----------------
+person("pl-laimomo", "赖嬷嬷", family="rong", role="仆役",
+       summary="贾府老仆，服侍过贾母一辈，孙子赖尚荣捐官。",
+       detail="赖嬷嬷在贾母面前有座位，是“老家人”的代表。她教训孙子赖尚荣“你今年活了三十岁，虽然是人家的奴才，一落娘胎胞，主子恩典，放你出来……”",
+       tags=["老仆", "赖家"])
+person("pl-laishangrong", "赖尚荣", family="rong", role="仆役",
+       summary="赖大之子，蒙贾府恩典放出，捐了州县官。",
+       detail="赖尚荣是贾府豪奴子弟做官的样本：靠主子的关系脱籍捐官，也照见贾府的权势如何滋养依附者。",
+       tags=["捐官", "脱籍"])
+person("pl-wangshanbao", "王善保家的", family="rong", role="仆役",
+       summary="邢夫人陪房，抄检大观园的挑唆者，司棋的外祖母。",
+       detail="王善保家的因外孙女司棋被逐而怀恨，撺掇王夫人抄检，结果反查出自己外孙女的私情，当场出丑。",
+       tags=["陪房", "抄检", "司棋外祖母"])
+person("pl-zhourui", "周瑞家的", family="rong", role="仆役",
+       summary="王夫人陪房，引刘姥姥进府，府中消息灵通的管事媳妇。",
+       detail="周瑞家的是“送宫花”一回的引线人，借她的行走路线把各房人物关系一一带出。",
+       tags=["陪房", "送宫花", "刘姥姥"])
+person("pl-linzhixiao", "林之孝家的", family="rong", role="仆役",
+       summary="荣府管事媳妇，小红之母，巡夜查岗颇有威势。",
+       detail="林之孝家的掌管内务，抄检、查夜都由她随行。小红正是她女儿，却只能在怡红院做粗活。",
+       tags=["管事", "小红之母"])
+person("pl-mingyan", "茗烟", alias="焙茗", family="rong", role="小厮",
+       summary="宝玉贴身小厮，机灵淘气，闹学堂、烧香、找书都少不了他。",
+       detail="茗烟最得宝玉信任，敢替主子出头，也敢在书房里偷看闲书。宝玉祭金钏、访晴雯，都是他跟着。",
+       tags=["小厮", "闹学堂"])
+person("pl-ligui", "李贵", family="rong", role="小厮",
+       summary="宝玉奶兄，宝玉的跟班头儿，老成持重。",
+       detail="李贵在闹学堂后替宝玉挨贾政的骂，回话得体：“哥儿已经吓慌了，老爷也不用太紧。”是仆役中少见的老成人。",
+       tags=["奶兄", "跟班"])
+person("pl-xinger", "兴儿", family="rong", role="小厮",
+       summary="贾琏的小厮，向尤二姐细说荣府诸人，口齿伶俐。",
+       detail="兴儿一段“荣府人物论”极为精彩：说凤姐“嘴甜心苦，两面三刀”，说探春“玫瑰花”，是借小厮之口作人物小传。",
+       tags=["小厮", "荣府人物论"])
+
+# ---------------- 丫鬟补遗 ----------------
+for pid, name, host, host_id, note in [
+    ("pl-cuimo", "翠墨", "探春", "pl-tanchun", "秋爽斋丫鬟，随探春理家、应对抄检"),
+    ("pl-cuilv", "翠缕", "史湘云", "pl-xiangyun", "湘云丫鬟，与主子论阴阳，天真有趣"),
+    ("pl-xiuju", "绣橘", "贾迎春", "pl-yingchun", "迎春丫鬟，为主子争累丝金凤，比迎春更强硬"),
+    ("pl-suyun", "素云", "李纨", "pl-livan", "稻香村丫鬟，行事稳当"),
+    ("pl-biyue", "碧月", "李纨", "pl-livan", "稻香村丫鬟"),
+    ("pl-hupo", "琥珀", "贾母", "pl-jiamu", "贾母房中丫鬟，传话理事"),
+    ("pl-qiuwen", "秋纹", "贾宝玉", "pl-baoyu", "怡红院丫鬟，性急口快"),
+    ("pl-bihen", "碧痕", "贾宝玉", "pl-baoyu", "怡红院丫鬟，曾服侍宝玉沐浴"),
+    ("pl-qianxue", "茜雪", "贾宝玉", "pl-baoyu", "怡红院丫鬟，因枫露茶事被撵，是宝玉房中第一个被逐的"),
+    ("pl-chunyan", "春燕", "贾宝玉", "pl-baoyu", "怡红院丫鬟，与母亲、姑妈的家庭纠纷写出底层处境"),
+    ("pl-sier", "四儿", "贾宝玉", "pl-baoyu", "怡红院丫鬟，原名芸香，因说“同生日就是夫妻”被逐"),
+    ("pl-zhuier", "坠儿", "贾宝玉", "pl-baoyu", "怡红院小丫鬟，偷虾须镯被晴雯撵出"),
+]:
+    person(pid, name, family="rong", role="丫鬟",
+           summary=host + "房中丫鬟。" + note + "。",
+           detail=note + "。她们的存在让大观园的日常有了层次，也让“千红一哭”的结局更具体。",
+           tags=[host + "丫鬟"])
+
+for pid, name, note in [("pl-wenguan", "文官", "十二官之首，贾母留下使唤"),
+                        ("pl-ruiguan", "蕊官", "十二官之一，后归宝钗"),
+                        ("pl-ouguan2", "菂官", "十二官之一，与藕官相好，早亡")]:
+    person(pid, name, family="rong", role="丫鬟",
+           summary="梨香院十二戏子之一。" + note + "。",
+           detail=note + "。十二官被遣散后各寻归宿，是“风流云散”最具体的一次预演。",
+           tags=["戏子", "十二官"])
+
 # ---------------- 关系 ----------------
 FAM = [
     ("pl-jiamu", "pl-jiashe", "母子"), ("pl-jiamu", "pl-jiazheng", "母子"),
@@ -422,7 +574,6 @@ LOVE = [
     ("pl-xuebaochai", "pl-yinger", "主仆"), ("pl-xuebaochai", "pl-xiangling", "姑嫂"),
     ("pl-yingchun", "pl-siqi", "主仆"), ("pl-tanchun", "pl-shishu", "主仆"),
     ("pl-xichun", "pl-ruhua", "主仆"), ("pl-wangxifeng", "pl-xiaohong", "主仆"),
-    ("pl-wangxifeng", "pl-xiangling", "同乡"),
     ("pl-jiayuanchun", "pl-baoyu", "姐弟"), ("pl-jiayuanchun", "pl-jiazheng", "父女"),
     ("pl-livan", "pl-tanchun", "诗社同人"),
 ]
@@ -449,6 +600,112 @@ for a in ["pl-daiyu", "pl-xuebaochai", "pl-tanchun", "pl-xiangyun", "pl-livan", 
     for b in ["pl-daiyu", "pl-xuebaochai", "pl-tanchun", "pl-xiangyun", "pl-livan", "pl-baoyu"]:
         if a < b:
             rel(a, b, "诗社同人")
+
+
+# ---------------- 补充关系 ----------------
+EXTRA = [
+    # 族中旁支
+    ("pl-jiadairu", "pl-jiarui", "祖孙"),
+    ("pl-jiadairu", "pl-jiazheng", "族中长辈"),
+    ("pl-jiarui", "pl-wangxifeng", "相思"),
+    ("pl-jiaqiang", "pl-jiazhen", "抚养"),
+    ("pl-jiaqiang", "pl-lingguan", "情人"),
+    ("pl-jiayun", "pl-xiaohong", "情人"),
+    ("pl-jiayun", "pl-jialian", "宗族"),
+    ("pl-jiayun", "pl-wangxifeng", "求差事"),
+    ("pl-jiaqin", "pl-jiazhen", "宗族"),
+    ("pl-jiaqin", "pl-wangxifeng", "求差事"),
+    # 妾室与姻亲
+    ("pl-zhouyiniang", "pl-jiazheng", "妾室"),
+    ("pl-zhouyiniang", "pl-zhaoyiniang", "同侪"),
+    ("pl-hushi", "pl-jiarong", "夫妻"),
+    ("pl-sunshaozu", "pl-yingchun", "夫妻"),
+    ("pl-sunshaozu", "pl-jiashe", "翁婿"),
+    ("pl-youlaniang", "pl-youshi", "继母女"),
+    ("pl-youlaniang", "pl-youerjie", "母女"),
+    ("pl-youlaniang", "pl-yousanjie", "母女"),
+    ("pl-liwen", "pl-livan", "堂姐妹"),
+    ("pl-liqi", "pl-livan", "堂姐妹"),
+    ("pl-liwen", "pl-liqi", "姐妹"),
+    ("pl-liqi", "pl-zhenbaoyu", "夫妻"),
+    # 僧道
+    ("pl-zhinenger", "pl-qinzhong", "情人"),
+    ("pl-zhinenger", "pl-jingxu", "师徒"),
+    ("pl-jingxu", "pl-wangxifeng", "请托"),
+    ("pl-madaopo", "pl-zhaoyiniang", "串通"),
+    ("pl-madaopo", "pl-jiamu", "供奉"),
+    ("pl-zhangdaoshi", "pl-jiamu", "旧识"),
+    ("pl-zhangdaoshi", "pl-baoyu", "提亲"),
+    # 镜像与友人
+    ("pl-zhenbaoyu", "pl-baoyu", "镜像"),
+    ("pl-fengziying", "pl-baoyu", "友人"),
+    ("pl-fengziying", "pl-xuepan", "友人"),
+    ("pl-weiruolan", "pl-baoyu", "友人"),
+    ("pl-weiruolan", "pl-xiangyun", "夫妻"),
+    # 清客
+    ("pl-zhanguang", "pl-jiazheng", "清客"),
+    ("pl-shanpinren", "pl-jiazheng", "清客"),
+    ("pl-buguxiu", "pl-jiazheng", "清客"),
+    # 仆役与陪房
+    ("pl-laimomo", "pl-jiamu", "老仆"),
+    ("pl-laishangrong", "pl-laimomo", "祖孙"),
+    ("pl-laishangrong", "pl-jiazheng", "主仆"),
+    ("pl-wangshanbao", "pl-xingfuren", "陪房"),
+    ("pl-wangshanbao", "pl-siqi", "外祖母"),
+    ("pl-wangshanbao", "pl-tanchun", "抄检"),
+    ("pl-zhourui", "pl-wangfuren", "陪房"),
+    ("pl-zhourui", "pl-liulaolao", "引荐"),
+    ("pl-linzhixiao", "pl-xiaohong", "母女"),
+    ("pl-linzhixiao", "pl-wangxifeng", "主仆"),
+    ("pl-mingyan", "pl-baoyu", "小厮"),
+    ("pl-ligui", "pl-baoyu", "奶兄"),
+    ("pl-xinger", "pl-jialian", "小厮"),
+    ("pl-xinger", "pl-youerjie", "传话"),
+]
+for a, b, l in EXTRA:
+    rel(a, b, l)
+
+# 丫鬟与本房主子
+HOSTS = {
+    "pl-cuimo": "pl-tanchun", "pl-cuilv": "pl-xiangyun", "pl-xiuju": "pl-yingchun",
+    "pl-suyun": "pl-livan", "pl-biyue": "pl-livan", "pl-hupo": "pl-jiamu",
+    "pl-qiuwen": "pl-baoyu", "pl-bihen": "pl-baoyu", "pl-qianxue": "pl-baoyu",
+    "pl-chunyan": "pl-baoyu", "pl-sier": "pl-baoyu", "pl-zhuier": "pl-baoyu",
+}
+for maid, host in HOSTS.items():
+    rel(maid, host, "主仆")
+    # 只有怡红院的丫鬟才与袭人、晴雯、麝月同房
+    if host == "pl-baoyu":
+        for peer in ["pl-xiren", "pl-qingwen", "pl-sheyue"]:
+            rel(maid, peer, "同房")
+
+# 十二官
+rel("pl-wenguan", "pl-jiamu", "主仆")
+rel("pl-wenguan", "pl-fangguan", "同班")
+rel("pl-ruiguan", "pl-xuebaochai", "主仆")
+rel("pl-ruiguan", "pl-fangguan", "同班")
+rel("pl-ouguan2", "pl-ouguan", "情人")
+rel("pl-ouguan2", "pl-fangguan", "同班")
+
+# 丫鬟间的私交与冲突
+rel("pl-zhuier", "pl-xiaohong", "私交")
+rel("pl-zhuier", "pl-qingwen", "被撵")
+rel("pl-chunyan", "pl-yinger", "私交")
+rel("pl-pinger", "pl-xinger", "同僚")
+rel("pl-yuanyang", "pl-hupo", "同房")
+rel("pl-jinchuan", "pl-yuchuan", "姐妹")
+
+# 事件补挂人物
+EVENT_EXTRA = {
+    "ev-yuanyang-ju": ["pl-xingfuren"],
+    "ev-chaojia": ["pl-jiaqiang", "pl-jiaqin"],
+    "ev-liulaolao": ["pl-zhourui", "pl-pinger"],
+    "ev-shishe": ["pl-liwen", "pl-liqi"],
+    "ev-daiyu-jin": ["pl-xingfuren"],
+}
+for eid, pids in EVENT_EXTRA.items():
+    for pid in pids:
+        R.append({"a": eid, "b": pid, "label": "出场"})
 
 # ---------------- 判词 ----------------
 FATE = [
@@ -730,7 +987,10 @@ GENEALOGY = [
     ("pl-jiajing", "贾敬", "pl-jiadaihua", None, 3, "ning"),
     ("pl-jiazhen", "贾珍", "pl-jiajing", "pl-youshi", 4, "ning"),
     ("pl-xichun", "贾惜春", "pl-jiajing", None, 4, "ning"),
-    ("pl-jiarong", "贾蓉", "pl-jiazhen", "pl-qinkeqing", 5, "ning"),
+    ("pl-jiarong", "贾蓉", "pl-jiazhen", "pl-hushi", 5, "ning"),
+    ("pl-jiadairu", "贾代儒", None, None, 2, "ning"),
+    ("pl-jiarui", "贾瑞", "pl-jiadairu", None, 3, "ning"),
+    ("pl-jiaqiang", "贾蔷", None, None, 4, "ning"),
     # 贾府：荣国府一脉
     ("pl-jiayuan", "贾源\n荣国公", None, None, 1, "rong"),
     ("pl-jiadaishan", "贾代善", "pl-jiayuan", "pl-jiamu", 2, "rong"),
@@ -738,7 +998,7 @@ GENEALOGY = [
     ("pl-jiazheng", "贾政", "pl-jiadaishan", "pl-wangfuren", 3, "rong"),
     ("pl-jiamin", "贾敏", "pl-jiadaishan", "pl-linruhai", 3, "rong"),
     ("pl-jialian", "贾琏", "pl-jiashe", "pl-wangxifeng", 4, "rong"),
-    ("pl-yingchun", "贾迎春", "pl-jiashe", None, 4, "rong"),
+    ("pl-yingchun", "贾迎春", "pl-jiashe", "pl-sunshaozu", 4, "rong"),
     ("pl-jiayuanchun", "贾元春", "pl-jiazheng", None, 4, "rong"),
     ("pl-jiazhu", "贾珠", "pl-jiazheng", "pl-livan", 4, "rong"),
     ("pl-baoyu", "贾宝玉", "pl-jiazheng", "pl-xuebaochai", 4, "rong"),
@@ -747,6 +1007,8 @@ GENEALOGY = [
     ("pl-daiyu", "林黛玉", "pl-jiamin", None, 4, "rong"),
     ("pl-qiaojie", "巧姐", "pl-jialian", None, 5, "rong"),
     ("pl-jialan", "贾兰", "pl-jiazhu", None, 5, "rong"),
+    ("pl-jiayun", "贾芸", None, None, 4, "rong"),
+    ("pl-jiaqin", "贾芹", None, None, 4, "rong"),
     # 林家（与荣府交叉，单列一图）
     ("pl-linruhai", "林如海", None, "pl-jiamin", 1, "lin"),
     ("pl-jiamin", "贾敏", "pl-linruhai", None, 2, "lin"),
@@ -775,6 +1037,13 @@ GEN_NOTE = {
     "wang": "王家：王子腾一系，王夫人、薛姨妈之兄，王熙凤之叔，贾府最重要的外援。",
     "xue": "薛家：皇商，薛姨妈携子女寄居贾府；薛蝌、宝琴为堂房一支。",
 }
+
+# 统一与补遗人物重名的 id
+for it in P:
+    it["id"] = ENRICH.ID_ALIASES.get(it["id"], it["id"])
+for r in R:
+    r["a"] = ENRICH.ID_ALIASES.get(r["a"], r["a"])
+    r["b"] = ENRICH.ID_ALIASES.get(r["b"], r["b"])
 
 # ---------------- 输出 ----------------
 seed = {
@@ -824,36 +1093,61 @@ for iid, tags in ENRICH.TAGS_ADD.items():
         byid[iid]["tags"] = list(dict.fromkeys(old + tags))
 
 # 增补人物、地点、事件、诗词、回目
+# 若与既有补遗条目同 id，则以新数据补全旧条目，避免重复
+def upsert_item(item, cat):
+    item = dict(item)
+    item["id"] = ENRICH.ID_ALIASES.get(item["id"], item["id"])
+    item.setdefault("cat", cat)
+    iid = item["id"]
+    if iid in byid:
+        dst = byid[iid]
+        for k in ("summary", "detail", "alias", "type"):
+            if item.get(k):
+                dst[k] = item[k]
+        if not dst.get("family") and item.get("family"):
+            dst["family"] = item["family"]
+        if not dst.get("role") and item.get("role"):
+            dst["role"] = item["role"]
+        dst["tags"] = list(dict.fromkeys((dst.get("tags") or []) + (item.get("tags") or [])))
+        dst["refs"] = list(dict.fromkeys((dst.get("refs") or []) + (item.get("refs") or [])))
+        return dst
+    seed["items"].append(item)
+    byid[iid] = item
+    return item
+
 for p in ENRICH.EXTRA_PEOPLE:
-    p = dict(p)
-    p.setdefault("cat", "people")
-    seed["items"].append(p)
+    upsert_item(p, "people")
 for p in ENRICH.EXTRA_PLACES:
-    p = dict(p)
-    p.setdefault("cat", "place")
-    seed["items"].append(p)
+    upsert_item(p, "place")
 for e in ENRICH.EXTRA_EVENTS:
     e = dict(e)
-    e.setdefault("cat", "event")
     e.setdefault("type", "情节")
-    seed["items"].append(e)
+    upsert_item(e, "event")
 for p in ENRICH.EXTRA_POEMS:
     p = dict(p)
-    p.setdefault("cat", "poetry")
     p.setdefault("type", "诗词")
-    seed["items"].append(p)
+    upsert_item(p, "poetry")
 for n, title, detail, tags in ENRICH.EXTRA_CHAPTERS:
-    seed["items"].append(dict(
+    upsert_item(dict(
         id="ch-%d" % n, cat="chapter", type="回目", name="第%d回" % n,
         alias=title, seq=n, summary=title, detail=detail, tags=tags,
         refs=["《红楼梦》第%d回" % n, "中国艺术研究院红楼梦研究所校注本《红楼梦》，人民文学出版社"],
-    ))
+    ), "chapter")
+
+# 合并后再统一家族归属
+for iid, fam in ENRICH.FAMILY_FIX.items():
+    if iid in byid:
+        byid[iid]["family"] = fam
 
 byid = {it["id"]: it for it in seed["items"]}
 
 # 富化正文与参考来源
 for iid, txt in ENRICH.DETAIL_OVERRIDES.items():
     if iid in byid:
+        # 判词、诗词的原文已由 quote 字段单独展示，详情里不再重复
+        if iid.startswith(("fate-", "poem-")) and txt.startswith("【原文】"):
+            parts = txt.split("\n\n", 1)
+            txt = parts[1] if len(parts) > 1 else ""
         byid[iid]["detail"] = txt
 for it in seed["items"]:
     own = it.get("refs") or []
@@ -866,6 +1160,8 @@ for it in seed["items"]:
 seen_rel = {(r["a"], r["b"], r["label"]) for r in seed["relations"]}
 
 def add_rel(a, b, label):
+    a = ENRICH.ID_ALIASES.get(a, a)
+    b = ENRICH.ID_ALIASES.get(b, b)
     if a in byid and b in byid:
         key = (a, b, label)
         if key not in seen_rel:
@@ -924,8 +1220,9 @@ for ev in [it for it in seed["items"] if it["cat"] == "event"]:
         add_rel("ch-%d" % n, ev["id"], "回目")
 
 # 谱系补入贾琮
-seed["genealogy"].append({"id": "pl-jiacong", "label": "贾琮", "parent": "pl-jiashe",
-                          "spouse": None, "gen": 4, "family": "rong"})
+if not any(g["id"] == "pl-jiacong" and g["family"] == "rong" for g in seed["genealogy"]):
+    seed["genealogy"].append({"id": "pl-jiacong", "label": "贾琮", "parent": "pl-jiashe",
+                              "spouse": None, "gen": 4, "family": "rong"})
 GEN_NOTE.setdefault("lin", "林家：林如海、贾敏、林黛玉。黛玉六岁丧母，入贾府依外祖母，是“还泪”之旅的开始。")
 
 # 统计面板按实际数据重算
@@ -938,7 +1235,79 @@ seed["panels"][1]["rows"] = [
     {"label": f["name"], "value": family_counts[f["id"]]}
     for f in seed["families"] if family_counts.get(f["id"])
 ]
-seed["panels"].extend(ENRICH.EXTRA_PANELS)
+all_panels = list(seed["panels"]) + list(ENRICH.EXTRA_PANELS)
+seen_panel = set()
+seed["panels"] = []
+for p in all_panels:
+    if p["title"] not in seen_panel:
+        seen_panel.add(p["title"])
+        seed["panels"].append(p)
+
+# 去重合并：同一 id 只保留一份，后到的（富化数据）优先，缺失字段用前一份补
+merged = {}
+for it in seed["items"]:
+    old = merged.get(it["id"])
+    if old is None:
+        merged[it["id"]] = dict(it)
+    else:
+        out = dict(old)
+        for k, v in it.items():
+            if v not in (None, "", [], {}):
+                out[k] = v
+            elif k not in out:
+                out[k] = v
+        merged[it["id"]] = out
+seed["items"] = list(merged.values())
+
+# 同名去重：优先保留已有关系更多的那个 id
+deg = {}
+for r in seed["relations"]:
+    deg[r["a"]] = deg.get(r["a"], 0) + 1
+    deg[r["b"]] = deg.get(r["b"], 0) + 1
+by_name = {}
+alias = {}
+for it in seed["items"]:
+    key = (it["cat"], it["name"])
+    if key in by_name:
+        keep = by_name[key]
+        drop = it
+        if deg.get(drop["id"], 0) > deg.get(keep["id"], 0):
+            keep, drop = drop, keep
+        alias[drop["id"]] = keep["id"]
+        by_name[key] = keep
+    else:
+        by_name[key] = it
+if alias:
+    seed["items"] = [it for it in seed["items"] if it["id"] not in alias]
+    for r in seed["relations"]:
+        r["a"] = alias.get(r["a"], r["a"])
+        r["b"] = alias.get(r["b"], r["b"])
+    for g in seed["genealogy"]:
+        g["id"] = alias.get(g["id"], g["id"])
+        if g.get("parent"):
+            g["parent"] = alias.get(g["parent"], g["parent"])
+        if g.get("spouse"):
+            g["spouse"] = alias.get(g["spouse"], g["spouse"])
+
+# 关系去重（同一对 + 同一标签只留一条）
+seen_rel, rels = set(), []
+for r in seed["relations"]:
+    key = (r["a"], r["b"], r["label"])
+    if key in seen_rel:
+        continue
+    seen_rel.add(key)
+    rels.append(r)
+seed["relations"] = rels
+
+# 谱系去重（family + item_id 唯一）
+seen_gen, gen = set(), []
+for g in seed["genealogy"]:
+    key = (g["family"], g["id"])
+    if key in seen_gen:
+        continue
+    seen_gen.add(key)
+    gen.append(g)
+seed["genealogy"] = gen
 
 # 事件、回目按回次排序；其余类别保持原有编排
 CAT_ORDER = {"people": 0, "place": 1, "event": 2, "chapter": 3, "fate": 4, "poetry": 5}
