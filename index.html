@@ -88,6 +88,12 @@
         <button class="seg-btn" data-gfilter="love">情缘</button>
         <button class="seg-btn" data-gfilter="friend">同人/友人</button>
       </div>
+      <div class="gsearch" id="gSearchWrap">
+        <input id="gSearch" type="search" placeholder="搜人物，回车定位" autocomplete="off"
+               spellcheck="false" aria-label="搜索图谱中的人物" aria-controls="gSearchList">
+        <button class="gsearch-clear" id="gSearchClear" aria-label="清空" hidden>✕</button>
+        <div class="gsearch-list" id="gSearchList" role="listbox" hidden></div>
+      </div>
       <div class="zoom" id="gZoom">
         <button data-zoom="out">−</button><span id="gZoomLabel">100%</span><button data-zoom="in">＋</button>
         <button data-zoom="reset" class="fit">重置</button>

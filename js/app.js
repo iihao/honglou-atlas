@@ -688,6 +688,45 @@
     });
   }
 
+  /* 把某个人物/事件在图上定位出来：必要时恢复全量筛选，居中并放大 */
+  function focusGraphNode(id) {
+    if (!byId[id]) return false;
+    if (!gState.nodeMap[id]) {
+      if (byId[id].cat === 'event' && !state.showEvents) {
+        state.showEvents = true;
+        var t = $('#evToggle');
+        if (t) { t.classList.add('on'); t.textContent = '隐藏事件节点'; }
+      }
+      state.gfilter = 'all';
+      $$('.seg-btn[data-gfilter]').forEach(function (x) {
+        x.classList.toggle('on', x.getAttribute('data-gfilter') === 'all');
+      });
+      gState.laid = false; gState.pos = {}; gState.sel = null;
+      clearEdgeSel();
+      renderGraph();
+    }
+    var nd = gState.nodeMap[id];
+    if (!nd) return false;
+    setGraphView('graph');
+    gState.sel = id;
+    clearEdgeSel();
+    var z = Math.max(1.15, gState.zoom);
+    gState.zoom = z;
+    gState.tx = clampPan(G.W / 2 - nd.x * z);
+    gState.ty = clampPan(G.H / 2 - nd.y * z);
+    applyTransform();
+    syncZoom();
+    highlight(id);
+    var g = document.querySelector('.g-node[data-id="' + id + '"]');
+    if (g) {
+      g.classList.remove('pulse');
+      void g.getBoundingClientRect();
+      g.classList.add('pulse');
+      setTimeout(function () { g.classList.remove('pulse'); }, 2600);
+    }
+    return true;
+  }
+
   function setGraphView(v) {
     state.gview = v;
     $$('#gViewSeg [data-gview]').forEach(function (b) {
@@ -1739,6 +1778,97 @@
         renderGraph();
       });
     });
+    // ---------------- 图谱搜索：输入人名，回车直接定位到点位 ----------------
+    var gsInput = $('#gSearch');
+    if (gsInput && !gsInput.dataset.bound) {
+      gsInput.dataset.bound = '1';
+      var gsList = $('#gSearchList'), gsClear = $('#gSearchClear');
+      var gsHits = [], gsActive = -1;
+
+      var closeGsList = function () {
+        if (gsList) gsList.hidden = true;
+        gsActive = -1;
+      };
+
+      var paintGsList = function () {
+        if (!gsList) return;
+        $$('button', gsList).forEach(function (b, i) {
+          b.classList.toggle('on', i === gsActive);
+        });
+      };
+
+      var renderGsList = function () {
+        var q = gsInput.value.trim();
+        if (gsClear) gsClear.hidden = !q;
+        if (!q) { closeGsList(); return; }
+        var pool = itemsOf('people').concat(state.showEvents ? itemsOf('event') : []);
+        gsHits = pool.filter(function (it) {
+          return it.name.indexOf(q) >= 0 || (it.alias && it.alias.indexOf(q) >= 0);
+        });
+        // 前缀命中、名字短的排前面
+        gsHits.sort(function (a, b) {
+          var pa = a.name.indexOf(q) === 0 ? 0 : 1, pb = b.name.indexOf(q) === 0 ? 0 : 1;
+          return pa - pb || a.name.length - b.name.length;
+        });
+        gsHits = gsHits.slice(0, 8);
+        gsActive = gsHits.length ? 0 : -1;
+        if (!gsList) return;
+        gsList.innerHTML = gsHits.length
+          ? gsHits.map(function (it, i) {
+              return '<button role="option" data-id="' + it.id + '"' + (i === 0 ? ' class="on"' : '') + '>' +
+                '<span class="gs-name">' + esc(it.name) + '</span>' +
+                '<span class="gs-meta">' + esc(it.familyName || it.role || catName(it.cat)) + '</span></button>';
+            }).join('')
+          : '<div class="gs-none">没有找到「' + esc(q) + '」</div>';
+        gsList.hidden = false;
+      };
+
+      var pickGs = function (id, name) {
+        if (!id) return;
+        gsInput.value = name || '';
+        if (gsClear) gsClear.hidden = false;
+        closeGsList();
+        focusGraphNode(id);
+      };
+
+      gsInput.addEventListener('input', renderGsList);
+      gsInput.addEventListener('focus', function () { if (gsInput.value.trim()) renderGsList(); });
+      gsInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') { closeGsList(); gsInput.blur(); return; }
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+          if (!gsHits.length) return;
+          e.preventDefault();
+          gsActive = (gsActive + (e.key === 'ArrowDown' ? 1 : gsHits.length - 1)) % gsHits.length;
+          paintGsList();
+          return;
+        }
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          var it = gsHits[gsActive] || gsHits[0];
+          if (it) pickGs(it.id, it.name);
+        }
+      });
+      if (gsList) {
+        gsList.addEventListener('click', function (e) {
+          var b = e.target.closest('button[data-id]');
+          if (!b) return;
+          pickGs(b.getAttribute('data-id'), $('.gs-name', b) ? $('.gs-name', b).textContent : '');
+        });
+      }
+      if (gsClear) {
+        gsClear.addEventListener('click', function () {
+          gsInput.value = '';
+          gsClear.hidden = true;
+          closeGsList();
+          gsInput.focus();
+        });
+      }
+      document.addEventListener('click', function (e) {
+        if (!$('#gSearchWrap') || $('#gSearchWrap').contains(e.target)) return;
+        closeGsList();
+      });
+    }
+
     var crossToggle = $('#crossToggle');
     if (crossToggle && !crossToggle.dataset.bound) {
       crossToggle.dataset.bound = '1';
