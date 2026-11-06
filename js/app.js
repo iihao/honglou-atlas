@@ -314,11 +314,40 @@
     return f ? f.color : '#6b6458';
   }
 
+  // 关系权重：数值越大越"根本"。一对人有多重关系时，图上只画权重最高的一条，
+  // 其余在关系卡里并列（血缘 > 婚姻 > 主仆 > 诗社等具体身份 > 泛泛同人 > 事件）
+  var REL_W = {
+    '父子': 100, '父女': 100, '母子': 100, '母女': 100,
+    '同父同母兄妹': 99, '同父同母姐妹': 99, '同父同母兄弟': 99, '同父同母姐弟': 99,
+    '同父异母兄妹': 97, '同父异母姐妹': 97, '同父异母兄弟': 97, '同父异母姐弟': 97,
+    '嫡母': 96, '继母女': 92, '养父女': 92,
+    '兄妹': 90, '姐妹': 90, '兄弟': 90, '姐弟': 90,
+    '祖孙': 89, '外祖母': 89, '外祖父': 89, '曾祖母': 89, '姑祖母': 89, '外孙女': 87,
+    '叔侄': 84, '姑侄': 84, '舅甥': 84, '婶侄': 84,
+    '堂兄弟': 82, '堂姐妹': 82, '堂兄妹': 82,
+    '族兄妹': 78, '族姐妹': 78, '族亲': 72, '宗族': 72, '族中长辈': 70, '远亲': 60,
+    '夫妻': 86, '未婚夫妻': 85, '妾室': 78, '翁婿': 74, '岳婿': 74, '翁媳': 72, '姑嫂': 68,
+    '主仆': 58, '陪房': 57, '老仆': 57, '大管家': 56, '乳母': 56, '小厮': 54,
+    '奶兄': 46, '同房': 40,
+    '恋人': 76, '情人': 74, '知己': 70, '相思': 60,
+    '诗社发起': 50, '诗社社长': 48, '诗友': 44, '诗社同人': 30,
+    '同窗': 36, '同班': 34, '世交': 38, '旧识': 32, '旧交': 32, '友人': 36,
+    '清客': 28, '方外之交': 34, '镜像': 34, '私交': 30, '同僚': 30, '同侪': 30
+  };
+
+  function relWeight(label) {
+    if (REL_W[label] != null) return REL_W[label];
+    var c = relCat(label);
+    return c === 'kin' ? 80 : c === 'love' ? 70 : c === 'servant' ? 55 :
+      c === 'friend' ? 35 : c === 'event' ? 5 : 20;
+  }
+
   function relCat(label) {
-    if (KIN.indexOf(label) >= 0) return 'kin';
-    if (/主仆|大管家|老仆|乳母|陪房|管家|心腹|小厮/.test(label)) return 'servant';
+    if (/主仆|大管家|老仆|乳母|陪房|管家|心腹|小厮|奶兄/.test(label)) return 'servant';
+    if (KIN.indexOf(label) >= 0 ||
+        /父|母|兄|弟|姐|妹|祖|孙|叔|侄|姑|舅|姨|堂|族|嫡|养|继|婿|媳|嫂/.test(label)) return 'kin';
     if (/知己|夫妻|妾室|未婚|恋人|情人|通房|情/.test(label)) return 'love';
-    if (/同人|同窗|同伴|友人|诗友|方外|旧交|盟友/.test(label)) return 'friend';
+    if (/同人|同窗|同伴|友人|诗友|诗社|方外|旧交|旧识|世交|盟友/.test(label)) return 'friend';
     return 'other';
   }
 
@@ -338,19 +367,23 @@
     var ids = {};
     people.forEach(function (p) { ids[p.id] = p; });
 
-    // 同一对人可能有多条关系（旧识 + 打醮），图上只画一根线，
-    // 否则两条线完全重叠，悬停时还会互相抢命中区
+    // 同一对人可能有多重关系（兄妹 + 诗社发起 + 诗社同人），图上只画一根线，
+    // 取权重最高的一条作主关系；其余留到关系卡里并列
     var seen = {}, edges = [], byPair = {};
     D.relations.forEach(function (r) {
       if (!ids[r.a] || !ids[r.b]) return;
       var pair = r.a < r.b ? r.a + '|' + r.b : r.b + '|' + r.a;
       if (state.gfilter !== 'all' && relCat(r.label) !== state.gfilter) return;
-      if (byPair[pair]) { byPair[pair].labels.push(r.label); return; }
-      var e = { a: r.a, b: r.b, label: r.label, labels: [r.label] };
-      byPair[pair] = e;
-      edges.push(e);
+      var e = byPair[pair];
+      if (!e) {
+        e = { a: r.a, b: r.b, label: r.label, labels: [r.label] };
+        byPair[pair] = e;
+        edges.push(e);
+      } else {
+        e.labels.push(r.label);
+        if (relWeight(r.label) > relWeight(e.label)) e.label = r.label;
+      }
     });
-    edges.forEach(function (e) { e.labelAll = e.labels.join(' / '); });
 
     // 可选：把事件作为节点接进来
     if (state.showEvents) {
@@ -520,6 +553,7 @@
     gState.nodeMap = {};
     model.nodes.forEach(function (nd) { gState.nodeMap[nd.id] = nd; });
     gState.edges = model.edges;
+    gState.nodes = model.nodes;
 
     var parts = ['<g id="gViewport">'];
     // 每个岛的名称（与分簇布局一致）
@@ -541,7 +575,7 @@
         '<line class="g-edge" x1="' + a.x.toFixed(1) + '" y1="' + a.y.toFixed(1) +
         '" x2="' + b.x.toFixed(1) + '" y2="' + b.y.toFixed(1) + '"/>' +
         '<text class="g-edge-label" x="' + mx.toFixed(1) + '" y="' + (my - 3).toFixed(1) + '" text-anchor="middle">' +
-        esc(e.labelAll || e.label) + '</text></g>');
+        esc(e.label) + '</text></g>');
     });
     model.nodes.forEach(function (nd) {
       var r = Math.min(8.5, 3.0 + Math.sqrt(nd.deg) * (model.nodes.length > 100 ? 1.5 : 1.8));
@@ -554,7 +588,7 @@
           ? '<rect class="dot" x="' + (nd.x - r).toFixed(1) + '" y="' + (nd.y - r).toFixed(1) +
             '" width="' + (r * 2).toFixed(1) + '" height="' + (r * 2).toFixed(1) + '" rx="2" fill="#7a6a52"/>'
           : '<circle class="hit" cx="' + nd.x.toFixed(1) + '" cy="' + nd.y.toFixed(1) +
-            '" r="' + (r + 7).toFixed(1) + '"/>' +
+            '" r="' + (r + 2.5).toFixed(1) + '"/>' +
             '<circle class="dot" cx="' + nd.x.toFixed(1) + '" cy="' + nd.y.toFixed(1) + '" r="' + r.toFixed(1) +
             '" fill="' + famColor(nd.item) + '"/>' +
             (fated ? '<circle class="ring" cx="' + nd.x.toFixed(1) + '" cy="' + nd.y.toFixed(1) +
@@ -773,7 +807,7 @@
   function toggleGraphFs() { setGraphFs(!isGraphFs()); }
 
   function paintEdges() {
-    var focusNode = gState.hover || gState.sel;   // 鼠标悬停优先，其次选中
+    var focusNode = gState.edgeHover ? null : (gState.hover || gState.sel);  // 连线悬停优先
     var eid = gState.edgeSel, hov = gState.edgeHover;
     var any = !!focusNode || !!eid || !!hov;
     // 聚焦时把相关的人名都显出来（密集区默认隐藏的标签也一并显示）
@@ -788,7 +822,7 @@
         if (e.b === focusNode) { show[e.a] = 1; nbr[e.a] = 1; }
       });
     }
-    var eFocus = gState.hover ? null : (hov || eid);  // 人物悬停优先于连线
+    var eFocus = hov || eid;
     $$('.g-node').forEach(function (g) {
       var nid2 = g.getAttribute('data-id');
       var isEnd = !!eFocus && (nid2 === eFocus.a || nid2 === eFocus.b);
@@ -827,6 +861,7 @@
     });
     paintEdges();
     var tip = $('#gTip');
+    if (gState.edgeHover || gState.edgeSel) { tip.hidden = true; return; }
     if (id && gState.nodeMap[id]) {
       tip.innerHTML = '<b>' + esc(gState.nodeMap[id].item.name) + '</b>' +
         esc((gState.nodeMap[id].item.alias || gState.nodeMap[id].item.role || ''));
@@ -919,6 +954,19 @@
     html += '<p class="edge-note">' + esc(A.name) + ' 对 ' + esc(B.name) + ' 是「' + label +
       '」；从 ' + esc(B.name) + ' 一方看则是「' + inv + '」。' +
       (REL_NOTE[label] ? esc(REL_NOTE[label]) + ' ' : '') + '点姓名可看人物详情。</p>';
+    // 同一对人可能有多重关系：主关系之外的分层次列出来
+    var pairLabels = [];
+    D.relations.forEach(function (r) {
+      if ((r.a === a && r.b === b) || (r.a === b && r.b === a)) {
+        if (pairLabels.indexOf(r.label) < 0) pairLabels.push(r.label);
+      }
+    });
+    pairLabels.sort(function (x, y) { return relWeight(y) - relWeight(x); });
+    var extra = pairLabels.filter(function (l) { return l !== label; });
+    if (extra.length) {
+      html += '<p class="edge-also">同一对人物另有：' +
+        extra.map(function (l) { return '「' + esc(l) + '」'; }).join('') + '</p>';
+    }
 
     if (A.cat === 'event' || B.cat === 'event') {
       var ev = A.cat === 'event' ? A : B;
@@ -951,8 +999,10 @@
     }
     // 精确切换：列出 A 的其他关系，点一下即选中对应连线
     var others = D.relations.filter(function (r) {
-      return (r.a === a || r.b === a) && byId[r.a] && byId[r.b] &&
-        !(r.a === a && r.b === b && r.label === label);
+      if (!byId[r.a] || !byId[r.b]) return false;
+      if (!(r.a === a || r.b === a)) return false;
+      if ((r.a === a && r.b === b) || (r.a === b && r.b === a)) return false;  // 同一对人已在上面并列
+      return true;
     }).slice(0, 12);
     if (others.length) {
       html += '<div class="edge-events"><h4>' + esc(A.name) + ' 的其他关系</h4><div class="edge-more">' +
@@ -1059,30 +1109,44 @@
     return Math.hypot(px - qx, py - qy);
   }
 
+  var _ptCache = null;
+  function svgToGraph(svg, ev) {
+    if (!svg) return null;
+    if (!_ptCache) _ptCache = svg.createSVGPoint();
+    _ptCache.x = ev.clientX; _ptCache.y = ev.clientY;
+    var m = svg.getScreenCTM();
+    if (!m) return null;
+    var p = _ptCache.matrixTransform(m.inverse());
+    return { x: (p.x - gState.tx) / gState.zoom, y: (p.y - gState.ty) / gState.zoom };
+  }
+
+  function nodeAtPoint(p) {
+    if (!p) return null;
+    var hit = null;
+    gState.nodes.forEach(function (nd) {
+      var rr = Math.min(8.5, 3.0 + Math.sqrt(nd.deg) * (gState.nodes.length > 100 ? 1.5 : 1.8));
+      if (Math.hypot(p.x - nd.x, p.y - nd.y) <= rr + 2) hit = nd;
+    });
+    return hit;
+  }
+
   function bindEdgeHover() {
     var svg = $('#gSvg');
     if (!svg || svg.dataset.edgeHover) return;
     svg.dataset.edgeHover = '1';
-    var raf = 0, lastEv = null, pt = null;
-
-    function toGraph(ev) {
-      if (!pt) pt = svg.createSVGPoint();
-      pt.x = ev.clientX; pt.y = ev.clientY;
-      var m = svg.getScreenCTM();
-      if (!m) return null;
-      var p = pt.matrixTransform(m.inverse());
-      return { x: (p.x - gState.tx) / gState.zoom, y: (p.y - gState.ty) / gState.zoom };
-    }
+    var raf = 0, lastEv = null;
 
     function update(ev) {
       if (!ev) return;
-      // 落在节点命中圈内时交给节点悬停处理，避免两种高亮打架
-      if (ev.target && ev.target.closest && ev.target.closest('.g-node')) {
+      var p = svgToGraph(svg, ev);
+      if (!p) return;
+      // 指针落在某个圆点（含 2px 容差）上时交给节点悬停；
+      // 注意不能用 DOM 的大命中圈，否则密集区里根本点不到线
+      var overNode = nodeAtPoint(p);
+      if (overNode) {
         if (gState.edgeHover) { gState.edgeHover = null; paintEdges(); }
         return;
       }
-      var p = toGraph(ev);
-      if (!p) return;
       var best = null, bestD = 1e9;
       gState.edges.forEach(function (e) {
         var a = gState.nodeMap[e.a], b = gState.nodeMap[e.b];
@@ -1117,9 +1181,22 @@
   function bindGraph() {
     $$('.g-node').forEach(function (g) {
       var id = g.getAttribute('data-id');
-      g.addEventListener('mouseenter', function () { gState.hover = id; highlight(id); });
+      g.addEventListener('mouseenter', function () {
+        if (gState.edgeHover) { gState.edgeHover = null; }
+        gState.hover = id; highlight(id);
+      });
       g.addEventListener('mouseleave', function () { gState.hover = null; highlight(gState.sel); });
-      g.addEventListener('click', function (e) { e.stopPropagation(); gState.sel = id; clearEdgeSel(); highlight(id); openItem(id); });
+      g.addEventListener('click', function (e) {
+        e.stopPropagation();
+        // 圆点命中圈比视觉半径略大，若指针其实贴在连线上（已由距离判定命中某条线），优先打开关系卡
+        if (gState.edgeHover) {
+          var eh = gState.edgeHover;
+          var rec = gState.edges.filter(function (r) { return r.a === eh.a && r.b === eh.b; })[0];
+          openEdge(eh.a, eh.b, rec ? rec.label : '');
+          return;
+        }
+        gState.sel = id; clearEdgeSel(); highlight(id); openItem(id);
+      });
     });
     // 连线悬停：用「指针到线段的距离」判定，而不是 DOM 命中。
     // 密集区里多条线的 18px 命中区互相叠压，靠 DOM 只能选中最后画的那条，
@@ -1139,13 +1216,18 @@
       });
     }
     $('#gSvg').addEventListener('click', function (e) {
-      if (e.target.closest('.g-node')) return;
-      if (gState.edgeHover) {
+      // 圆点的 DOM 命中圈（r+4）比视觉半径大，会和贴近圆点的连线抢点击；
+      // 以「距离判定」为准：真在圆点上才算点人，否则算点线
+      var p = svgToGraph($('#gSvg'), e);
+      var nodeHit = nodeAtPoint(p);
+      if (gState.edgeHover && !nodeHit) {
         var eh = gState.edgeHover;
         var rec = gState.edges.filter(function (r) { return r.a === eh.a && r.b === eh.b; })[0];
         openEdge(eh.a, eh.b, rec ? rec.label : '');
+        e.stopPropagation();
         return;
       }
+      if (nodeHit || e.target.closest('.g-node')) return;
       clearEdgeSel();
     });
 
@@ -1342,6 +1424,12 @@
     '祖孙': '祖辈', '外祖母': '外孙/女', '曾祖母': '曾孙/女', '姑祖母': '侄孙/女',
     '夫妻': '配偶', '妾室': '夫主', '未婚夫妻': '未婚夫/妻',
     '兄弟': '兄弟', '兄妹': '兄妹', '姐妹': '姐妹', '姐弟': '姐弟',
+    '同父异母兄妹': '同父异母兄妹', '同父异母兄弟': '同父异母兄弟',
+    '同父异母姐妹': '同父异母姐妹', '同父异母姐弟': '同父异母姐弟',
+    '同父同母兄妹': '同父同母兄妹', '同父同母姐弟': '同父同母姐弟',
+    '同父同母兄弟': '同父同母兄弟', '同父同母姐妹': '同父同母姐妹',
+    '堂兄妹': '堂兄妹', '族兄妹': '族兄妹', '族姐妹': '族姐妹',
+    '诗社发起': '诗社成员', '诗社社长': '诗社成员',
     '堂兄弟': '堂兄弟', '堂姐妹': '堂姐妹', '嫡母': '庶子/女', '养父女': '养女',
     '姑嫂': '姑/嫂', '姨甥': '姨母/甥', '叔侄': '侄', '姑侄': '侄', '翁婿': '婿',
     '继母女': '继女', '主仆': '仆从', '陪房': '陪房', '老仆': '仆从',
@@ -1360,6 +1448,16 @@
     '祖孙': '祖辈与孙辈。', '外祖母': '外祖母与外孙/女。', '曾祖母': '曾祖母与曾孙/女。',
     '姑祖母': '姑祖母与侄孙/女。', '嫡母': '嫡母与庶子/女。', '养父女': '养父与养女。',
     '兄弟': '同辈兄弟。', '兄妹': '兄妹。', '姐妹': '姐妹。', '姐弟': '姐弟。',
+    '同父异母兄妹': '同父异母的兄妹：同出一父，各自不同母。',
+    '同父异母兄弟': '同父异母的兄弟。',
+    '同父异母姐妹': '同父异母的姐妹。',
+    '同父异母姐弟': '同父异母的姐弟。',
+    '同父同母姐弟': '同父同母的姐弟（同为赵姨娘所出）。',
+    '堂兄妹': '堂房兄妹：父辈为亲兄弟。',
+    '族兄妹': '族中兄妹：同族而支派较远。',
+    '族姐妹': '族中姐妹：同族而支派较远。',
+    '诗社发起': '海棠诗社由探春发起。',
+    '诗社社长': '诗社由李纨主持评诗。',
     '堂兄弟': '堂房兄弟。', '堂姐妹': '堂房姐妹。', '姑嫂': '姑嫂。', '姨甥': '姨母与甥。',
     '叔侄': '叔侄。', '姑侄': '姑侄。', '翁婿': '岳父与女婿。', '继母女': '继母与继女。',
     '主仆': '主仆。', '陪房': '陪房仆妇与主子。', '老仆': '老仆与主子。', '大管家': '管家与主子。',
@@ -1379,7 +1477,8 @@
       if (r.a === id && byId[r.b]) out.push({ other: byId[r.b], label: r.label, show: r.label, dir: 'out' });
       else if (r.b === id && byId[r.a]) out.push({ other: byId[r.a], label: r.label, show: INV_LABEL[r.label] || r.label, dir: 'in' });
     });
-    return out;
+    // 血缘、婚姻等根本关系排在前面，诗社同人、事件类沉底
+    return out.sort(function (x, y) { return relWeight(y.label) - relWeight(x.label); });
   }
 
   function openItem(id) {

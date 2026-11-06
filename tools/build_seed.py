@@ -665,6 +665,39 @@ EXTRA = [
 for a, b, l in EXTRA:
     rel(a, b, l)
 
+# ---- 亲缘补全：贾政一房的兄弟姊妹，及大观园诸钗的堂/族关系 ----
+# 这些关系在展示上永远优先于「诗社同人」一类的群体关系（见前端 REL_W）
+KIN_EXTRA = [
+    # 贾政所出：元春、贾珠、宝玉为王夫人所出；探春、贾环为赵姨娘所出
+    ("pl-baoyu", "pl-tanchun", "同父异母兄妹"),
+    ("pl-baoyu", "pl-jiahuan", "同父异母兄弟"),
+    ("pl-baoyu", "pl-jiazhu", "兄弟"),
+    ("pl-tanchun", "pl-jiahuan", "同父同母姐弟"),
+    ("pl-jiayuanchun", "pl-tanchun", "同父异母姐妹"),
+    ("pl-jiayuanchun", "pl-jiahuan", "同父异母姐弟"),
+    ("pl-jiazhu", "pl-tanchun", "同父异母兄妹"),
+    ("pl-jiazhu", "pl-jiahuan", "同父异母兄弟"),
+    ("pl-jiayuanchun", "pl-jiazhu", "姐弟"),
+    # 荣国府三春与宝玉：贾赦、贾政为亲兄弟，故为堂亲；惜春出宁国府，为族亲
+    ("pl-baoyu", "pl-yingchun", "堂兄妹"),
+    ("pl-tanchun", "pl-yingchun", "堂姐妹"),
+    ("pl-tanchun", "pl-jialian", "堂兄妹"),
+    ("pl-baoyu", "pl-xichun", "族兄妹"),
+    ("pl-tanchun", "pl-xichun", "族姐妹"),
+    ("pl-yingchun", "pl-xichun", "族姐妹"),
+]
+for a, b, l in KIN_EXTRA:
+    rel(a, b, l)
+
+# ---- 诗社：探春发起、李纨社长，其余为同人 ----
+SHISHE = ["pl-daiyu", "pl-xuebaochai", "pl-xiangyun", "pl-livan", "pl-baoyu",
+          "pl-yingchun", "pl-xichun", "pl-tanchun"]
+for pid in SHISHE:
+    if pid != "pl-tanchun":
+        rel("pl-tanchun", pid, "诗社发起")
+    if pid != "pl-livan":
+        rel("pl-livan", pid, "诗社社长")
+
 # 丫鬟与本房主子
 HOSTS = {
     "pl-cuimo": "pl-tanchun", "pl-cuilv": "pl-xiangyun", "pl-xiuju": "pl-yingchun",
