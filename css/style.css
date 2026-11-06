@@ -546,6 +546,7 @@ table.data th{font-family:var(--serif);font-size:11px;letter-spacing:.14em;color
 /* ---------- 关系图全屏覆盖层 ---------- */
 .stage-tools{display:none}
 body.graph-fs{overflow:hidden}
+body.graph-fs #gSvg{min-width:0!important}
 body.graph-fs #gStage{
   position:fixed;inset:0;z-index:200;border:0;border-radius:0;
   contain:layout paint;will-change:transform;

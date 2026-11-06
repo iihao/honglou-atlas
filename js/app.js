@@ -747,7 +747,7 @@
 
   /* 网页全屏：只用页面内覆盖层，不调用浏览器原生 Fullscreen（不抢占整个浏览器）。
      进入时把 viewBox 收到人物范围，让画布真正放大到铺满屏幕 */
-  var FS_VIEWBOX = null, FS_TRANSFORM = null;
+  var FS_VIEWBOX = null, FS_TRANSFORM = null, FS_KEEP = false;
 
   function graphContentBBox() {
     var minX = 1e9, minY = 1e9, maxX = -1e9, maxY = -1e9, n = 0;
@@ -761,40 +761,74 @@
     return n ? { minX: minX, minY: minY, maxX: maxX, maxY: maxY } : null;
   }
 
+  // 只按当前舞台尺寸重算 viewBox 与铺满样式，不改动已保存的“退出还原点”
+  function applyFsViewBox() {
+    var svg = $('#gSvg');
+    if (!svg || !document.body.classList.contains('graph-fs')) return false;
+    var bb = graphContentBBox();
+    if (!bb) return false;
+    var sr = $('#gStage').getBoundingClientRect();
+    var aspect = Math.max(0.2, sr.width / Math.max(1, sr.height));
+    // 内容范围 + 内边距；viewBox 宽高比对齐舞台，保证放大后铺满
+    var padX = 60, padTop = 90, padBottom = 70;
+    var cw = (bb.maxX - bb.minX) + padX * 2;
+    var ch = (bb.maxY - bb.minY) + padTop + padBottom;
+    var vw, vh;
+    if (aspect < 0.95) {
+      // 竖屏（手机）：塞下整张横铺的图谱会缩成中间一条细带，
+      // 按高度铺满又会只剩两三个点；折中到约 60% 缩放，横向留出可拖动余量
+      vw = Math.max(ch * aspect, sr.width / 0.62);
+      vh = vw / aspect;
+    } else if (cw / ch >= aspect) { vw = cw; vh = cw / aspect; }
+    else { vh = ch; vw = ch * aspect; }
+    var cx = (bb.minX + bb.maxX) / 2, cy = (bb.minY + bb.maxY) / 2;
+    // 若刚搜索定位过某人，且当前视野装不下整张图，就以这个人为中心，别让他跑到屏幕外
+    var sel = gState.sel && gState.nodeMap[gState.sel];
+    if (sel && (vw < cw || vh < ch)) { cx = sel.x; cy = sel.y; }
+    var x = cx - vw / 2, y = cy - vh / 2;
+    svg.setAttribute('viewBox', x.toFixed(1) + ' ' + y.toFixed(1) + ' ' + vw.toFixed(1) + ' ' + vh.toFixed(1));
+    svg.style.width = '100%';
+    svg.style.height = '100%';
+    svg.style.maxWidth = 'none';
+    // 窄屏样式给 #gSvg 设了 min-width:760px（平时靠横向滚动看图），
+    // 全屏时如果不解除，SVG 会保持 760 宽，viewBox 是按舞台（约 390）算的，右侧就被裁掉
+    svg.style.minWidth = '0';
+    gState.zoom = 1; gState.tx = 0; gState.ty = 0;
+    applyTransform();
+    return true;
+  }
+
   function fitSvgToStage(on) {
     var svg = $('#gSvg');
     if (!svg) return;
     if (on) {
-      var bb = graphContentBBox();
-      if (!bb) return;
+      // 只在“第一次进入全屏”时记录还原点；之后的 resize / 二次对齐都只重算 viewBox，
+      // 否则会把用户搜索定位后的缩放和平移状态覆盖掉，退出全屏就跳回原点
       if (!FS_VIEWBOX) {
         FS_VIEWBOX = svg.getAttribute('viewBox') || ('0 0 ' + G.W + ' ' + G.H);
         FS_TRANSFORM = { zoom: gState.zoom, tx: gState.tx, ty: gState.ty };
+        // 横屏且用户已经自己缩放/平移到某处（比如搜索定位过某人）：
+        // 全屏只把画布铺满，保持原视野，避免"一进全屏就把画面重置"的跳变
+        var sr0 = $('#gStage').getBoundingClientRect();
+        FS_KEEP = (gState.zoom !== 1 || gState.tx !== 0 || gState.ty !== 0) &&
+          (sr0.width / Math.max(1, sr0.height)) >= 0.95;
       }
-      var sr = $('#gStage').getBoundingClientRect();
-      var aspect = sr.width / Math.max(1, sr.height);
-      // 内容范围 + 内边距；viewBox 宽高比对齐舞台，保证放大后铺满
-      var padX = 60, padTop = 90, padBottom = 70;
-      var cw = (bb.maxX - bb.minX) + padX * 2;
-      var ch = (bb.maxY - bb.minY) + padTop + padBottom;
-      var vw, vh;
-      if (cw / ch >= aspect) { vw = cw; vh = cw / aspect; }
-      else { vh = ch; vw = ch * aspect; }
-      var cx = (bb.minX + bb.maxX) / 2, cy = (bb.minY + bb.maxY) / 2;
-      var x = cx - vw / 2, y = cy - vh / 2;
-      svg.setAttribute('viewBox', x.toFixed(1) + ' ' + y.toFixed(1) + ' ' + vw.toFixed(1) + ' ' + vh.toFixed(1));
-      svg.style.width = '100%';
-      svg.style.height = '100%';
-      svg.style.maxWidth = 'none';
-      gState.zoom = 1; gState.tx = 0; gState.ty = 0;
-      applyTransform();
+      if (FS_KEEP) {
+        svg.style.width = '100%';
+        svg.style.height = '100%';
+        svg.style.maxWidth = 'none';
+        svg.style.minWidth = '0';
+        applyTransform();
+      } else {
+        applyFsViewBox();
+      }
     } else {
       if (FS_VIEWBOX) svg.setAttribute('viewBox', FS_VIEWBOX);
-      svg.style.width = ''; svg.style.height = ''; svg.style.maxWidth = '';
+      svg.style.width = ''; svg.style.height = ''; svg.style.maxWidth = ''; svg.style.minWidth = '';
       if (FS_TRANSFORM) {
         gState.zoom = FS_TRANSFORM.zoom; gState.tx = FS_TRANSFORM.tx; gState.ty = FS_TRANSFORM.ty;
       }
-      FS_VIEWBOX = null; FS_TRANSFORM = null;
+      FS_VIEWBOX = null; FS_TRANSFORM = null; FS_KEEP = false;
       applyTransform();
     }
   }
@@ -815,6 +849,14 @@
     document.body.classList.toggle('graph-fs', on);
     setTimeout(function () { document.body.classList.remove('fs-switching'); }, 260);
     fitSvgToStage(on);
+    if (on) {
+      requestAnimationFrame(function () {
+        // 首帧时筛选条刚从文档流变为 fixed，舞台尺寸可能还没稳定，按最终尺寸再对齐一次
+        if (!document.body.classList.contains('graph-fs') || FS_KEEP) return;
+        applyFsViewBox();
+        syncZoom();
+      });
+    }
     syncFsUi(on);
   }
 
