@@ -521,6 +521,75 @@ for pid, name, note in [("pl-wenguan", "文官", "十二官之首，贾母留下
            detail=note + "。十二官被遣散后各寻归宿，是“风流云散”最具体的一次预演。",
            tags=["戏子", "十二官"])
 
+# ---------------- 谱系附注：爵位、房分、嫡庶、排行 ----------------
+# rk   排行（长幼，同时也是兄弟姊妹的左右顺序）
+# title 爵位 / 官职（袭爵者在前面加「袭」）
+# inher 是否承袭爵位
+# house 房分（长房 / 二房 / 旁支）
+# ord  同父兄弟姊妹的排序键（小的在左）
+GEN_INFO = {
+    # 宁国府
+    "pl-jiayan":      {"rk": "始祖", "title": "宁国公", "house": "", "ord": 0},
+    "pl-jiadaihua":   {"rk": "长子", "title": "袭宁国公·一等神威将军", "inher": True, "ord": 0},
+    "pl-jiafu":       {"rk": "嫡长子", "ord": 0},
+    "pl-jiajing":     {"rk": "嫡次子", "title": "乙卯科进士·袭爵", "inher": True, "ord": 1},
+    "pl-jiazhen":     {"rk": "长子", "title": "袭三品威烈将军", "inher": True, "house": "长房", "ord": 0},
+    "pl-xichun":      {"rk": "长女", "house": "长房", "ord": 0},
+    "pl-jiarong":     {"rk": "长子", "title": "捐五品龙禁尉", "ord": 0},
+    "pl-jiadairu":    {"rk": "族叔", "title": "贾氏家塾塾师", "house": "旁支", "ord": 0},
+    "pl-jiarui":      {"rk": "孙", "house": "旁支", "ord": 0},
+    "pl-jiaqiang":    {"rk": "族子", "house": "旁支", "ord": 0},
+
+    # 荣国府
+    "pl-jiayuan":     {"rk": "始祖", "title": "荣国公", "house": "", "ord": 0},
+    "pl-jiadaishan":  {"rk": "长子", "title": "袭荣国公", "inher": True, "ord": 0},
+    "pl-jiashe":      {"rk": "嫡长子", "title": "袭一等将军", "inher": True, "house": "长房", "ord": 0},
+    "pl-jiazheng":    {"rk": "嫡次子", "title": "工部员外郎", "house": "二房", "ord": 1},
+    "pl-jiamin":      {"rk": "嫡女", "ord": 2},
+    "pl-jialian":     {"rk": "长子", "title": "捐同知", "house": "长房", "ord": 0},
+    "pl-jiacong":     {"rk": "庶次子", "house": "长房", "ord": 1},
+    "pl-yingchun":    {"rk": "庶长女", "house": "长房", "ord": 2},
+    "pl-jiayuanchun": {"rk": "嫡长女", "title": "贤德妃", "house": "二房", "ord": 0},
+    "pl-jiazhu":      {"rk": "嫡长子", "house": "二房", "ord": 1},
+    "pl-baoyu":       {"rk": "嫡次子", "house": "二房", "ord": 2},
+    "pl-tanchun":     {"rk": "庶次女", "house": "二房", "ord": 3},
+    "pl-jiahuan":     {"rk": "庶三子", "house": "二房", "ord": 4},
+    "pl-daiyu":       {"rk": "独女", "ord": 0},
+    "pl-qiaojie":     {"rk": "嫡长女", "house": "长房", "ord": 0},
+    "pl-jialan":      {"rk": "嫡长子", "house": "二房", "ord": 0},
+    "pl-jiayun":      {"rk": "族子", "house": "旁支", "ord": 0},
+    "pl-jiaqin":      {"rk": "族子", "house": "旁支", "ord": 0},
+
+    # 林家
+    "pl-linruhai":    {"rk": "始祖", "title": "兰台寺大夫·巡盐御史", "house": "", "ord": 0},
+
+    # 史家
+    "pl-shigong":     {"rk": "始祖", "title": "保龄侯", "house": "", "ord": 0},
+    "vg-shi-son":     {"rk": "长子", "ord": 0},
+    "pl-shinai":      {"rk": "长子", "title": "袭保龄侯", "inher": True, "ord": 0},
+    "pl-shiding":     {"rk": "次子", "title": "忠靖侯", "ord": 1},
+    "vg-shi-father":  {"rk": "三子", "ord": 2},
+    "pl-xiangyun":    {"rk": "独女", "ord": 0},
+
+    # 王家
+    "pl-wanggong":    {"rk": "始祖", "title": "县伯", "house": "", "ord": 0},
+    "vg-wang-zhangfang": {"rk": "长子", "ord": 0},
+    "pl-wangziteng":  {"rk": "次子", "title": "京营节度使·九省都检点", "ord": 1},
+    "pl-wangzisheng": {"rk": "三子", "ord": 2},
+    "pl-wangfuren":   {"rk": "长女", "ord": 3},
+    "pl-wangxifeng":  {"rk": "长女", "ord": 0},
+    "pl-wangren":     {"rk": "长子", "ord": 0},
+
+    # 薛家
+    "pl-xuegong":     {"rk": "始祖", "title": "紫薇舍人", "house": "", "ord": 0},
+    "pl-xueyima":     {"rk": "长女", "ord": 0},
+    "vg-xue-cifang":  {"rk": "次子", "ord": 1},
+    "pl-xuepan":      {"rk": "长子", "title": "皇商", "ord": 0},
+    "pl-xuebaochai":  {"rk": "长女", "ord": 1},
+    "pl-xueke":       {"rk": "长子", "ord": 0},
+    "pl-xuebaoqin":   {"rk": "次女", "ord": 1},
+}
+
 # ---------------- 关系 ----------------
 FAM = [
     ("pl-jiamu", "pl-jiashe", "母子"), ("pl-jiamu", "pl-jiazheng", "母子"),
@@ -1096,7 +1165,8 @@ seed = {
     "items": P,
     "relations": R,
     "panels": PANELS,
-    "genealogy": [{"id": a, "label": b, "parent": c, "spouse": d, "gen": e, "family": f}
+    "genealogy": [dict({"id": a, "label": b, "parent": c, "spouse": d, "gen": e, "family": f},
+                       **GEN_INFO.get(a, {}))
                   for (a, b, c, d, e, f) in GENEALOGY],
     "genealogy_notes": GEN_NOTE,
 }

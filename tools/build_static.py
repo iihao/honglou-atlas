@@ -50,7 +50,9 @@ def build():
             for r in conn.execute("SELECT a,b,label FROM relations")]
 
     gen = [{"id": r["item_id"], "family": r["family"], "parent": r["parent_id"],
-            "spouse": r["spouse_id"], "gen": r["gen"], "label": r["label"]}
+            "spouse": r["spouse_id"], "gen": r["gen"], "label": r["label"],
+            "rk": r["rk"] or "", "title": r["title"] or "", "inher": bool(r["inher"]),
+            "house": r["house"] or "", "ord": r["ord"] or 0}
            for r in conn.execute("SELECT * FROM genealogy")]
 
     notes = {r["family"]: r["note"] for r in conn.execute("SELECT * FROM family_notes")}

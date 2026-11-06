@@ -52,10 +52,12 @@ def build(conn, seed):
                          (r["a"], r["b"], r["label"]))
 
     for g in seed.get("genealogy", []):
-        conn.execute("""INSERT OR REPLACE INTO genealogy(family,item_id,parent_id,spouse_id,gen,label)
-                        VALUES(?,?,?,?,?,?)""",
+        conn.execute("""INSERT OR REPLACE INTO genealogy
+                        (family,item_id,parent_id,spouse_id,gen,label,rk,title,inher,house,ord)
+                        VALUES(?,?,?,?,?,?,?,?,?,?,?)""",
                      (g["family"], g["id"], g.get("parent"), g.get("spouse"),
-                      g["gen"], g.get("label") or ""))
+                      g["gen"], g.get("label") or "", g.get("rk"), g.get("title"),
+                      1 if g.get("inher") else 0, g.get("house"), g.get("ord") or 0))
     for fam, note in (seed.get("genealogy_notes") or {}).items():
         conn.execute("INSERT OR REPLACE INTO family_notes(family,note) VALUES(?,?)", (fam, note))
 

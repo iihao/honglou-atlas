@@ -12055,7 +12055,11 @@
    "parent": null,
    "spouse": null,
    "gen": 1,
-   "family": "ning"
+   "family": "ning",
+   "rk": "始祖",
+   "title": "宁国公",
+   "house": "",
+   "ord": 0
   },
   {
    "id": "pl-jiadaihua",
@@ -12063,7 +12067,11 @@
    "parent": "pl-jiayan",
    "spouse": null,
    "gen": 2,
-   "family": "ning"
+   "family": "ning",
+   "rk": "长子",
+   "title": "袭宁国公·一等神威将军",
+   "inher": true,
+   "ord": 0
   },
   {
    "id": "pl-jiafu",
@@ -12071,7 +12079,9 @@
    "parent": "pl-jiadaihua",
    "spouse": null,
    "gen": 3,
-   "family": "ning"
+   "family": "ning",
+   "rk": "嫡长子",
+   "ord": 0
   },
   {
    "id": "pl-jiajing",
@@ -12079,7 +12089,11 @@
    "parent": "pl-jiadaihua",
    "spouse": null,
    "gen": 3,
-   "family": "ning"
+   "family": "ning",
+   "rk": "嫡次子",
+   "title": "乙卯科进士·袭爵",
+   "inher": true,
+   "ord": 1
   },
   {
    "id": "pl-jiazhen",
@@ -12087,7 +12101,12 @@
    "parent": "pl-jiajing",
    "spouse": "pl-youshi",
    "gen": 4,
-   "family": "ning"
+   "family": "ning",
+   "rk": "长子",
+   "title": "袭三品威烈将军",
+   "inher": true,
+   "house": "长房",
+   "ord": 0
   },
   {
    "id": "pl-xichun",
@@ -12095,7 +12114,10 @@
    "parent": "pl-jiajing",
    "spouse": null,
    "gen": 4,
-   "family": "ning"
+   "family": "ning",
+   "rk": "长女",
+   "house": "长房",
+   "ord": 0
   },
   {
    "id": "pl-jiarong",
@@ -12103,7 +12125,10 @@
    "parent": "pl-jiazhen",
    "spouse": "pl-hushi",
    "gen": 5,
-   "family": "ning"
+   "family": "ning",
+   "rk": "长子",
+   "title": "捐五品龙禁尉",
+   "ord": 0
   },
   {
    "id": "pl-jiadairu",
@@ -12111,7 +12136,11 @@
    "parent": null,
    "spouse": null,
    "gen": 2,
-   "family": "ning"
+   "family": "ning",
+   "rk": "族叔",
+   "title": "贾氏家塾塾师",
+   "house": "旁支",
+   "ord": 0
   },
   {
    "id": "pl-jiarui",
@@ -12119,7 +12148,10 @@
    "parent": "pl-jiadairu",
    "spouse": null,
    "gen": 3,
-   "family": "ning"
+   "family": "ning",
+   "rk": "孙",
+   "house": "旁支",
+   "ord": 0
   },
   {
    "id": "pl-jiaqiang",
@@ -12127,7 +12159,10 @@
    "parent": null,
    "spouse": null,
    "gen": 4,
-   "family": "ning"
+   "family": "ning",
+   "rk": "族子",
+   "house": "旁支",
+   "ord": 0
   },
   {
    "id": "pl-jiayuan",
@@ -12135,7 +12170,11 @@
    "parent": null,
    "spouse": null,
    "gen": 1,
-   "family": "rong"
+   "family": "rong",
+   "rk": "始祖",
+   "title": "荣国公",
+   "house": "",
+   "ord": 0
   },
   {
    "id": "pl-jiadaishan",
@@ -12143,7 +12182,11 @@
    "parent": "pl-jiayuan",
    "spouse": "pl-jiamu",
    "gen": 2,
-   "family": "rong"
+   "family": "rong",
+   "rk": "长子",
+   "title": "袭荣国公",
+   "inher": true,
+   "ord": 0
   },
   {
    "id": "pl-jiashe",
@@ -12151,7 +12194,12 @@
    "parent": "pl-jiadaishan",
    "spouse": "pl-xingfuren",
    "gen": 3,
-   "family": "rong"
+   "family": "rong",
+   "rk": "嫡长子",
+   "title": "袭一等将军",
+   "inher": true,
+   "house": "长房",
+   "ord": 0
   },
   {
    "id": "pl-jiazheng",
@@ -12159,7 +12207,11 @@
    "parent": "pl-jiadaishan",
    "spouse": "pl-wangfuren",
    "gen": 3,
-   "family": "rong"
+   "family": "rong",
+   "rk": "嫡次子",
+   "title": "工部员外郎",
+   "house": "二房",
+   "ord": 1
   },
   {
    "id": "pl-jiamin",
@@ -12167,7 +12219,9 @@
    "parent": "pl-jiadaishan",
    "spouse": "pl-linruhai",
    "gen": 3,
-   "family": "rong"
+   "family": "rong",
+   "rk": "嫡女",
+   "ord": 2
   },
   {
    "id": "pl-jialian",
@@ -12175,7 +12229,11 @@
    "parent": "pl-jiashe",
    "spouse": "pl-wangxifeng",
    "gen": 4,
-   "family": "rong"
+   "family": "rong",
+   "rk": "长子",
+   "title": "捐同知",
+   "house": "长房",
+   "ord": 0
   },
   {
    "id": "pl-yingchun",
@@ -12183,7 +12241,10 @@
    "parent": "pl-jiashe",
    "spouse": "pl-sunshaozu",
    "gen": 4,
-   "family": "rong"
+   "family": "rong",
+   "rk": "庶长女",
+   "house": "长房",
+   "ord": 2
   },
   {
    "id": "pl-jiayuanchun",
@@ -12191,7 +12252,11 @@
    "parent": "pl-jiazheng",
    "spouse": null,
    "gen": 4,
-   "family": "rong"
+   "family": "rong",
+   "rk": "嫡长女",
+   "title": "贤德妃",
+   "house": "二房",
+   "ord": 0
   },
   {
    "id": "pl-jiazhu",
@@ -12199,7 +12264,10 @@
    "parent": "pl-jiazheng",
    "spouse": "pl-livan",
    "gen": 4,
-   "family": "rong"
+   "family": "rong",
+   "rk": "嫡长子",
+   "house": "二房",
+   "ord": 1
   },
   {
    "id": "pl-baoyu",
@@ -12207,7 +12275,10 @@
    "parent": "pl-jiazheng",
    "spouse": "pl-xuebaochai",
    "gen": 4,
-   "family": "rong"
+   "family": "rong",
+   "rk": "嫡次子",
+   "house": "二房",
+   "ord": 2
   },
   {
    "id": "pl-tanchun",
@@ -12215,7 +12286,10 @@
    "parent": "pl-jiazheng",
    "spouse": null,
    "gen": 4,
-   "family": "rong"
+   "family": "rong",
+   "rk": "庶次女",
+   "house": "二房",
+   "ord": 3
   },
   {
    "id": "pl-jiahuan",
@@ -12223,7 +12297,10 @@
    "parent": "pl-jiazheng",
    "spouse": null,
    "gen": 4,
-   "family": "rong"
+   "family": "rong",
+   "rk": "庶三子",
+   "house": "二房",
+   "ord": 4
   },
   {
    "id": "pl-daiyu",
@@ -12231,7 +12308,9 @@
    "parent": "pl-jiamin",
    "spouse": null,
    "gen": 4,
-   "family": "rong"
+   "family": "rong",
+   "rk": "独女",
+   "ord": 0
   },
   {
    "id": "pl-qiaojie",
@@ -12239,7 +12318,10 @@
    "parent": "pl-jialian",
    "spouse": null,
    "gen": 5,
-   "family": "rong"
+   "family": "rong",
+   "rk": "嫡长女",
+   "house": "长房",
+   "ord": 0
   },
   {
    "id": "pl-jialan",
@@ -12247,7 +12329,10 @@
    "parent": "pl-jiazhu",
    "spouse": null,
    "gen": 5,
-   "family": "rong"
+   "family": "rong",
+   "rk": "嫡长子",
+   "house": "二房",
+   "ord": 0
   },
   {
    "id": "pl-jiacong",
@@ -12255,7 +12340,10 @@
    "parent": "pl-jiashe",
    "spouse": null,
    "gen": 4,
-   "family": "rong"
+   "family": "rong",
+   "rk": "庶次子",
+   "house": "长房",
+   "ord": 1
   },
   {
    "id": "pl-jiayun",
@@ -12263,7 +12351,10 @@
    "parent": null,
    "spouse": null,
    "gen": 4,
-   "family": "rong"
+   "family": "rong",
+   "rk": "族子",
+   "house": "旁支",
+   "ord": 0
   },
   {
    "id": "pl-jiaqin",
@@ -12271,7 +12362,10 @@
    "parent": null,
    "spouse": null,
    "gen": 4,
-   "family": "rong"
+   "family": "rong",
+   "rk": "族子",
+   "house": "旁支",
+   "ord": 0
   },
   {
    "id": "pl-linruhai",
@@ -12279,7 +12373,11 @@
    "parent": null,
    "spouse": "pl-jiamin",
    "gen": 1,
-   "family": "lin"
+   "family": "lin",
+   "rk": "始祖",
+   "title": "兰台寺大夫·巡盐御史",
+   "house": "",
+   "ord": 0
   },
   {
    "id": "pl-daiyu",
@@ -12287,7 +12385,9 @@
    "parent": "pl-linruhai",
    "spouse": null,
    "gen": 2,
-   "family": "lin"
+   "family": "lin",
+   "rk": "独女",
+   "ord": 0
   },
   {
    "id": "pl-shigong",
@@ -12295,7 +12395,11 @@
    "parent": null,
    "spouse": null,
    "gen": 1,
-   "family": "shi"
+   "family": "shi",
+   "rk": "始祖",
+   "title": "保龄侯",
+   "house": "",
+   "ord": 0
   },
   {
    "id": "vg-shi-son",
@@ -12303,7 +12407,9 @@
    "parent": "pl-shigong",
    "spouse": null,
    "gen": 2,
-   "family": "shi"
+   "family": "shi",
+   "rk": "长子",
+   "ord": 0
   },
   {
    "id": "pl-shinai",
@@ -12311,7 +12417,11 @@
    "parent": "vg-shi-son",
    "spouse": null,
    "gen": 3,
-   "family": "shi"
+   "family": "shi",
+   "rk": "长子",
+   "title": "袭保龄侯",
+   "inher": true,
+   "ord": 0
   },
   {
    "id": "pl-shiding",
@@ -12319,7 +12429,10 @@
    "parent": "vg-shi-son",
    "spouse": null,
    "gen": 3,
-   "family": "shi"
+   "family": "shi",
+   "rk": "次子",
+   "title": "忠靖侯",
+   "ord": 1
   },
   {
    "id": "vg-shi-father",
@@ -12327,7 +12440,9 @@
    "parent": "vg-shi-son",
    "spouse": null,
    "gen": 3,
-   "family": "shi"
+   "family": "shi",
+   "rk": "三子",
+   "ord": 2
   },
   {
    "id": "pl-xiangyun",
@@ -12335,7 +12450,9 @@
    "parent": "vg-shi-father",
    "spouse": null,
    "gen": 4,
-   "family": "shi"
+   "family": "shi",
+   "rk": "独女",
+   "ord": 0
   },
   {
    "id": "pl-wanggong",
@@ -12343,7 +12460,11 @@
    "parent": null,
    "spouse": null,
    "gen": 1,
-   "family": "wang"
+   "family": "wang",
+   "rk": "始祖",
+   "title": "县伯",
+   "house": "",
+   "ord": 0
   },
   {
    "id": "pl-wangziteng",
@@ -12351,7 +12472,10 @@
    "parent": "pl-wanggong",
    "spouse": null,
    "gen": 2,
-   "family": "wang"
+   "family": "wang",
+   "rk": "次子",
+   "title": "京营节度使·九省都检点",
+   "ord": 1
   },
   {
    "id": "pl-wangfuren",
@@ -12359,7 +12483,9 @@
    "parent": "pl-wanggong",
    "spouse": "pl-jiazheng",
    "gen": 2,
-   "family": "wang"
+   "family": "wang",
+   "rk": "长女",
+   "ord": 3
   },
   {
    "id": "pl-wangzisheng",
@@ -12367,7 +12493,9 @@
    "parent": "pl-wanggong",
    "spouse": null,
    "gen": 2,
-   "family": "wang"
+   "family": "wang",
+   "rk": "三子",
+   "ord": 2
   },
   {
    "id": "vg-wang-zhangfang",
@@ -12375,7 +12503,9 @@
    "parent": "pl-wanggong",
    "spouse": null,
    "gen": 2,
-   "family": "wang"
+   "family": "wang",
+   "rk": "长子",
+   "ord": 0
   },
   {
    "id": "pl-wangxifeng",
@@ -12383,7 +12513,9 @@
    "parent": "vg-wang-zhangfang",
    "spouse": "pl-jialian",
    "gen": 3,
-   "family": "wang"
+   "family": "wang",
+   "rk": "长女",
+   "ord": 0
   },
   {
    "id": "pl-wangren",
@@ -12391,7 +12523,9 @@
    "parent": "vg-wang-zhangfang",
    "spouse": null,
    "gen": 3,
-   "family": "wang"
+   "family": "wang",
+   "rk": "长子",
+   "ord": 0
   },
   {
    "id": "pl-xuegong",
@@ -12399,7 +12533,11 @@
    "parent": null,
    "spouse": null,
    "gen": 1,
-   "family": "xue"
+   "family": "xue",
+   "rk": "始祖",
+   "title": "紫薇舍人",
+   "house": "",
+   "ord": 0
   },
   {
    "id": "pl-xueyima",
@@ -12407,7 +12545,9 @@
    "parent": "pl-xuegong",
    "spouse": null,
    "gen": 2,
-   "family": "xue"
+   "family": "xue",
+   "rk": "长女",
+   "ord": 0
   },
   {
    "id": "pl-xuepan",
@@ -12415,7 +12555,10 @@
    "parent": "pl-xueyima",
    "spouse": "pl-xiajingui",
    "gen": 3,
-   "family": "xue"
+   "family": "xue",
+   "rk": "长子",
+   "title": "皇商",
+   "ord": 0
   },
   {
    "id": "pl-xuebaochai",
@@ -12423,7 +12566,9 @@
    "parent": "pl-xueyima",
    "spouse": "pl-baoyu",
    "gen": 3,
-   "family": "xue"
+   "family": "xue",
+   "rk": "长女",
+   "ord": 1
   },
   {
    "id": "vg-xue-cifang",
@@ -12431,7 +12576,9 @@
    "parent": "pl-xuegong",
    "spouse": null,
    "gen": 2,
-   "family": "xue"
+   "family": "xue",
+   "rk": "次子",
+   "ord": 1
   },
   {
    "id": "pl-xueke",
@@ -12439,7 +12586,9 @@
    "parent": "vg-xue-cifang",
    "spouse": "pl-xingxiuyan",
    "gen": 3,
-   "family": "xue"
+   "family": "xue",
+   "rk": "长子",
+   "ord": 0
   },
   {
    "id": "pl-xuebaoqin",
@@ -12447,7 +12596,9 @@
    "parent": "vg-xue-cifang",
    "spouse": null,
    "gen": 3,
-   "family": "xue"
+   "family": "xue",
+   "rk": "次女",
+   "ord": 1
   }
  ],
  "genealogy_notes": {

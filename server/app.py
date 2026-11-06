@@ -158,8 +158,12 @@ class Handler(SimpleHTTPRequestHandler):
             items = [row_item(r, tags.get(r["id"], [])) for r in conn.execute("SELECT * FROM v_items ORDER BY sort")]
             rels = [{"a": r[0], "b": r[1], "label": r[2]}
                     for r in conn.execute("SELECT a,b,label FROM relations")]
-            gen = [{"id": r[0], "family": r[1], "parent": r[2], "spouse": r[3], "gen": r[4], "label": r[5]}
-                   for r in conn.execute("SELECT item_id,family,parent_id,spouse_id,gen,label FROM genealogy")]
+            gen = [{"id": r[0], "family": r[1], "parent": r[2], "spouse": r[3], "gen": r[4],
+                    "label": r[5], "rk": r[6], "title": r[7], "inher": bool(r[8]),
+                    "house": r[9], "ord": r[10]}
+                   for r in conn.execute("SELECT item_id,family,parent_id,spouse_id,gen,label,"
+                                         "COALESCE(rk,''),COALESCE(title,''),COALESCE(inher,0),"
+                                         "COALESCE(house,''),COALESCE(ord,0) FROM genealogy")]
             notes = {r[0]: r[1] for r in conn.execute("SELECT family,note FROM family_notes")}
             panels = []
             for r in conn.execute("SELECT title,note,kind,payload FROM panels ORDER BY sort"):

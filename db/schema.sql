@@ -89,6 +89,11 @@ CREATE TABLE IF NOT EXISTS genealogy (
   spouse_id TEXT,
   gen INTEGER NOT NULL,
   label TEXT,
+  rk TEXT,
+  title TEXT,
+  inher INTEGER DEFAULT 0,
+  house TEXT,
+  ord INTEGER DEFAULT 0,
   PRIMARY KEY (family, item_id)
 );
 CREATE INDEX IF NOT EXISTS idx_gen_family ON genealogy(family, gen);

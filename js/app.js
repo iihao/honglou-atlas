@@ -4,7 +4,7 @@
 
   var D = null, byId = {}, famById = {}, state = {
     view: 'lineage', geo: 'rong', gfilter: 'all', family: 'all', role: 'all',
-    q: '', selected: null, list: [], lgZoom: 1, showEvents: false
+    q: '', selected: null, list: [], lgZoom: 1, lgZoomManual: false, showEvents: false
   };
   var G = { W: 1500, H: 980, pad: 50 };
   var gState = { nodes: [], edges: [], nodeMap: {}, pos: {}, laid: false, zoom: 1, tx: 0, ty: 0,
@@ -120,39 +120,62 @@
     var set = {}, rowIds = {};
     g.forEach(function (x) { set[x.id] = x; rowIds[x.id] = 1; });
 
-    var NW = 82, NH = 34, SP = 44, ROW = 104, L = 64, T = 50, GAP = 18;
+    var NW = 128, NH = 50, SP = 46, ROW = 118, L = 64, T = 62, GAP = 20;
     var SW = NW - 8;
     var children = {};
     g.forEach(function (x) {
       if (x.parent && set[x.parent]) (children[x.parent] = children[x.parent] || []).push(x.id);
     });
+    // 同辈按长幼排序（ord 小的在左），没有 ord 的按原顺序排在后面
+    Object.keys(children).forEach(function (k) {
+      children[k].sort(function (a, b) {
+        return (set[a].ord || 0) - (set[b].ord || 0);
+      });
+    });
     var roots = g.filter(function (x) { return !x.parent || !set[x.parent]; }).map(function (x) { return x.id; });
 
-    var cursor = 0, pos = {};
+    // 按像素游标排布：只有真的带配偶的节点才多占一个配偶位，
+    // 不再给每个人预留固定槽位，兄弟姊妹之间就不会空出大片
+    function ownW(x) {
+      return NW + (attachedSpouse(x) ? SP + SW : 0);
+    }
+    var cursor = L, pos = {};
     function walk(id) {
       var kids = children[id] || [];
-      if (!kids.length) { pos[id] = cursor++; return pos[id]; }
+      var self = set[id];
+      if (!kids.length) {
+        var left = cursor;
+        cursor += ownW(self) + GAP;
+        pos[id] = left + ownW(self) / 2;
+        return pos[id];
+      }
+      var blockLeft = cursor;
       var xs = kids.map(walk);
-      pos[id] = (Math.min.apply(null, xs) + Math.max.apply(null, xs)) / 2;
-      return pos[id];
+      var c = (Math.min.apply(null, xs) + Math.max.apply(null, xs)) / 2;
+      // 父节点自身也占横向空间（尤其带配偶时），否则会和同辈兄弟姊妹的方框压在一起
+      c = Math.max(c, blockLeft + ownW(self) / 2);
+      pos[id] = c;
+      cursor = Math.max(cursor, c + ownW(self) / 2 + GAP);
+      return c;
     }
-    // 不同房支之间留出呼吸空间
-    roots.forEach(function (id, i) {
-      if (i) cursor += 0.45;
-      walk(id);
-    });
+    roots.forEach(walk);
 
-    var slotW = NW + SP + SW + GAP;
     var maxGen = Math.max.apply(null, g.map(function (x) { return x.gen; }));
-    var W = Math.max((cursor || 1) * slotW + L + 40, 360);
+    var W = Math.max(cursor + 40, 360);
     var H = T + maxGen * ROW + 30;
     var svg = $('#lgSvg');
     svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
     svg.setAttribute('height', 'auto');
-    svg.style.width = (state.lgZoom * 100) + '%';
+    // 默认按容器宽度自适应（整棵树一屏看完）；用户手动缩放后不再自动改
+    if (!state.lgZoomManual) {
+      var fitBox = $('#lgScroll');
+      var fitW = fitBox ? fitBox.clientWidth : 0;
+      if (fitW && W > fitW) state.lgZoom = Math.max(0.45, Math.min(1, fitW / W));
+      else state.lgZoom = 1;
+    }
     syncLgZoom();
 
-    function rowLeft(id) { return L + (pos[id] || 0) * slotW; }
+    function rowLeft(id) { return pos[id] - ownW(set[id]) / 2; }
     function rowTop(gen) { return T + (gen - 1) * ROW; }
     function attachedSpouse(x) {
       return x.spouse && byId[x.spouse] && !rowIds[x.spouse];
@@ -242,7 +265,7 @@
     var centerRoot = function () {
       if (!sc0 || !roots.length) return;
       var realW = svg.getBoundingClientRect().width || W;
-      sc0.scrollLeft = (L + (pos[roots[0]] || 0) * slotW + NW / 2) * (realW / W) - sc0.clientWidth / 2;
+      sc0.scrollLeft = (pos[roots[0]] || 0) * (realW / W) - sc0.clientWidth / 2;
     };
     requestAnimationFrame(centerRoot);
     setTimeout(centerRoot, 120);
@@ -275,35 +298,73 @@
     return { id: g.id, name: name, alias: rest || '名佚', family: g.family, virtual: true };
   }
 
+  function clip(s, n) {
+    s = String(s || '');
+    return s.length > n ? s.slice(0, n - 1) + '…' : s;
+  }
+
   function nodeSVG(it, x, y, w, h, isSpouse, g) {
     var color = famById[it.family] ? famById[it.family].color : '#8a8073';
     var name = it.name.length > 6 ? it.name.slice(0, 6) : it.name;
-    var sub = it.alias ? String(it.alias).split('、')[0] : (it.role || '');
-    if (sub.length > 7) sub = sub.slice(0, 7);
-    return '<g class="lg-node' + (isSpouse ? ' spouse' : '') + '" data-id="' + esc(it.id) +
-      '" tabindex="0" role="button" aria-label="' + esc(it.name) + '">' +
-      '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="3" stroke="' + color + '"/>' +
-      '<text class="lg-name" x="' + (x + w / 2) + '" y="' + (y + h / 2 + (sub ? -2 : 4)) + '">' + esc(name) + '</text>' +
-      (sub ? '<text class="lg-sub" x="' + (x + w / 2) + '" y="' + (y + h - 7) + '">' + esc(sub) + '</text>' : '') +
-      '</g>';
+    // 谱系附注：排行（嫡长子 / 庶次女）+ 爵位官职
+    var rk = g && g.rk ? g.rk : '';
+    var title = g && g.title ? g.title : '';
+    var meta = rk || title ? [rk, title].filter(Boolean).join(' · ')
+      : (it.alias ? String(it.alias).split('、')[0] : (it.role || ''));
+    var born = /庶/.test(rk) ? ' shu' : (/嫡/.test(rk) ? ' di' : '');
+    var cls = 'lg-node' + (isSpouse ? ' spouse' : '') + born + (g && g.inher ? ' inher' : '');
+    var aria = [it.name, rk, title, g && g.inher ? '承袭爵位' : '', g && g.house ? g.house : '']
+      .filter(Boolean).join(' · ');
+    var parts = ['<g class="' + cls + '" data-id="' + esc(it.id) +
+      '" tabindex="0" role="button" aria-label="' + esc(aria) + '">',
+      '<title>' + esc(aria) + '</title>',
+      '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="3" stroke="' + color + '"/>'];
+    // 左色条：嫡（朱）/ 庶（青灰）
+    if (born) {
+      parts.push('<rect class="lg-born' + born + '" x="' + (x + 1) + '" y="' + (y + 1) +
+        '" width="3" height="' + (h - 2) + '" rx="1.5"/>');
+    }
+    parts.push('<text class="lg-name" x="' + (x + w / 2) + '" y="' + (y + 20) + '">' + esc(name) + '</text>');
+    if (meta) {
+      parts.push('<text class="lg-sub" x="' + (x + w / 2) + '" y="' + (y + h - 11) + '">' +
+        esc(clip(meta, Math.max(6, Math.floor((w - 14) / 9.2)))) + '</text>');
+    }
+    // 袭爵角标 / 房分
+    if (g && g.inher) {
+      parts.push('<rect class="lg-inher-badge" x="' + (x + w - 19) + '" y="' + (y + 4) +
+        '" width="15" height="15" rx="2"/>' +
+        '<text class="lg-inher-t" x="' + (x + w - 11.5) + '" y="' + (y + 15) + '">爵</text>');
+    }
+    if (g && g.house) {
+      parts.push('<text class="lg-house" x="' + (x + 2) + '" y="' + (y - 4) + '">' + esc(g.house) + '</text>');
+    }
+    parts.push('</g>');
+    return parts.join('');
   }
 
   function virtualSVG(x, x0, y0, w, h) {
     var lines = String(x.label || '名佚').split('\n');
     var name = lines[0] || '名佚';
-    var sub = lines.slice(1).join(' ');
-    return '<g class="lg-node virtual" role="img" aria-label="' + esc(lines.join(' ')) + '">' +
+    var sub = [x.rk, lines.slice(1).join(' ')].filter(Boolean).join(' · ');
+    return '<g class="lg-node virtual" role="img" aria-label="' + esc([lines.join(' '), x.rk || ''].join(' ')) + '">' +
       '<rect x="' + x0 + '" y="' + y0 + '" width="' + w + '" height="' + h + '" rx="3"/>' +
-      '<text class="lg-name" x="' + (x0 + w / 2) + '" y="' + (y0 + h / 2 + (sub ? -2 : 4)) + '">' + esc(name) + '</text>' +
-      (sub ? '<text class="lg-sub" x="' + (x0 + w / 2) + '" y="' + (y0 + h - 7) + '">' + esc(sub) + '</text>' : '') +
+      '<text class="lg-name" x="' + (x0 + w / 2) + '" y="' + (y0 + 20) + '">' + esc(name) + '</text>' +
+      (sub ? '<text class="lg-sub" x="' + (x0 + w / 2) + '" y="' + (y0 + h - 11) + '">' + esc(clip(sub, Math.max(6, Math.floor((w - 14) / 9.2)))) + '</text>' : '') +
       '</g>';
   }
 
   function syncLgZoom() {
     var svg = $('#lgSvg');
     if (!svg) return;
-    svg.style.width = (state.lgZoom * 100) + '%';
-    svg.style.minWidth = state.lgZoom >= 1 ? '760px' : '0';
+    // 按 viewBox 原始像素铺开：100% 就是「1 个图单位 = 1px」，
+    // 谱系较宽时在容器里横向滚动，而不是把整棵树压扁塞进一屏
+    var vb = (svg.getAttribute('viewBox') || '0 0 1000 500').split(/\s+/);
+    var vw = parseFloat(vb[2]) || 1000;
+    var px = Math.max(320, Math.round(vw * state.lgZoom));
+    svg.style.width = px + 'px';
+    // 内容比容器窄时居中（margin auto），比容器宽时自动靠左并可横向滚动
+    svg.style.margin = '0 auto';
+    svg.style.minWidth = '0';
     var lbl = $('#lgZoomLabel');
     if (lbl) lbl.textContent = Math.round(state.lgZoom * 100) + '%';
   }
@@ -1801,9 +1862,9 @@
         var sc = $('#lgScroll');
         var ratio = sc && sc.scrollWidth ? sc.scrollLeft / sc.scrollWidth : 0;
         var m = b.getAttribute('data-lgzoom');
-        if (m === 'in') state.lgZoom = Math.min(2.6, state.lgZoom * 1.2);
-        else if (m === 'out') state.lgZoom = Math.max(0.5, state.lgZoom / 1.2);
-        else state.lgZoom = 1;
+        if (m === 'in') { state.lgZoom = Math.min(2.6, state.lgZoom * 1.2); state.lgZoomManual = true; }
+        else if (m === 'out') { state.lgZoom = Math.max(0.3, state.lgZoom / 1.2); state.lgZoomManual = true; }
+        else { state.lgZoom = 1; state.lgZoomManual = false; }
         syncLgZoom();
         requestAnimationFrame(function () {
           if (sc) sc.scrollLeft = ratio * sc.scrollWidth;

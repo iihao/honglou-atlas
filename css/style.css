@@ -108,7 +108,13 @@ input[type=search]:focus,select:focus{border-color:var(--red);box-shadow:0 0 0 3
 .lg-node{cursor:pointer}
 .lg-node rect{fill:#fffdf7;stroke-width:1.4;rx:3;transition:.15s}
 .lg-node:hover rect{fill:#fff;filter:drop-shadow(0 3px 8px rgba(50,35,18,.22))}
-.lg-node .lg-name{font-family:var(--serif);font-size:14px;fill:var(--ink);text-anchor:middle;pointer-events:none}
+.lg-node .lg-name{font-family:var(--serif);font-size:14.5px;fill:var(--ink);text-anchor:middle;pointer-events:none}
+.lg-node .lg-born{fill:#a83a41}
+.lg-node .lg-born.shu{fill:#6d7f8c}
+.lg-node.inher>rect:nth-of-type(1){stroke-width:1.8;stroke:#b07a3a}
+.lg-inher-badge{fill:#f7edd8;stroke:#b07a3a;stroke-width:1}
+.lg-inher-t{font-family:var(--serif);font-size:10px;fill:#8a5f2c;text-anchor:middle;font-weight:600}
+.lg-house{font-family:var(--sans);font-size:9px;fill:#b07a3a;letter-spacing:.06em}
 .lg-node .lg-sub{font-family:var(--sans);font-size:10px;fill:var(--ink-3);text-anchor:middle;pointer-events:none}
 .lg-node.spouse rect{stroke-dasharray:4 3;fill:#fbf6ea}
 .lg-node.spouse .lg-name{font-size:12.5px;fill:var(--ink-2)}
