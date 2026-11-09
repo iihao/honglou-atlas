@@ -350,9 +350,10 @@ table.data th{font-family:var(--serif);font-size:11px;letter-spacing:.14em;color
   #lgSvg{min-width:760px}
   .lg-note{font-size:11px;padding:9px 12px;line-height:1.75}
 
-  /* 关系图：同样保留可读尺寸 */
+  /* 关系图：同样保留可读尺寸。touch-action:none 让 JS 接管单指平移与双指缩放，
+     pan-x pan-y 会把触摸手势交给浏览器滚动，own handler 里的 preventDefault 失效 */
   .stage{overflow:auto;-webkit-overflow-scrolling:touch}
-  #gSvg{min-width:760px;touch-action:pan-x pan-y}
+  #gSvg{min-width:760px;touch-action:none}
   .legend{gap:4px 10px;font-size:10px}
 
   /* 人物：两列紧凑 */

@@ -643,7 +643,7 @@ LOVE = [
     ("pl-xuebaochai", "pl-yinger", "主仆"), ("pl-xuebaochai", "pl-xiangling", "姑嫂"),
     ("pl-yingchun", "pl-siqi", "主仆"), ("pl-tanchun", "pl-shishu", "主仆"),
     ("pl-xichun", "pl-ruhua", "主仆"), ("pl-wangxifeng", "pl-xiaohong", "主仆"),
-    ("pl-jiayuanchun", "pl-baoyu", "姐弟"), ("pl-jiayuanchun", "pl-jiazheng", "父女"),
+    ("pl-jiayuanchun", "pl-baoyu", "姐弟"),
     ("pl-livan", "pl-tanchun", "诗社同人"),
 ]
 for a, b, l in LOVE:
@@ -1380,10 +1380,19 @@ FEMALE = {
     "pl-ruiguan", "pl-ouguan2", "pl-wangqinghui", "pl-xujunbaoyi", "pl-yanrui", "pl-zhushuzhen",
 }
 _rel_keys = {(r["a"], r["b"], r["label"]) for r in seed["relations"]}
+# 同一对人物只保留一条「父/母—子女」关系：若反方向已经写过，
+# 后面按谱系补入时就不能再造一条 A→B，否则会同时出现
+# 「贾赦-父子->贾琮」和「贾琮-父子->贾赦」两条方向相反的关系。
+_PARENT_LABELS = {"父子", "父女", "母子", "母女"}
 def _link(a, b, label):
-    if a and b and a != b and a in _item_ids and b in _item_ids and (a, b, label) not in _rel_keys:
-        _rel_keys.add((a, b, label))
-        seed["relations"].append({"a": a, "b": b, "label": label})
+    if not (a and b and a != b and a in _item_ids and b in _item_ids):
+        return
+    if (a, b, label) in _rel_keys:
+        return
+    if label in _PARENT_LABELS and any((b, a, x) in _rel_keys for x in _PARENT_LABELS):
+        return
+    _rel_keys.add((a, b, label))
+    seed["relations"].append({"a": a, "b": b, "label": label})
 
 for g in seed["genealogy"]:
     if g.get("parent"):
@@ -1514,9 +1523,19 @@ if alias:
             g["spouse"] = alias.get(g["spouse"], g["spouse"])
 
 # 关系去重（同一对 + 同一标签只留一条）
+# 注意：夫妻、借银、串通这类对称关系，数据源里常把 A→B 和 B→A 各写一遍。
+# 若只按有方向的 (a,b,label) 去重，两条都会留下 —— 前端会显示成两条重复关系、
+# 关系卡「同一对人物另有」也会串味。对称标签按无序对去重，其余保持有向。
+SYMMETRIC = {"夫妻", "未婚夫妻", "兄弟", "姐妹", "兄妹", "姐弟", "堂兄弟", "堂姐妹", "堂兄妹",
+             "族亲", "宗族", "同房", "同侪", "同僚", "同班", "同窗", "诗友", "诗社同人", "友人",
+             "知己", "情人", "恋人", "镜像", "世交", "旧交", "旧识", "私交", "玩伴", "同伴",
+             "方外之交", "冲突", "仇人", "合谋", "串通", "借银", "舅甥"}
 seen_rel, rels = set(), []
 for r in seed["relations"]:
-    key = (r["a"], r["b"], r["label"])
+    if r["label"] in SYMMETRIC:
+        key = (r["label"],) + tuple(sorted((r["a"], r["b"])))
+    else:
+        key = (r["a"], r["b"], r["label"])
     if key in seen_rel:
         continue
     seen_rel.add(key)

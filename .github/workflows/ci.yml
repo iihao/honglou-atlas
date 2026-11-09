@@ -34,6 +34,21 @@ jobs:
           names = collections.Counter(i['name'] for i in d['items'] if i['cat'] == 'people')
           dupe = [k for k, v in names.items() if v > 1]
           assert not dupe, f'重名人物: {dupe[:5]}'
+          # 对称关系（夫妻/借银…）不允许 A→B 与 B→A 同时存在，否则前端会出现重复行
+          sym = {"夫妻","未婚夫妻","兄弟","姐妹","兄妹","姐弟","堂兄弟","堂姐妹","堂兄妹",
+                 "族亲","宗族","同房","同侪","同僚","同班","同窗","诗友","诗社同人","友人",
+                 "知己","情人","恋人","镜像","世交","旧交","旧识","私交","玩伴","同伴",
+                 "方外之交","冲突","仇人","合谋","串通","借银"}
+          seen = set()
+          both = []
+          for r in d['relations']:
+              if r['label'] not in sym:
+                  continue
+              k = (r['label'],) + tuple(sorted((r['a'], r['b'])))
+              if k in seen:
+                  both.append(r)
+              seen.add(k)
+          assert not both, f'对称关系重复 {len(both)} 条: {both[:3]}'
           # vg-* 是「名佚」谱系占位节点，允许只存在于 genealogy
           def ok(i):
               return i in idset or str(i).startswith('vg-')

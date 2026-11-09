@@ -8,3 +8,6 @@ db/*.db-wal
 db/*.db-shm
 dist/
 .venv/
+
+# 公众号等个人发布素材：只保留在本地，不推到公共仓库
+docs/wechat/

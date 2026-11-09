@@ -4,14 +4,19 @@
 
   var D = null, byId = {}, famById = {}, state = {
     view: 'lineage', geo: 'rong', gfilter: 'all', family: 'all', role: 'all',
-    q: '', selected: null, list: [], lgZoom: 1, lgZoomManual: false, showEvents: false
+    q: '', selected: null, list: [], lgZoom: 1, lgZoomManual: false, showEvents: false,
+    modalPushed: false, modalBack: ''
   };
   var G = { W: 1500, H: 980, pad: 50 };
   var gState = { nodes: [], edges: [], nodeMap: {}, pos: {}, laid: false, zoom: 1, tx: 0, ty: 0,
-    hover: null, sel: null, edgeSel: null, edgeHover: null };
+    hover: null, sel: null, edgeSel: null, edgeHover: null, clusters: null, clusterIds: null };
   var CAT = { people: '人物', event: '事件', fate: '判词', poetry: '诗词', place: '地点', chapter: '回目' };
   var KIN = ['父子', '父女', '母子', '母女', '兄弟', '兄妹', '姐妹', '姐弟', '祖孙', '外祖母', '曾祖母',
-    '姑祖母', '夫妻', '妾室', '嫡母', '养父女', '堂兄弟', '堂姐妹', '姑嫂', '姨甥', '叔侄', '姑侄', '舅甥', '继母女', '翁媳', '岳婿', '族亲', '未婚夫妻'];
+    '姑祖母', '夫妻', '妾室', '嫡母', '养父女', '堂兄弟', '堂姐妹', '姑嫂', '姨甥', '叔侄', '姑侄', '舅甥', '继母女', '翁媳', '岳婿', '族亲', '未婚夫妻',
+    // 下面这些含「父/母/兄…」等字，但上面的正则匹配不到，补进白名单
+    '表亲', '姑父', '外祖父', '外孙女', '堂兄妹', '族兄妹', '族姐妹', '婶侄', '翁婿',
+    '同父同母兄妹', '同父同母姐妹', '同父同母兄弟', '同父同母姐弟',
+    '同父异母兄妹', '同父异母姐妹', '同父异母兄弟', '同父异母姐弟'];
 
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
@@ -165,7 +170,6 @@
     var H = T + maxGen * ROW + 30;
     var svg = $('#lgSvg');
     svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
-    svg.setAttribute('height', 'auto');
     // 默认按容器宽度自适应（整棵树一屏看完）；用户手动缩放后不再自动改
     if (!state.lgZoomManual) {
       var fitBox = $('#lgScroll');
@@ -303,6 +307,23 @@
     return s.length > n ? s.slice(0, n - 1) + '…' : s;
   }
 
+  // 按可用像素宽度截断文字。原先用「9.2px/字」估算，而 .lg-sub 实际字号是 10px、
+  // 汉字宽度约等于字号，结果「袭宁国公·一等神威将军」这类长爵位会溢出方框。
+  // 这里按字符类别分别计宽：汉字/全角 ≈ 1 个字号，ASCII ≈ 0.55 个字号。
+  function clipPx(s, px, fontSize) {
+    s = String(s || '');
+    var unit = fontSize || 10;
+    var width = 0, out = '';
+    for (var i = 0; i < s.length; i++) {
+      var ch = s.charAt(i);
+      var cw = /[\u0000-\u00ff]/.test(ch) ? unit * 0.55 : unit;
+      if (width + cw > px) return out.slice(0, -1) + '…';
+      width += cw;
+      out += ch;
+    }
+    return out;
+  }
+
   function nodeSVG(it, x, y, w, h, isSpouse, g) {
     var color = famById[it.family] ? famById[it.family].color : '#8a8073';
     var name = it.name.length > 6 ? it.name.slice(0, 6) : it.name;
@@ -327,7 +348,7 @@
     parts.push('<text class="lg-name" x="' + (x + w / 2) + '" y="' + (y + 20) + '">' + esc(name) + '</text>');
     if (meta) {
       parts.push('<text class="lg-sub" x="' + (x + w / 2) + '" y="' + (y + h - 11) + '">' +
-        esc(clip(meta, Math.max(6, Math.floor((w - 14) / 9.2)))) + '</text>');
+        esc(clipPx(meta, w - 14, 10)) + '</text>');
     }
     // 袭爵角标 / 房分
     if (g && g.inher) {
@@ -349,7 +370,7 @@
     return '<g class="lg-node virtual" role="img" aria-label="' + esc([lines.join(' '), x.rk || ''].join(' ')) + '">' +
       '<rect x="' + x0 + '" y="' + y0 + '" width="' + w + '" height="' + h + '" rx="3"/>' +
       '<text class="lg-name" x="' + (x0 + w / 2) + '" y="' + (y0 + 20) + '">' + esc(name) + '</text>' +
-      (sub ? '<text class="lg-sub" x="' + (x0 + w / 2) + '" y="' + (y0 + h - 11) + '">' + esc(clip(sub, Math.max(6, Math.floor((w - 14) / 9.2)))) + '</text>' : '') +
+      (sub ? '<text class="lg-sub" x="' + (x0 + w / 2) + '" y="' + (y0 + h - 11) + '">' + esc(clipPx(sub, w - 14, 10)) + '</text>' : '') +
       '</g>';
   }
 
@@ -404,11 +425,12 @@
   }
 
   function relCat(label) {
-    if (/主仆|大管家|老仆|乳母|陪房|管家|心腹|小厮|奶兄/.test(label)) return 'servant';
+    // 「同房」指同房伺候的丫鬟，属主仆而非「其他」
+    if (/主仆|大管家|老仆|乳母|陪房|管家|心腹|小厮|奶兄|同房/.test(label)) return 'servant';
     if (KIN.indexOf(label) >= 0 ||
-        /父|母|兄|弟|姐|妹|祖|孙|叔|侄|姑|舅|姨|堂|族|嫡|养|继|婿|媳|嫂/.test(label)) return 'kin';
+        /父|母|兄|弟|姐|妹|祖|孙|叔|侄|姑|舅|姨|堂|族|嫡|养|继|婿|媳|嫂|表亲/.test(label)) return 'kin';
     if (/知己|夫妻|妾室|未婚|恋人|情人|通房|情/.test(label)) return 'love';
-    if (/同人|同窗|同伴|友人|诗友|诗社|方外|旧交|旧识|世交|盟友/.test(label)) return 'friend';
+    if (/同人|同窗|同伴|友人|诗友|诗社|方外|旧交|旧识|世交|盟友|塾师|师徒|玩伴/.test(label)) return 'friend';
     return 'other';
   }
 
@@ -600,14 +622,28 @@
       return;
     }
 
-    // 复用已有坐标，避免切换时塌缩
+    // 复用已有坐标，避免切换时塌缩。
+    // 关键：layout() 是唯一给 model 挂 clusters 的地方。只要节点坐标全都命中
+    // gState.pos 就不会重排，此时 clusters 为空 —— 岛名标签会整片消失。
+    // 所以记住上一轮的分簇，节点集合完全一致时直接复用。
     var prev = gState.pos;
-    var need = !gState.laid;
     model.nodes.forEach(function (nd) {
       var p = prev[nd.id];
-      if (p) { nd.x = p[0]; nd.y = p[1]; } else { need = true; }
+      if (p) { nd.x = p[0]; nd.y = p[1]; }
     });
-    if (need) layout(model);
+    // 用「节点 id 集合」判断能否复用，而不是只比数量：
+    // 换个筛选后人数可能刚好相同（例如两次都是 72 人），比数量会误判成同一批节点，
+    // 于是套用旧的岛坐标，节点跑出岛外、标签也错位。
+    var prevIds = gState.clusterIds;
+    var sameSet = !!gState.clusters && prevIds && prevIds.length === model.nodes.length &&
+      model.nodes.every(function (nd) { return prevIds.indexOf(nd.id) >= 0; });
+    if (!sameSet) {
+      layout(model);
+      gState.clusters = model.clusters;
+      gState.clusterIds = model.nodes.map(function (nd) { return nd.id; });
+    } else {
+      model.clusters = gState.clusters;
+    }
     gState.laid = true;
     gState.pos = {};
     model.nodes.forEach(function (nd) { gState.pos[nd.id] = [nd.x, nd.y]; });
@@ -629,7 +665,7 @@
       var cat = (a.item.cat === 'event' || b.item.cat === 'event') ? 'event' : relCat(e.label);
       var mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
       var cross = (a.item.family || 'other') !== (b.item.family || 'other');
-      parts.push('<g class="g-edge-g ' + cat + (cross ? ' cross' : '') + '" data-a="' + e.a + '" data-b="' + e.b +
+      parts.push('<g class="g-edge-g ' + cat + (cross ? ' cross' : '') + '" data-a="' + esc(e.a) + '" data-b="' + esc(e.b) +
         '" data-cat="' + cat + '" data-label="' + esc(e.label) + '">' +
         '<line class="g-edge-hit" x1="' + a.x.toFixed(1) + '" y1="' + a.y.toFixed(1) +
         '" x2="' + b.x.toFixed(1) + '" y2="' + b.y.toFixed(1) + '"/>' +
@@ -644,7 +680,7 @@
       var fated = !isEv && FATED[nd.id];
       parts.push('<g class="g-node' + (isEv ? ' ev' : '') + (fated ? ' fated' : '') +
         ((isEv || nd.deg < (model.nodes.length > 100 ? 5 : 3)) ? ' minor' : '') +
-        '" data-id="' + nd.id + '" tabindex="0" role="button">' +
+        '" data-id="' + esc(nd.id) + '" tabindex="0" role="button">' +
         (isEv
           ? '<rect class="dot" x="' + (nd.x - r).toFixed(1) + '" y="' + (nd.y - r).toFixed(1) +
             '" width="' + (r * 2).toFixed(1) + '" height="' + (r * 2).toFixed(1) + '" rx="2" fill="#7a6a52"/>'
@@ -1406,6 +1442,48 @@
       gState.zoom = Math.max(0.5, Math.min(3, gState.zoom * (e.deltaY > 0 ? 0.89 : 1.12)));
       applyTransform(); syncZoom();
     }, { passive: false });
+
+    // 触摸屏：画布提示里写着「双指缩放」，但只绑了 mouse/wheel，手机上完全不能缩放。
+    // 这里补单指平移 + 双指捏合缩放（touch-action:pan-x pan-y 已在 CSS 允许手势）。
+    var tz = null, tDrag = null;
+    var svgEl = $('#gSvg');
+    svgEl.addEventListener('touchstart', function (e) {
+      if (e.touches.length === 2) {
+        tDrag = null;
+        var a = e.touches[0], b = e.touches[1];
+        tz = { d: Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY), z: gState.zoom };
+      } else if (e.touches.length === 1 && !e.target.closest('.g-node')) {
+        var t = e.touches[0];
+        tDrag = { x: t.clientX, y: t.clientY, tx: gState.tx, ty: gState.ty, moved: false };
+      }
+    }, { passive: true });
+    svgEl.addEventListener('touchmove', function (e) {
+      var rect = svgEl.getBoundingClientRect();
+      var k = G.W / (rect.width || G.W);
+      if (e.touches.length === 2 && tz) {
+        e.preventDefault();
+        var a = e.touches[0], b = e.touches[1];
+        var d = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+        if (d > 0) {
+          gState.zoom = Math.max(0.5, Math.min(3, tz.z * (d / tz.d)));
+          applyTransform(); syncZoom();
+        }
+      } else if (tDrag && e.touches.length === 1) {
+        var t = e.touches[0];
+        var dx = t.clientX - tDrag.x, dy = t.clientY - tDrag.y;
+        if (!tDrag.moved && Math.abs(dx) + Math.abs(dy) < 6) return;
+        e.preventDefault();
+        tDrag.moved = true;
+        stage.classList.add('dragging');
+        gState.tx = clampPan(tDrag.tx + dx * k);
+        gState.ty = clampPan(tDrag.ty + dy * k);
+        applyTransform();
+      }
+    }, { passive: false });
+    svgEl.addEventListener('touchend', function (e) {
+      if (e.touches.length === 0) { tz = null; tDrag = null; stage.classList.remove('dragging'); }
+      else if (e.touches.length === 1) { tz = null; }
+    }, { passive: true });
   }
 
   /* ---------------- 人物 ---------------- */
@@ -1433,7 +1511,7 @@
     $('#peopleCount').textContent = list.length + ' / ' + itemsOf('people').length + ' 人';
     $('#peopleGrid').innerHTML = list.map(function (p) {
       var f = famById[p.family];
-      return '<div class="person" data-id="' + p.id + '">' +
+      return '<div class="person" data-id="' + esc(p.id) + '">' +
         '<div class="avatar" style="border-color:' + (f ? f.color : '#c0b195') + '">' + esc(p.name.slice(0, 1)) + '</div>' +
         '<div><div class="pname">' + esc(p.name) + '</div>' +
         '<div class="pmeta">' + esc([f ? f.name : '', p.role].filter(Boolean).join(' · ')) +
@@ -1638,6 +1716,13 @@
     renderModal(it);
     $('#modal').hidden = false;
     document.body.style.overflow = 'hidden';
+    // 详情是「可后退、可分享」的：把地址栏换成 #item/<id>，关掉时再还原。
+    // 用 replaceState 而不是 hash 赋值，避免在历史里堆一串详情页。
+    if (!state.modalPushed) {
+      state.modalBack = location.hash || '#lineage';
+      state.modalPushed = true;
+      try { history.replaceState(null, '', '#item/' + encodeURIComponent(id)); } catch (e) { /* 忽略 */ }
+    }
   }
   function closeModal() {
     $('#modal').hidden = true;
@@ -1645,6 +1730,15 @@
     var tools = document.getElementById('stageTools');
     if (tools) tools.style.display = '';
     gState.sel = null;
+    // 关掉详情时把地址栏还原回原来的视图，避免刷新又弹回详情、
+    // 也避免「后退」被卡在 #item/... 上回不去
+    if (state.modalPushed) {
+      state.modalPushed = false;
+      var back = state.modalBack || ('#' + state.view);
+      if (location.hash.indexOf('#item/') === 0) {
+        try { history.replaceState(null, '', back); } catch (e) { /* 忽略 */ }
+      }
+    }
     if (state.view === 'graph') highlight(null);
   }
   function step(d) {
