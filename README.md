@@ -1,7 +1,7 @@
 # 红楼梦图谱 · Dream of the Red Chamber Atlas
 
 <p align="center">
-  <img src="docs/screenshot-graph.png" alt="红楼梦人物关系图谱" width="880">
+  <img src="docs/demo.gif" alt="红楼梦图谱：搜索「蕉下客」定位探春，点连线看宝玉与探春的关系" width="820">
 </p>
 
 <p align="center">
@@ -18,6 +18,14 @@
 > 纯静态、无需后端、手机可用；数据全部结构化为 SQLite，前端零依赖。
 
 **如果这个项目对你有帮助，点一个 ⭐ Star 是最好的支持。**
+
+<details>
+<summary>更多截图</summary>
+
+![人物关系图谱](docs/screenshot-graph.png)
+![荣国府谱系](docs/screenshot-lineage.png)
+
+</details>
 
 ## 运行
 
