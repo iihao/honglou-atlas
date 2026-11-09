@@ -1,9 +1,23 @@
 # 红楼梦图谱 · Dream of the Red Chamber Atlas
 
-> [English](README.en.md) · 中文
+<p align="center">
+  <img src="docs/screenshot-graph.png" alt="红楼梦人物关系图谱" width="880">
+</p>
 
-一个零依赖的《红楼梦》人物谱系、关系图谱与词条检索项目。数据以 SQLite 存储，
-前端为原生 HTML/CSS/JS，后端仅用 Python 标准库。
+<p align="center">
+  <a href="https://iihao.github.io/honglou-atlas/"><b>▶ 在线体验（免安装）</b></a>
+  &nbsp;·&nbsp;
+  <a href="README.en.md">English</a>
+  &nbsp;·&nbsp;
+  <img src="https://img.shields.io/github/license/iihao/honglou-atlas" alt="license">
+  <img src="https://img.shields.io/github/last-commit/iihao/honglou-atlas" alt="last commit">
+  <a href="https://github.com/iihao/honglou-atlas/stargazers"><img src="https://img.shields.io/github/stars/iihao/honglou-atlas?style=social" alt="stars"></a>
+</p>
+
+> 把《红楼梦》的人物、谱系、判词、事件与地点做成一张可以点、可以搜、可以顺着关系走的图。
+> 纯静态、无需后端、手机可用；数据全部结构化为 SQLite，前端零依赖。
+
+**如果这个项目对你有帮助，点一个 ⭐ Star 是最好的支持。**
 
 ## 运行
 
@@ -87,3 +101,11 @@ tools/enrich_data.py 词条富化数据
   ```
 - 新增人物请同时补关系与谱系；事件请补 `cast`，不要只写正文。
 - 提交前建议跑一遍：`python3 -c "import json;json.load(open('db/seed.json'))"` 确认格式。
+
+## 支持这个项目
+
+如果它帮你省下了翻书查人的时间，点一个 **⭐ Star** 能让更多读红楼的人看到它。
+
+- 把它分享给一个正在读原著的朋友
+- 发现人物、判词或脂评有误，提一个 Issue
+- 想补充数据（人物、事件、判词），欢迎 PR，格式见 `CONTRIBUTING.md`
