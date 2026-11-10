@@ -12,6 +12,7 @@
   <img src="https://img.shields.io/github/license/iihao/honglou-atlas" alt="license">
   <img src="https://img.shields.io/github/last-commit/iihao/honglou-atlas" alt="last commit">
   <a href="https://github.com/iihao/honglou-atlas/stargazers"><img src="https://img.shields.io/github/stars/iihao/honglou-atlas?style=social" alt="stars"></a>
+  <a href="https://github.com/iihao/honglou-atlas/graphs/traffic"><img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fiihao%2Fhonglou-atlas%2Fmain%2Fmetrics%2Fbadge.json" alt="visitors"></a>
 </p>
 
 > 把《红楼梦》的人物、谱系、判词、事件与地点做成一张可以点、可以搜、可以顺着关系走的图。
