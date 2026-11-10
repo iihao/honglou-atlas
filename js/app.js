@@ -1651,7 +1651,9 @@
   function foreshadowHTML() {
     var list = (D.foreshadow || []).slice().sort(function (a, b) {
       var order = { '印证': 0, '续书': 1, '存疑': 2 };
-      return (order[a.verdict] || 9) - (order[b.verdict] || 9);
+      var rankA = Object.prototype.hasOwnProperty.call(order, a.verdict) ? order[a.verdict] : 9;
+      var rankB = Object.prototype.hasOwnProperty.call(order, b.verdict) ? order[b.verdict] : 9;
+      return rankA - rankB;
     });
     var counts = { '印证': 0, '续书': 0, '存疑': 0 };
     list.forEach(function (f) { counts[f.verdict] = (counts[f.verdict] || 0) + 1; });
