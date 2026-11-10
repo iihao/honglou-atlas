@@ -1706,14 +1706,27 @@
     });
 
     if (M.meta && M.meta.note) {
-      $('#mapLead').textContent = '宁国府在街东、荣国府在街西，大观园在荣府东北。点击院落可看主人词条。';
+      $('#mapLead').textContent = '宁国府在街东、荣国府在街西，大观园在荣府东北。园内相对位置据游园路线与景物描写推定；点击院落可看主人词条。';
     }
 
-    var svg = ['<rect class="m-bg" x="0" y="0" width="1000" height="700"/>'];
+    var ART = window.MAP_ART;
+    var svg = [ART.defs, '<rect class="m-bg" x="0" y="0" width="1000" height="700"/>'];
 
-    // 宁荣街
-    svg.push('<rect class="m-street" x="52" y="616" width="892" height="36" rx="4"/>');
-    svg.push('<text class="m-street-t" x="500" y="639" text-anchor="middle">宁 荣 街</text>');
+    // 场景：地面、水系、甬道、草木、山石、石狮（全部画在房间之下）
+    (M.panels || []).forEach(function (p) {
+      svg.push('<g class="m-landscape ' + p.id + '">');
+      svg.push('<rect class="m-ground" x="' + p.x + '" y="' + p.y + '" width="' + p.w + '" height="' + p.h + '" rx="8"/>');
+      svg.push('<rect class="m-ground-dots" x="' + p.x + '" y="' + p.y + '" width="' + p.w + '" height="' + p.h + '" rx="8"/>');
+      svg.push(ART.scenery(p));
+      svg.push('</g>');
+    });
+
+    // 罗盘与街
+    svg.push('<g class="m-compass"><circle cx="948" cy="42" r="20"/><path d="M948 28l-4.5 14 4.5-2.6 4.5 2.6z"/><text x="948" y="74" text-anchor="middle">北</text></g>');
+    svg.push(ART.lions());
+    svg.push(ART.street());
+    svg.push(ART.cartouche());
+    svg.push('<rect class="m-grain" x="0" y="0" width="1000" height="700"/>');
 
     var unplaced = [];
 
@@ -1731,7 +1744,7 @@
     (M.panels || []).forEach(function (p) {
       var dim = cur !== 'all' && cur !== p.id;
       svg.push('<g class="m-panel' + (dim ? ' dim' : '') + '">');
-      svg.push('<rect class="m-pbox" x="' + p.x + '" y="' + p.y + '" width="' + p.w + '" height="' + p.h + '" rx="6"/>');
+      svg.push(ART.wall(p, p.id === 'yuan'));
       // 标题画在框外上方，避免压住框内的第一个院落
       svg.push('<text class="m-ptitle" x="' + (p.x + 2) + '" y="' + (p.y - 9) + '">' + esc(p.name) +
         '<tspan class="m-psub" dx="8">' + esc(p.sub || '') + '</tspan></text>');
@@ -1747,20 +1760,37 @@
         svg.push('<g class="' + cls + '"' + (owner ? ' data-owner="' + owner.id + '"' : '') +
           ' data-room="' + esc(r.id) + '">');
         svg.push('<title>' + esc(r.name + (owner ? ' · ' + owner.name : '') + '\n' + (r.basis || '')) + '</title>');
-        svg.push('<rect x="' + r.x + '" y="' + r.y + '" width="' + r.w + '" height="' + r.h + '" rx="3"/>');
+        svg.push('<rect class="m-plot" x="' + r.x + '" y="' + r.y + '" width="' + r.w + '" height="' + r.h + '" rx="3"/>');
 
-        var fsName = fitFont(r.name, r.w, 11.5);
-        var lines = nameLines(r.name, r.w, fsName);
-        var showOwner = owner && r.h >= 44 && r.w >= 62;
-        var blockH = lines.length * (fsName + 3) + (showOwner ? 14 : 0);
-        var top = r.y + (r.h - blockH) / 2 + fsName;
-        lines.forEach(function (ln, i) {
+        // 建筑画在上方，名字排在下方：方框只当“地块”，不再画边框，
+        // 看起来才像图而不是表格。
+        var compact = r.h < 42;
+        var hasOwner = !!owner;
+        var twoLine = hasOwner && r.h >= 62;
+        var textH = compact ? 0 : (twoLine ? 22 : 15);
+        if (compact) {
+          svg.push(ART.glyph(r.kind, { x: r.x, y: r.y, w: r.w, h: r.h }, 'is-wash'));
+        } else {
+          svg.push(ART.glyph(r.kind, { x: r.x, y: r.y + 1, w: r.w, h: Math.max(12, r.h - textH - 2) }));
+        }
+
+        var fsName = fitFont(r.name, r.w, compact ? 11 : 11);
+        if (compact) {
           svg.push('<text class="m-rname" style="font-size:' + fsName.toFixed(1) + 'px" x="' + (r.x + r.w / 2) +
-            '" y="' + (top + i * (fsName + 3)) + '" text-anchor="middle">' + esc(ln) + '</text>');
-        });
-        if (showOwner) {
-          svg.push('<text class="m-owner" x="' + (r.x + r.w / 2) + '" y="' + (top + lines.length * (fsName + 3) + 6) +
-            '" text-anchor="middle">' + esc(owner.name) + '</text>');
+            '" y="' + (r.y + r.h / 2 + fsName / 3).toFixed(1) + '">' + esc(r.name) + '</text>');
+        } else if (twoLine) {
+          svg.push('<text class="m-rname" style="font-size:' + fsName.toFixed(1) + 'px" x="' + (r.x + r.w / 2) +
+            '" y="' + (r.y + r.h - 13) + '">' + esc(r.name) + '</text>' +
+            '<text class="m-owner" x="' + (r.x + r.w / 2) + '" y="' + (r.y + r.h - 3) + '">' + esc(owner.name) + '</text>');
+        } else {
+          // 单行：主人名若放得下就接在后面（红色），放不下就只留房名
+          var ownerW = hasOwner ? owner.name.length * (fsName - 0.5) + 5 : 0;
+          var nameW = r.name.length * fsName;
+          var inline = hasOwner && (nameW + ownerW <= r.w - 4);
+          var txt = '<text class="m-rname" style="font-size:' + fsName.toFixed(1) + 'px" x="' + (r.x + r.w / 2) +
+            '" y="' + (r.y + r.h - 5) + '">' + esc(r.name) +
+            (inline ? '<tspan class="m-owner-inline" dx="5">' + esc(owner.name) + '</tspan>' : '') + '</text>';
+          svg.push(txt);
         }
         svg.push('</g>');
       });

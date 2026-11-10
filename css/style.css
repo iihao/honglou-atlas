@@ -746,38 +746,113 @@ body.fs-switching *,body.fs-switching *::before,body.fs-switching *::after{
 .m-home a:hover{border-bottom-color:var(--red)}
 .m-fs .fs-dl{grid-template-columns:44px 1fr}
 
-/* ---------- 府邸示意图 ---------- */
-.map-box{border:1px solid var(--line);border-radius:4px;background:
-  radial-gradient(600px 320px at 30% 0%,#fdf9ef 0,transparent 70%),rgba(255,255,255,.5);
-  padding:4px;overflow:auto}
+/* ---------- 府邸渲染图 ---------- */
+.map-box{border:1px solid var(--line);border-radius:4px;background:#e9e6d8;padding:4px;overflow:auto}
 #mapSvg{display:block;width:100%;height:auto;min-width:760px}
-.m-bg{fill:transparent}
-.m-street{fill:rgba(168,130,60,.10);stroke:var(--line-2);stroke-width:1;stroke-dasharray:6 4}
+.m-bg{fill:#ece9dc}
+.m-landscape .m-ground{fill:#e0e5d1;stroke:#b3bda2;stroke-width:1}
+.m-landscape.rong .m-ground{fill:#e4e7d5}
+.m-landscape.yuan .m-ground{fill:#d9e6d0;stroke:#a3b596}
+.m-landscape.ning .m-ground{fill:#e8e0cf;stroke:#bdb29a}
+.m-water-edge{fill:none;stroke:#91b5b3;stroke-width:24;stroke-linecap:round;opacity:.45}
+.m-water{fill:none;stroke:#b4d0c9;stroke-width:17;stroke-linecap:round}
+.m-garden-path-edge{fill:none;stroke:#c7b996;stroke-width:13;stroke-linecap:round;stroke-linejoin:round}
+.m-garden-path{fill:none;stroke:#e6ddc7;stroke-width:9;stroke-linecap:round;stroke-linejoin:round}
+.m-tree-shadow{fill:#516c54;opacity:.13}
+.m-tree-crown{fill:#789477;stroke:#668367;stroke-width:1}
+.m-tree-light{fill:#a9b99a;opacity:.82}
+.m-tree-trunk{stroke:#796b50;stroke-width:2}
+.m-compass circle{fill:#f8f6eb;stroke:#a9a28d;stroke-width:1}
+.m-compass path{fill:#9b493c}
+.m-compass text{font-family:var(--serif);font-size:11px;fill:var(--ink-2)}
+.m-street{fill:#ded4bc;stroke:#ab9c80;stroke-width:1;stroke-dasharray:6 4}
 .m-street-t{font-family:var(--serif);font-size:13px;fill:var(--ink-3);letter-spacing:.4em}
-.m-pbox{fill:rgba(246,241,230,.55);stroke:var(--line-2);stroke-width:1.2;stroke-dasharray:8 5}
+.m-wall-band{fill:none;stroke:#cdc6ae;stroke-width:8;stroke-linejoin:round}
+.m-wall-in{fill:none;stroke:#b3ab92;stroke-width:1}
+.m-wall-tile{stroke:#8f8a74;stroke-width:1.4;opacity:.7}
+.m-garden-wall{fill:rgba(255,255,255,.03);stroke:#9aa48c;stroke-width:1.3;stroke-dasharray:10 6}
 .m-panel.dim{opacity:.35}
 .m-ptitle{font-family:var(--serif);font-size:15px;fill:var(--ink);letter-spacing:.14em}
 .m-psub{font-family:var(--sans);font-size:10.5px;fill:var(--ink-3);letter-spacing:.1em}
-.m-room rect{fill:#fffdf7;stroke:var(--line-2);stroke-width:1.1;transition:.15s}
+/* fill:transparent 而不是 none —— none 会让方框收不到点击，整块房间就点不动了 */.m-room .m-plot{fill:transparent;stroke:none;transition:.15s;pointer-events:all}
 .m-room .m-rname{font-family:var(--serif);font-size:11.5px;fill:var(--ink);letter-spacing:.02em}
 .m-room .m-rname.small{font-size:10.5px;fill:var(--ink-2)}
 .m-room .m-owner{font-size:10px;fill:var(--red);letter-spacing:.06em}
-.m-room.k-zheng rect{fill:#fdf6ee;stroke:var(--red-2);stroke-width:1.4}
-.m-room.k-lou rect{fill:#f7f4ec}
-.m-room.k-yuan rect{fill:#fbf9f2}
-.m-room.k-men rect{fill:#f3efe4}
-.m-room.k-jing rect,.m-room.has-owner{cursor:pointer}
-.m-room.k-jing rect{fill:none;stroke-dasharray:3 3}
+.m-room.k-zheng .m-plot{fill:rgba(255,249,242,.45)}
+.m-art.m-plant{opacity:.95}
+.m-plant-sh{fill:#6f7a5c;opacity:.14}
+.m-lion .g-base{fill:#b9b2a0}
+.m-lion .g-lion-b{fill:#c6bfab;stroke:#8f8a76;stroke-width:1}
+.m-lion .g-lion-h{fill:#cfc8b4;stroke:#8f8a76;stroke-width:1}
+.m-lion .g-lion-e,.m-lion .g-lion-f{fill:none;stroke:#8f8a76;stroke-width:1}
+.m-room.k-jing .m-plot{fill:none;stroke:rgba(185,176,154,.6);stroke-dasharray:3 3}
+.m-owner-inline{fill:var(--red)}
+.m-room .m-rname,.m-room .m-owner{text-anchor:middle;paint-order:stroke;stroke:#f4f0e4;stroke-width:2.6px;stroke-linejoin:round}
+.m-room.has-owner{cursor:pointer}
 .m-dot{fill:var(--red-2)}
-.m-room:hover rect{fill:#fff;stroke:var(--red);filter:drop-shadow(0 3px 8px rgba(50,35,18,.18))}
+.m-room:hover .m-plot{fill:rgba(255,255,255,.5);stroke:rgba(140,31,40,.35)}
+.m-ripple{fill:none;stroke:#8fb0aa;stroke-width:1.1;opacity:.75}
+.m-room:hover .m-art{opacity:1}
+
+/* --- 建筑符号（js/map-art.js 的 <symbol>） --- */
+.m-art,.m-plant,.m-lion{pointer-events:none}
+.m-art{opacity:1}
+.m-art.is-wash{opacity:.28}
+.m-art.is-bg{opacity:.55}
+.m-art .g-roof{fill:#c3bcab;stroke:#8d8574;stroke-width:1}
+.m-art .g-ridge{stroke:#8d8574;stroke-width:1.2;fill:none}
+.m-art .g-col{stroke:#9a8a6c;stroke-width:1.6;fill:none}
+.m-art .g-door{fill:#8a6a4a;opacity:.5;stroke:none}
+.m-art .g-doorline{stroke:#fdf7ec;stroke-width:.9;opacity:.7}
+.m-art .g-base{fill:#cfc8b4;opacity:.8;stroke:none}
+.m-art .g-tile{stroke:#8d8574;stroke-width:.55;opacity:.45;fill:none}
+.m-art .g-wall,.m-art .g-moon{fill:none;stroke:#9aa48c;stroke-width:2}
+.m-art .g-pole{stroke:#8a7b60;stroke-width:1.3;fill:none}
+.m-art .g-flag{fill:#c07a5f;opacity:.7}
+.m-art .g-rock{fill:#cec9b6;stroke:#8f8b74;stroke-width:1}
+.m-art .g-cun{stroke:#8f8b74;stroke-width:.8;fill:none;opacity:.65}
+.m-art .g-arch,.m-art .g-rail{fill:none;stroke:#a09274;stroke-width:2}
+.m-art .g-waterline{fill:none;stroke:#8fb0aa;stroke-width:1.2}
+.m-art.is-main .g-roof{fill:#cf9179;stroke:#9d5540}
+.m-art.is-main .g-ridge{stroke:#9d5540}
+.m-art.is-main .g-door{fill:#8c1f28;opacity:.4}
+
+/* --- 草木 --- */
+.m-art .g-stem{stroke:#7d9a6f;stroke-width:1.6;fill:none}
+.m-art .g-node{stroke:#7d9a6f;stroke-width:1.7;stroke-linecap:round;fill:none}
+.m-art .g-leaf{fill:none;stroke:#6f8f66;stroke-width:1.1;stroke-linejoin:round}
+.m-art .g-trunk{stroke:#7a6a4c;stroke-width:2;fill:none}
+.m-art .g-canopy{fill:#819a78;stroke:none}
+.m-art .g-willow-c{fill:#93aa80;stroke:none}
+.m-art .g-willow-d{stroke:#93aa80;stroke-width:1;fill:none}
+.m-art .g-blossom circle{fill:#c78a84;stroke:none}
+.m-art .g-trellis{stroke:#a09274;stroke-width:1.3;fill:none}
+.m-art .g-vine-s{stroke:#87996d;stroke-width:1.2;fill:none}
+.m-art .g-pad{fill:#9db58e;stroke:none;opacity:.9}
+.m-art .g-pad-line{stroke:#7d9a6f;stroke-width:.8;fill:none}
+
+/* --- 场景：水系、甬道、山石、石狮、图题 --- */
+.m-ground-dots{fill:url(#mDots);pointer-events:none}
+.m-grain{fill:#8a7f66;opacity:.05;filter:url(#mGrain);pointer-events:none}
+.m-water-pool{fill:#c6dcd3;stroke:#9dbcb4;stroke-width:1.2;opacity:.85}
+.m-path{fill:none;stroke:#d9d3be;stroke-linecap:round}
+.m-cart-t{font-family:var(--serif);font-size:15px;fill:var(--ink);letter-spacing:.14em}
+.m-cart-rule{stroke:var(--line-2);stroke-width:.8;opacity:.55}
+.m-street-pave{fill:url(#mPaving);pointer-events:none}
+.m-cart-s{font-family:var(--sans);font-size:9.5px;fill:var(--ink-3);letter-spacing:.05em}
+.m-seal rect{fill:#8c1f28}
+.m-seal text{fill:#f6ece0;font-family:var(--serif);font-size:19px;letter-spacing:0}
+
 .map-legend{display:flex;flex-wrap:wrap;gap:14px;margin:12px 2px 6px;font-size:11px;color:var(--ink-3)}
 .map-legend i{display:inline-block;width:12px;height:9px;border:1px solid var(--line-2);margin-right:5px;
   border-radius:2px;vertical-align:-1px}
-.map-legend .k-zheng{background:#fdf6ee;border-color:var(--red-2)}
-.map-legend .k-yuan{background:#fbf9f2}
-.map-legend .k-lou{background:#f7f4ec}
-.map-legend .k-men{background:#f3efe4}
-.map-legend .k-jing{background:none;border-style:dashed}
+.map-legend .k-zheng{background:#cf9179;border-color:#9d5540}
+.map-legend .k-yuan{background:#c3bcab;border-color:#8d8574}
+.map-legend .k-lou{background:#cf9179;border-color:#9d5540}
+.map-legend .k-water{background:#c6dcd3;border-color:#9dbcb4}
+.map-legend .k-tree{background:#8aa77a;border-color:#6f8f66;border-radius:50% 50% 45% 45%}
+.map-legend .k-men{background:#b7b09d;border-color:#8d8574}
+.map-legend .k-jing{background:#cec9b6;border-color:#8f8b74}
 .map-list{margin-top:10px;border-top:1px solid var(--line)}
 .ml-row{display:grid;grid-template-columns:76px 132px 78px 1fr;gap:10px;align-items:baseline;
   padding:9px 2px;border-bottom:1px solid var(--line);font-size:12px}
