@@ -98,6 +98,16 @@ CREATE TABLE IF NOT EXISTS genealogy (
 );
 CREATE INDEX IF NOT EXISTS idx_gen_family ON genealogy(family, gen);
 
+-- 隐语 / 谶语 / 府邸示意图这类“结构松散、前端一次加载”的内容统一放这里，
+-- 加新类型不必改表结构（kind 由前端分发）。
+CREATE TABLE IF NOT EXISTS lore (
+  id      TEXT PRIMARY KEY,
+  kind    TEXT NOT NULL,   -- wordplay / foreshadow / panel / room
+  payload TEXT NOT NULL,   -- JSON
+  sort    INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_lore_kind ON lore(kind);
+
 CREATE TABLE IF NOT EXISTS family_notes (
   family TEXT PRIMARY KEY,
   note   TEXT

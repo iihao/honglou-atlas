@@ -24,8 +24,10 @@
     <a href="#people" data-nav="people">人物</a>
     <a href="#events" data-nav="events">事件</a>
     <a href="#fate" data-nav="fate">判词</a>
+    <a href="#riddle" data-nav="riddle">隐语</a>
     <a href="#poetry" data-nav="poetry">诗词</a>
     <a href="#places" data-nav="places">地点</a>
+    <a href="#map" data-nav="map">府邸</a>
     <a href="#chapters" data-nav="chapters">回目</a>
     <a href="#data" data-nav="data">数据</a>
   </nav>
@@ -177,6 +179,46 @@
       <p>正册、副册、又副册，共十五则（含总览一则）。判词是全书命运的预言，也是结构的总纲。</p>
     </div>
     <div class="fate-grid" id="fateGrid"></div>
+  </div>
+</section>
+
+<!-- ============ 隐语：谐音与谶语 ============ -->
+<section class="view" id="view-riddle">
+  <div class="wrap">
+    <div class="page-head">
+      <p class="eyebrow">WORDPLAY &amp; FORESHADOW · 隐语谶言</p>
+      <h1>名字里的机关</h1>
+      <p>上卷：名字的谐音、反语与会意——作者在开卷就说“将真事隐去”“用假语村言”。
+         下卷：判词谶语与实际结局的对照，逐条标明是书中应验、续书收束，还是至今存疑。</p>
+    </div>
+    <div class="filterbar stack" id="riddleTabs"></div>
+    <div class="riddle-grid" id="riddleGrid"></div>
+  </div>
+</section>
+
+<!-- ============ 府邸图 ============ -->
+<section class="view" id="view-map">
+  <div class="wrap">
+    <div class="page-head">
+      <p class="eyebrow">ESTATE &amp; GARDEN · 府邸大观园</p>
+      <h1>宁荣二府与大观园</h1>
+      <p id="mapLead">宁国府在街东、荣国府在街西，大观园在荣府东北。点击院落可看主人词条。</p>
+    </div>
+    <div class="filterbar" id="mapTabs"></div>
+    <div class="map-box">
+      <svg id="mapSvg" viewBox="0 0 1000 700" role="img" aria-label="宁荣二府与大观园示意平面图"></svg>
+    </div>
+    <p class="scroll-hint">左右滑动可看全图</p>
+    <div class="map-legend">
+      <span><i class="k-zheng"></i>正堂 · 正房</span>
+      <span><i class="k-yuan"></i>院落</span>
+      <span><i class="k-lou"></i>楼阁</span>
+      <span><i class="k-men"></i>门 · 桥 · 亭</span>
+      <span><i class="k-jing"></i>景</span>
+      <span class="lg-hint">示意方位，非实测比例</span>
+    </div>
+    <div class="map-list" id="mapList"></div>
+    <div class="map-note" id="mapNote"></div>
   </div>
 </section>
 

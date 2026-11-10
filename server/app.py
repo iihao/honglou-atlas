@@ -170,12 +170,24 @@ class Handler(SimpleHTTPRequestHandler):
                 p = {"title": r[0], "desc": r[1], "kind": r[2]}
                 p.update(json.loads(r[3] or "{}"))
                 panels.append(p)
+            lore = {}
+            for r in conn.execute("SELECT kind, payload FROM lore ORDER BY sort"):
+                lore.setdefault(r[0], []).append(json.loads(r[1]))
+            meta = {r[0]: r[1] for r in conn.execute("SELECT key,value FROM meta")}
+
             return {
                 "title": "红楼梦图谱",
                 "families": [dict(r) for r in conn.execute("SELECT id,name,color,note FROM families ORDER BY sort")],
                 "roles": [r[0] for r in conn.execute("SELECT name FROM roles ORDER BY sort")],
                 "items": items, "relations": rels, "genealogy": gen,
                 "genealogyNotes": notes, "panels": panels,
+                "wordplay": lore.get("wordplay", []),
+                "foreshadow": lore.get("foreshadow", []),
+                "map": {
+                    "meta": json.loads(meta.get("lore:map") or "{}"),
+                    "panels": lore.get("panel", []),
+                    "rooms": lore.get("room", []),
+                },
             }
         finally:
             conn.close()

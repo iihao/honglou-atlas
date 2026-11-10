@@ -63,12 +63,25 @@ def build():
         p.update(json.loads(r["payload"] or "{}"))
         panels.append(p)
 
+    lore = {}
+    for r in conn.execute("SELECT kind, payload FROM lore ORDER BY sort"):
+        lore.setdefault(r["kind"], []).append(json.loads(r["payload"]))
+
+    meta = {r["key"]: r["value"] for r in conn.execute("SELECT key,value FROM meta")}
+
     data = {
         "title": "红楼梦图谱",
         "families": rows(conn, "SELECT id,name,color,note FROM families ORDER BY sort"),
         "roles": [r["name"] for r in conn.execute("SELECT name FROM roles ORDER BY sort")],
         "items": items, "relations": rels, "genealogy": gen,
         "genealogyNotes": notes, "panels": panels,
+        "wordplay": lore.get("wordplay", []),
+        "foreshadow": lore.get("foreshadow", []),
+        "map": {
+            "meta": json.loads(meta.get("lore:map") or "{}"),
+            "panels": lore.get("panel", []),
+            "rooms": lore.get("room", []),
+        },
     }
     conn.close()
 

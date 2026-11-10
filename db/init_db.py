@@ -25,6 +25,15 @@ def build(conn, seed):
         [(f["id"], f["name"], f.get("color"), f.get("note"), i)
          for i, f in enumerate(seed.get("families", []))])
     conn.executemany(
+        "INSERT INTO lore(id,kind,payload,sort) VALUES(?,?,?,?)",
+        [(x["id"], x["kind"], json.dumps(x["payload"], ensure_ascii=False), i)
+         for i, x in enumerate(seed.get("lore", []))])
+
+    for key, value in (seed.get("lore_meta") or {}).items():
+        conn.execute("INSERT INTO meta(key,value) VALUES(?,?)",
+                     ("lore:" + key, json.dumps(value, ensure_ascii=False)))
+
+    conn.executemany(
         "INSERT INTO roles(id,name,sort) VALUES(?,?,?)",
         [(r, r, i) for i, r in enumerate(seed.get("roles", []))])
 

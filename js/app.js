@@ -5,6 +5,7 @@
   var D = null, byId = {}, famById = {}, state = {
     view: 'lineage', geo: 'rong', gfilter: 'all', family: 'all', role: 'all',
     q: '', selected: null, list: [], lgZoom: 1, lgZoomManual: false, showEvents: false,
+    riddleTab: 'wordplay', mapFocus: 'all',
     modalPushed: false, modalBack: ''
   };
   var G = { W: 1500, H: 980, pad: 50 };
@@ -51,6 +52,24 @@
 
   // 每人对应的判词（谶语）：fate —对应→ people
   var FATE_MAP = {}, FATED = {};
+  /* 谐音 / 谶语 / 住处：词条弹窗里要用，启动时建好索引 */
+  var WORDPLAY_BY_PERSON = {}, FORESHADOW_BY_PERSON = {}, ROOM_BY_OWNER = {};
+  function buildLoreMaps() {
+    WORDPLAY_BY_PERSON = {}; FORESHADOW_BY_PERSON = {}; ROOM_BY_OWNER = {};
+    (D.wordplay || []).forEach(function (w) {
+      if (!w.person) return;
+      (WORDPLAY_BY_PERSON[w.person] = WORDPLAY_BY_PERSON[w.person] || []).push(w);
+    });
+    (D.foreshadow || []).forEach(function (f) {
+      if (!f.person) return;
+      (FORESHADOW_BY_PERSON[f.person] = FORESHADOW_BY_PERSON[f.person] || []).push(f);
+    });
+    ((D.map && D.map.rooms) || []).forEach(function (r) {
+      if (!r.owner) return;
+      (ROOM_BY_OWNER[r.owner] = ROOM_BY_OWNER[r.owner] || []).push(r);
+    });
+  }
+
   function buildFateMap() {
     FATE_MAP = {}; FATED = {};
     var cnt = {};
@@ -100,6 +119,8 @@
     if (v === 'people') renderPeople();
     if (v === 'events') renderEvents();
     if (v === 'fate') renderFate();
+    if (v === 'riddle') renderRiddle(parts[1]);
+    if (v === 'map') renderMap(parts[1]);
     if (v === 'poetry') renderPoetry();
     if (v === 'places') renderPlaces();
     if (v === 'chapters') renderChapters();
@@ -1568,6 +1589,215 @@
     });
   }
 
+  /* ---------------- 隐语：谐音 / 谶语对照 ---------------- */
+  var RIDDLE_TABS = [
+    { id: 'wordplay', name: '谐音 · 反语', count: function () { return (D.wordplay || []).length; } },
+    { id: 'foreshadow', name: '谶语 · 结局对照', count: function () { return (D.foreshadow || []).length; } }
+  ];
+
+  function renderRiddle(tab) {
+    if (tab === 'wordplay' || tab === 'foreshadow') state.riddleTab = tab;
+    var cur = state.riddleTab;
+
+    $('#riddleTabs').innerHTML = RIDDLE_TABS.map(function (t) {
+      return '<button class="chip ' + (cur === t.id ? 'on' : '') + '" data-rtab="' + t.id + '">' +
+        esc(t.name) + '<b>' + t.count() + '</b></button>';
+    }).join('');
+    $$('#riddleTabs .chip').forEach(function (b) {
+      b.addEventListener('click', function () {
+        location.hash = '#riddle/' + b.getAttribute('data-rtab');
+      });
+    });
+
+    var grid = $('#riddleGrid');
+    grid.className = 'riddle-grid ' + cur;
+    grid.innerHTML = cur === 'wordplay' ? wordplayHTML() : foreshadowHTML();
+
+    $$('#riddleGrid [data-go]').forEach(function (el) {
+      el.addEventListener('click', function () { openItem(el.getAttribute('data-go')); });
+    });
+  }
+
+  /* 每个谐音词：上面是“名 → 音”，下面一句解释 */
+  function wordplayHTML() {
+    var list = (D.wordplay || []).slice();
+    var KIND_ORDER = { '谐音': 0, '谐音（合读）': 1, '反语': 2, '会意': 3, '取义': 4 };
+    var rank = function (k) { return k in KIND_ORDER ? KIND_ORDER[k] : 9; };
+    list.sort(function (a, b) { return rank(a.kind) - rank(b.kind); });
+    return list.map(function (w) {
+      var who = w.person && byId[w.person];
+      return '<article class="wp' + (w.verdict === '通行' ? '' : ' wp-soft') + '">' +
+        '<div class="wp-head">' +
+          '<span class="wp-word">' + esc(w.word) + '</span>' +
+          '<span class="wp-arrow">→</span>' +
+          '<span class="wp-sound">' + esc(w.sound) + '</span>' +
+        '</div>' +
+        '<div class="wp-kind">' + esc(w.kind) + (w.verdict !== '通行' ? ' · ' + esc(w.verdict) : '') + '</div>' +
+        '<p class="wp-mean">' + esc(w.meaning) + '</p>' +
+        (w.note ? '<p class="wp-note">' + esc(w.note) + '</p>' : '') +
+        '<div class="wp-foot"><span>' + esc(w.chapter || '') + '</span>' +
+          (who ? '<button class="wp-go" data-go="' + who.id + '">' + esc(who.name) + ' 词条 →</button>' : '') +
+        '</div>' +
+      '</article>';
+    }).join('');
+  }
+
+  var VERDICT = {
+    '印证': { cls: 'v-ok', txt: '前八十回已应验' },
+    '续书': { cls: 'v-sec', txt: '程高本续书收束' },
+    '存疑': { cls: 'v-doubt', txt: '诸说存疑' }
+  };
+
+  function foreshadowHTML() {
+    var list = (D.foreshadow || []).slice().sort(function (a, b) {
+      var order = { '印证': 0, '续书': 1, '存疑': 2 };
+      return (order[a.verdict] || 9) - (order[b.verdict] || 9);
+    });
+    var counts = { '印证': 0, '续书': 0, '存疑': 0 };
+    list.forEach(function (f) { counts[f.verdict] = (counts[f.verdict] || 0) + 1; });
+
+    var head = '<div class="fs-sum">' + ['印证', '续书', '存疑'].map(function (k) {
+      var v = VERDICT[k];
+      return '<span class="fs-pill ' + v.cls + '"><b>' + counts[k] + '</b>' + v.txt + '</span>';
+    }).join('') + '</div>';
+
+    return head + list.map(function (f) {
+      var p = f.person && byId[f.person];
+      var v = VERDICT[f.verdict] || VERDICT['存疑'];
+      return '<article class="fs ' + v.cls + '">' +
+        '<div class="fs-head">' +
+          (p ? '<button class="fs-who" data-go="' + p.id + '">' + esc(p.name) + '</button>' : '<span class="fs-who">判词总目</span>') +
+          '<span class="fs-badge ' + v.cls + '">' + esc(f.verdict) + '</span>' +
+        '</div>' +
+        '<div class="fs-line">' + esc(f.line) + '</div>' +
+        '<dl class="fs-dl">' +
+          '<dt>所谶</dt><dd>' + esc(f.omen) + '</dd>' +
+          '<dt>结局</dt><dd>' + esc(f.ending) + '</dd>' +
+        '</dl>' +
+        (f.note ? '<p class="fs-note">' + esc(f.note) + '</p>' : '') +
+        '<div class="fs-foot">' + esc(f.scope || '') +
+          (f.fate ? ' · <button class="fs-link" data-go="' + f.fate + '">判词原文</button>' : '') +
+        '</div>' +
+      '</article>';
+    }).join('');
+  }
+
+  /* ---------------- 府邸示意图 ---------------- */
+  var MAP_TABS = [
+    { id: 'all', name: '全图' },
+    { id: 'rong', name: '荣国府' },
+    { id: 'ning', name: '宁国府' },
+    { id: 'yuan', name: '大观园' }
+  ];
+
+  function renderMap(focus) {
+    var M = D.map || { panels: [], rooms: [], meta: {} };
+    if (MAP_TABS.some(function (t) { return t.id === focus; })) state.mapFocus = focus;
+    var cur = state.mapFocus;
+
+    $('#mapTabs').innerHTML = MAP_TABS.map(function (t) {
+      return '<button class="chip ' + (cur === t.id ? 'on' : '') + '" data-mtab="' + t.id + '">' +
+        esc(t.name) + '</button>';
+    }).join('');
+    $$('#mapTabs .chip').forEach(function (b) {
+      b.addEventListener('click', function () { location.hash = '#map/' + b.getAttribute('data-mtab'); });
+    });
+
+    if (M.meta && M.meta.note) {
+      $('#mapLead').textContent = '宁国府在街东、荣国府在街西，大观园在荣府东北。点击院落可看主人词条。';
+    }
+
+    var svg = ['<rect class="m-bg" x="0" y="0" width="1000" height="700"/>'];
+
+    // 宁荣街
+    svg.push('<rect class="m-street" x="52" y="616" width="892" height="36" rx="4"/>');
+    svg.push('<text class="m-street-t" x="500" y="639" text-anchor="middle">宁 荣 街</text>');
+
+    var unplaced = [];
+
+    // 房间文字按方框宽度自动缩号，避免长名（如“大观楼 · 省亲别墅”）溢出
+    function fitFont(name, w, max) {
+      var per = Math.max(4, name.replace(/[ ·（）()]/g, '').length + (name.match(/ · /) ? 1 : 0));
+      return Math.min(max, Math.max(8.5, (w - 10) / per));
+    }
+    function nameLines(name, w, fs) {
+      var parts = name.split(' · ');
+      if (parts.length > 1 && parts[0].length * fs + 12 > w) return parts;
+      return [name];
+    }
+
+    (M.panels || []).forEach(function (p) {
+      var dim = cur !== 'all' && cur !== p.id;
+      svg.push('<g class="m-panel' + (dim ? ' dim' : '') + '">');
+      svg.push('<rect class="m-pbox" x="' + p.x + '" y="' + p.y + '" width="' + p.w + '" height="' + p.h + '" rx="6"/>');
+      // 标题画在框外上方，避免压住框内的第一个院落
+      svg.push('<text class="m-ptitle" x="' + (p.x + 2) + '" y="' + (p.y - 9) + '">' + esc(p.name) +
+        '<tspan class="m-psub" dx="8">' + esc(p.sub || '') + '</tspan></text>');
+      (M.rooms || []).forEach(function (r) {
+        if (r.panel !== p.id) return;
+        if (r.unplaced) { unplaced.push(r); return; }
+        var owner = r.owner && byId[r.owner];
+        var cls = 'm-room k-' + (r.kind === '正堂' || r.kind === '正房' ? 'zheng'
+          : r.kind === '楼' ? 'lou'
+          : r.kind === '门' || r.kind === '桥' || r.kind === '亭' || r.kind === '厅' ? 'men'
+          : r.kind === '景' ? 'jing' : 'yuan');
+        if (owner) cls += ' has-owner';
+        svg.push('<g class="' + cls + '"' + (owner ? ' data-owner="' + owner.id + '"' : '') +
+          ' data-room="' + esc(r.id) + '">');
+        svg.push('<title>' + esc(r.name + (owner ? ' · ' + owner.name : '') + '\n' + (r.basis || '')) + '</title>');
+        svg.push('<rect x="' + r.x + '" y="' + r.y + '" width="' + r.w + '" height="' + r.h + '" rx="3"/>');
+
+        var fsName = fitFont(r.name, r.w, 11.5);
+        var lines = nameLines(r.name, r.w, fsName);
+        var showOwner = owner && r.h >= 44 && r.w >= 62;
+        var blockH = lines.length * (fsName + 3) + (showOwner ? 14 : 0);
+        var top = r.y + (r.h - blockH) / 2 + fsName;
+        lines.forEach(function (ln, i) {
+          svg.push('<text class="m-rname" style="font-size:' + fsName.toFixed(1) + 'px" x="' + (r.x + r.w / 2) +
+            '" y="' + (top + i * (fsName + 3)) + '" text-anchor="middle">' + esc(ln) + '</text>');
+        });
+        if (showOwner) {
+          svg.push('<text class="m-owner" x="' + (r.x + r.w / 2) + '" y="' + (top + lines.length * (fsName + 3) + 6) +
+            '" text-anchor="middle">' + esc(owner.name) + '</text>');
+        }
+        svg.push('</g>');
+      });
+      svg.push('</g>');
+    });
+
+    $('#mapSvg').innerHTML = svg.join('');
+    $$('#mapSvg [data-owner]').forEach(function (g) {
+      g.addEventListener('click', function () { openItem(g.getAttribute('data-owner')); });
+    });
+
+    // 房间清单：把“依据”摊开写在下面，方便核对
+    var rooms = (M.rooms || []).filter(function (r) {
+      return !r.unplaced && (cur === 'all' || r.panel === cur);
+    });
+    $('#mapList').innerHTML = rooms.map(function (r) {
+      var owner = r.owner && byId[r.owner];
+      var pname = (M.panels || []).filter(function (p) { return p.id === r.panel; })[0];
+      return '<div class="ml-row">' +
+        '<span class="ml-p">' + esc(pname ? pname.name : '') + '</span>' +
+        '<span class="ml-n">' + esc(r.name) + '</span>' +
+        (owner ? '<button class="ml-o" data-go="' + owner.id + '">' + esc(owner.name) + '</button>' : '<span class="ml-o none">—</span>') +
+        '<span class="ml-b">' + esc(r.basis || '') + '</span>' +
+      '</div>';
+    }).join('');
+    $$('#mapList [data-go]').forEach(function (el) {
+      el.addEventListener('click', function () { openItem(el.getAttribute('data-go')); });
+    });
+
+    var unHtml = unplaced.map(function (r) {
+      return '<span class="mu-chip" title="' + esc(r.basis || '') + '">' + esc(r.name) + '</span>';
+    }).join('');
+    $('#mapNote').innerHTML =
+      (unHtml ? '<div class="map-unplaced"><span class="mu-lb">未定位景点</span>' + unHtml + '</div>' : '') +
+      '<p>' + esc((M.meta && M.meta.note) || '') + '</p>' +
+      ((M.meta && M.meta.refs) ? '<ul class="m-refs">' +
+        M.meta.refs.map(function (r) { return '<li>' + refHTML(r) + '</li>'; }).join('') + '</ul>' : '');
+  }
+
   function renderPoetry() {
     var list = itemsOf('poetry');
     state.list = list;
@@ -1772,6 +2002,47 @@
     return out.filter(function (t) { if (seen[t]) return false; seen[t] = 1; return true; });
   }
 
+  function wordplayLine(id) {
+    var list = WORDPLAY_BY_PERSON[id] || [];
+    if (!list.length) return '';
+    return list.map(function (w) {
+      return '<div class="m-wordplay"><span class="mw-k">' + esc(w.kind) + '</span>' +
+        '<b>' + esc(w.word) + '</b><span class="mw-a">→</span>' +
+        '<b class="mw-s">' + esc(w.sound) + '</b>' +
+        '<span class="mw-m">' + esc(w.meaning) + '</span></div>';
+    }).join('');
+  }
+
+  function homeLine(id) {
+    var rooms = (ROOM_BY_OWNER[id] || []).filter(function (r) {
+      return r.kind !== '景' && r.kind !== '门' && r.kind !== '桥';
+    });
+    if (!rooms.length) return '';
+    var panels = (D.map && D.map.panels) || [];
+    var first = rooms[0];
+    var panel = panels.filter(function (p) { return p.id === first.panel; })[0];
+    return '<div class="m-home"><span class="lb">住处</span>' +
+      '<a href="#map/' + esc(first.panel) + '">' + esc(first.name) +
+      (panel ? '（' + esc(panel.name) + '）' : '') + '</a>' +
+      (rooms.length > 1 ? '<span class="muted">等 ' + rooms.length + ' 处</span>' : '') + '</div>';
+  }
+
+  function foreshadowBlock(id) {
+    var list = FORESHADOW_BY_PERSON[id] || [];
+    if (!list.length) return '';
+    return list.map(function (f) {
+      var v = VERDICT[f.verdict] || VERDICT['存疑'];
+      return '<div class="m-sec m-block m-fs ' + v.cls + '">' +
+        '<h3>谶语 → 结局对照 <span class="fs-badge ' + v.cls + '">' + esc(f.verdict) + '</span></h3>' +
+        '<dl class="fs-dl"><dt>所谶</dt><dd>' + esc(f.omen) + '</dd>' +
+        '<dt>结局</dt><dd>' + esc(f.ending) + '</dd></dl>' +
+        (f.note ? '<div class="m-detail">' + esc(f.note) + '</div>' : '') +
+        '<div class="fs-foot">' + esc(f.scope || '') +
+        ' · <a href="#riddle/foreshadow">看全部判词对照</a></div>' +
+      '</div>';
+    }).join('');
+  }
+
   function renderModal(it) {
     var rels = relationsOf(it.id);
     var people = [], events = [], others = [];
@@ -1790,7 +2061,8 @@
       (sub ? '<div class="m-sub">' + esc(sub) + '</div>' : '') +
       '<div class="m-tags">' + (it.familyName ? '<span class="tag f">' + esc(it.familyName) + '</span>' : '') +
       (it.tags || []).map(function (t) { return '<span class="tag">' + esc(t) + '</span>'; }).join('') + '</div>' +
-      (it.quote ? '<div class="m-quote">' + esc(it.quote) + '</div>' : '');
+      (it.quote ? '<div class="m-quote">' + esc(it.quote) + '</div>' : '') +
+      wordplayLine(it.id) + homeLine(it.id);
 
     // 简介
     if (it.summary) html += '<div class="m-lead">' + esc(it.summary) + '</div>';
@@ -1822,6 +2094,7 @@
         '</div></div>';
       html += '</div>';
     }
+    html += foreshadowBlock(it.id);
     if (zhi.length) {
       html += '<div class="m-sec m-block m-zhi"><h3>脂评 · 脂批</h3><div class="m-detail">' +
         esc(zhi.join('\n')) + '</div></div>';
@@ -2148,6 +2421,7 @@
       D.families.forEach(function (f) { famById[f.id] = f; });
       buildEventMap();
       buildFateMap();
+      buildLoreMaps();
       var webCount = D.items.filter(function (it) {
         return (it.refs || []).some(function (r) { return r && typeof r === 'object' && r.url; });
       }).length;

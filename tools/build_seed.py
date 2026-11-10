@@ -11,6 +11,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import enrich_data as ENRICH
+import lore_data as LORE
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -1169,6 +1170,14 @@ seed = {
                        **GEN_INFO.get(a, {}))
                   for (a, b, c, d, e, f) in GENEALOGY],
     "genealogy_notes": GEN_NOTE,
+    # 隐语（谐音/反语）、谶语与结局对照、府邸示意平面
+    "lore": [
+        *[dict(id=i, kind="wordplay", payload=pl) for i, _k, pl in LORE.wordplay_payloads()],
+        *[dict(id=i, kind="foreshadow", payload=pl) for i, _k, pl in LORE.foreshadow_payloads()],
+        *[dict(id="map-" + p["id"], kind="panel", payload=p) for p in LORE.MAP["panels"]],
+        *[dict(id=r["id"], kind="room", payload=r) for r in LORE.MAP["rooms"]],
+    ],
+    "lore_meta": {"map": {k: v for k, v in LORE.MAP.items() if k not in ("panels", "rooms")}},
 }
 
 # 判词、诗词、回目并入 items
@@ -1440,6 +1449,18 @@ seed["panels"][1]["rows"] = [
     {"label": f["name"], "value": family_counts[f["id"]]}
     for f in seed["families"] if family_counts.get(f["id"])
 ]
+# 谶语判定的分布，直接把 lore 数据统计成一张图
+_VORDER = ["印证", "续书", "存疑"]
+_vcnt = {k: 0 for k in _VORDER}
+for _f in LORE.FORESHADOW:
+    _vcnt[_f["verdict"]] = _vcnt.get(_f["verdict"], 0) + 1
+seed["panels"].append({
+    "title": "判词兑现程度",
+    "desc": "十六则判词/册簿：前八十回内应验、由程高本续书收束，还是至今存疑。",
+    "kind": "bars",
+    "rows": [{"label": k, "value": _vcnt[k]} for k in _VORDER if _vcnt[k]],
+})
+
 all_panels = list(seed["panels"]) + list(ENRICH.EXTRA_PANELS)
 seen_panel = set()
 seed["panels"] = []

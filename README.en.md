@@ -32,6 +32,19 @@ say thanks — and it helps other readers find it.**
 | Fates (判词) | 15 |
 | Poems | 28 |
 | Events / chapters / places | 51 / 64 / 29 |
+| Wordplay (谐音/反语) | 34 |
+| Fates vs. endings (谶语对照) | 16 |
+| Mapped rooms (宁荣二府 · 大观园) | 26 |
+
+## Three things worth a look
+
+- **Names are puns.** 甄士隐 = “真事隐” (true matters hidden), 贾雨村 = “假语村言” (fiction),
+  元春/迎春/探春/惜春 = “原应叹息” (sigh after all), 单聘仁 = “善骗人” (good at cheating).
+  Each of the 34 entries notes the chapter and whether the reading is standard, "one theory" or disputed.
+- **Prophecy vs. ending.** Every 判词 is paired with what it foretold and what actually happens in the
+  text, tagged *fulfilled within the 80 chapters* / *resolved only by the 1791 sequel* / *unsettled*.
+- **Estate map.** 宁国府 east of the street, 荣国府 west of it, the garden north-east of 荣国府 — with
+  each courtyard's owner and the chapter that justifies its position.
 
 ## Why this exists
 
