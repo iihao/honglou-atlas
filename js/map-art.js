@@ -229,6 +229,24 @@
   /* 荷叶：藕香榭水面 */
   var LOTS = [{ x: 468, y: 158 }, { x: 552, y: 172 }];
 
+  /* 无名附屋与游径只补空间肌理，不对应原文可定位的单体建筑。 */
+  var FABRIC = [
+    [76, 92, 54, 28], [142, 92, 42, 26], [208, 98, 44, 25], [270, 184, 26, 38],
+    [82, 474, 50, 28], [146, 484, 34, 24], [326, 210, 42, 26], [326, 244, 42, 24],
+    [670, 276, 44, 26], [676, 318, 36, 24], [884, 104, 42, 28], [884, 154, 42, 30],
+    [882, 214, 44, 26], [660, 506, 42, 26], [876, 494, 46, 26], [666, 548, 34, 22]
+  ];
+  var GARDEN_PATHS = [
+    [[500, 540], [476, 516], [448, 500], [438, 472], [454, 444], [488, 430], [522, 414], [548, 390]],
+    [[488, 430], [470, 408], [452, 382], [458, 352], [482, 330], [506, 316]],
+    [[522, 414], [546, 388], [554, 358], [540, 332], [516, 312], [506, 282]],
+    [[482, 330], [462, 300], [462, 270], [480, 244], [506, 232]],
+    [[540, 332], [566, 302], [566, 270], [550, 244], [530, 226]],
+    [[506, 232], [490, 210], [486, 190], [500, 174]],
+    [[550, 244], [578, 218], [578, 190], [560, 170]],
+    [[438, 472], [426, 446], [424, 426]], [[554, 358], [584, 344], [594, 326]]
+  ];
+
   /* ------------------------------------------------------------ 渲染 */
 
   function inBox(panel, x, y) {
@@ -269,6 +287,9 @@
 
   window.MAP_ART = {
     defs: TEXTURE_DEFS,
+    /** 场景数据原样暴露给 js/map-3d.js：3D 沙盘与平面图共用同一份水系、草木、山石 */
+    data: { water: YUAN_WATER, pool: YUAN_POOL, trees: TREES, rocks: ROCKS, lotus: LOTS,
+      fabric: FABRIC, gardenPaths: GARDEN_PATHS },
     /** 建筑：按 kind 选图形，塞进给定方框（保持比例，水平居中、顶端留白） */
     glyph: function (kind, box, variant) {
       var name = kind === '正堂' || kind === '厅' ? 'hall'
@@ -352,6 +373,15 @@
       PATHS.forEach(function (p) {
         if (!inBox(panel, p.x, p.y)) return;
         out += '<path class="m-path" d="' + p.d + '" style="stroke-width:' + p.w + '"/>';
+      });
+      if (panel.id === 'yuan') GARDEN_PATHS.forEach(function (points) {
+        out += '<path class="m-garden-walk-edge" d="' + points.map(function (p, i) { return (i ? 'L' : 'M') + p[0] + ' ' + p[1]; }).join('') + '"/>';
+        out += '<path class="m-garden-walk" d="' + points.map(function (p, i) { return (i ? 'L' : 'M') + p[0] + ' ' + p[1]; }).join('') + '"/>';
+      });
+      FABRIC.forEach(function (b) {
+        if (!inBox(panel, b[0] + b[2] / 2, b[1] + b[3] / 2)) return;
+        out += '<rect class="m-fabric-base" x="' + b[0] + '" y="' + b[1] + '" width="' + b[2] + '" height="' + b[3] + '" rx="2"/>' +
+          '<path class="m-fabric-roof" d="M' + (b[0] - 2) + ' ' + (b[1] + 9) + 'l' + (b[2] / 2) + ' -8 ' + (b[2] / 2 + 4) + ' 8v3h-' + (b[2] + 4) + 'z"/>';
       });
       TREES.forEach(function (t) {
         if (inBox(panel, t.x, t.y)) out += plant(t.s, t.x, t.y, t.k);

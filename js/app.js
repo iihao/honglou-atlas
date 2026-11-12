@@ -120,7 +120,7 @@
     if (v === 'events') renderEvents();
     if (v === 'fate') renderFate();
     if (v === 'riddle') renderRiddle(parts[1]);
-    if (v === 'map') renderMap(parts[1]);
+    if (v === 'map') renderMap(parts[1], parts[2]);
     if (v === 'poetry') renderPoetry();
     if (v === 'places') renderPlaces();
     if (v === 'chapters') renderChapters();
@@ -1692,18 +1692,31 @@
     { id: 'yuan', name: '大观园' }
   ];
 
-  function renderMap(focus) {
+  function renderMap(focus, mode) {
     var M = D.map || { panels: [], rooms: [], meta: {} };
     if (MAP_TABS.some(function (t) { return t.id === focus; })) state.mapFocus = focus;
     var cur = state.mapFocus;
+    var is3d = mode === '3d';   // #map/<府>/3d：平面舆图与 3D 沙盘共用同一份数据，地址可直接分享
 
     $('#mapTabs').innerHTML = MAP_TABS.map(function (t) {
       return '<button class="chip ' + (cur === t.id ? 'on' : '') + '" data-mtab="' + t.id + '">' +
         esc(t.name) + '</button>';
-    }).join('');
+    }).join('') + '<button class="chip chip-3d ' + (is3d ? 'on' : '') + '" data-mtab="3d">' +
+      (is3d ? '◱ 平面舆图' : '◈ 3D 游览') + '</button>';
     $$('#mapTabs .chip').forEach(function (b) {
-      b.addEventListener('click', function () { location.hash = '#map/' + b.getAttribute('data-mtab'); });
+      b.addEventListener('click', function () {
+        var id = b.getAttribute('data-mtab'), to3d = id === '3d' ? !is3d : is3d;
+        location.hash = '#map/' + (id === '3d' ? cur : id) + (to3d ? '/3d' : '');
+      });
     });
+    var box = $('#mapBox');
+    box.classList.toggle('is-3d', is3d);
+    if (is3d) {
+      window.MAP_3D.show($('#map3d'), M, { focus: cur, byId: byId, open: openItem }).catch(function () {
+        box.classList.remove('is-3d');   // 没有 WebGL 或 three.js 没加载到：留在平面图
+        $('#mapLead').textContent = '当前浏览器无法显示 3D 沙盘，已退回平面舆图。';
+      });
+    }
 
     if (M.meta && M.meta.note) {
       $('#mapLead').textContent = '宁国府在街东、荣国府在街西，大观园在荣府东北。园内相对位置据游园路线与景物描写推定；点击院落可看主人词条。';
